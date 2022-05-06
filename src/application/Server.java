@@ -19,7 +19,7 @@ public class Server extends Thread implements Observable, Observer
     private static boolean over = false;
     private static int count = 0;
     private int port;
-    private static Scontroller c;
+    private static BoardController c;
     private int turn = 0;
     private static boolean ShipsSet = false;
     private static boolean CarrierSet = false;
@@ -33,13 +33,13 @@ public class Server extends Thread implements Observable, Observer
     public Server(int port) 
     { 
     	this.port = port;
-    	c = new Scontroller();
+    	c = new BoardController(2);
     	c.registerObserver((Observer)this);
     	registerObserver(c);
-    	c.setServer(this);
+    	
     	System.out.println(c.getID());
     	turn = (int) (Math.random() * 2 + 1);
-    	c.setTurn(turn);
+    	c.setCurrentTurn(turn);
     }
     
     public DataInputStream getServerInput() {
@@ -73,10 +73,6 @@ public class Server extends Thread implements Observable, Observer
             out = new DataOutputStream(
             		new BufferedOutputStream(socket.getOutputStream()));
             String line = "";
-            
-            c.setServerInputStream(in);
-            c.setServerOutputStream(out);
-            
   
             // reads message from client until "Over" is sent 
             while (!GameOver()) 

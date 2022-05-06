@@ -11,7 +11,7 @@ import javafx.stage.Stage;
 public class sMain extends Application {
 
 	private static Server server;
-	private static Scontroller controller;
+	private static BoardController controller;
 	private static int count = 0;
 	
 	@Override
@@ -23,7 +23,8 @@ public class sMain extends Application {
 			loader.setController(controller);
 
 			primaryStage.setTitle("Network Battleship Server");
-			loader.setLocation(getClass().getResource("/application/ServerBattleshipLayout.fxml"));
+			
+			loader.setLocation(getClass().getResource("/application/BattleshipLayout.fxml"));
 			Parent root = null;
 			root = loader.load();
 			
@@ -31,7 +32,7 @@ public class sMain extends Application {
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 			
 			primaryStage.setScene(scene);
-			if(controller.getTurn() == 2)
+			if(controller.getCurrentTurn() == 2)
 				infoBox("It is your turn first!", "Player 2");
 			else
 				infoBox("It is player 1's turn first...", "Player 2");
@@ -50,7 +51,7 @@ public class sMain extends Application {
         JOptionPane.showMessageDialog(null, infoMessage, "Server: " + titleBar, JOptionPane.INFORMATION_MESSAGE);
     }
 	
-	public static void launchGUI(String[] args, Server s, Scontroller con) {
+	public static void launchGUI(String[] args, Server s, BoardController con) {
 		server = s;
 		controller = con;
 		launch(args);

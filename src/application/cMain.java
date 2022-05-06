@@ -14,7 +14,7 @@ import javafx.scene.layout.BorderPane;
 
 public class cMain extends Application {
 	private static Client client;
-	private static Ccontroller controller;
+	private static BoardController controller;
 	private static int count = 0;
 	
 	@Override
@@ -25,7 +25,7 @@ public class cMain extends Application {
 			loader.setController(controller);
 
 			primaryStage.setTitle("Network Battleship Client");
-			loader.setLocation(getClass().getResource("/application/ClientBattleshipLayout.fxml"));
+			loader.setLocation(getClass().getResource("/application/BattleshipLayout.fxml"));
 			Parent root = null;
 			root = loader.load();
 			
@@ -33,7 +33,7 @@ public class cMain extends Application {
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 			
 			primaryStage.setScene(scene);
-			if(controller.getTurn() == 1)
+			if(controller.getCurrentTurn() == 1)
 				infoBox("It is your turn first!", "Player 1");
 			else
 				infoBox("It is player 2's turn first...", "Player 1");
@@ -52,7 +52,7 @@ public class cMain extends Application {
         JOptionPane.showMessageDialog(null, infoMessage, "Client: " + titleBar, JOptionPane.INFORMATION_MESSAGE);
     }
 	
-	public static void launchGUI(String[] args, Client c, Ccontroller con) {
+	public static void launchGUI(String[] args, Client c, BoardController con) {
 		client = c;
 		controller = con;
 		launch(args);

@@ -23,7 +23,7 @@
                     <items>
                       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
                            <children>
-                              <GridPane fx:id="SopponentGrid" gridLinesVisible="true" layoutX="92.0" layoutY="75.0" prefHeight="277.0" prefWidth="501.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                              <GridPane fx:id="opponentGrid" gridLinesVisible="true" layoutX="92.0" layoutY="75.0" prefHeight="277.0" prefWidth="501.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                 <columnConstraints>
                                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -158,7 +158,7 @@
                         </AnchorPane>
                       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="276.0" prefWidth="599.0">
                            <children>
-                              <GridPane fx:id="SplayerGrid" gridLinesVisible="true" prefHeight="278.0" prefWidth="512.0">
+                              <GridPane fx:id="playerGrid" gridLinesVisible="true" prefHeight="278.0" prefWidth="512.0">
                                  <columnConstraints>
                                     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                                     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -323,16 +323,16 @@
                            <children>
                               <Text layoutX="137.0" layoutY="24.0"  strokeType="OUTSIDE" strokeWidth="0.0"  text="Your Ships" />
                               <Text layoutX="22.0" layoutY="24.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Opponent's Ships" />
-                              <Text fx:id="soBattleship" layoutX="42.0" layoutY="65.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Battleship" />
-                              <Text fx:id="soCruiser" layoutX="50.0" layoutY="82.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Cruiser" />
-                              <Text fx:id="soSubmarine" layoutX="40.0" layoutY="99.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Submarine" />
-                              <Text fx:id="soDestroyer" layoutX="42.0" layoutY="116.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Destroyer" />
-                              <Text fx:id="soCarrier" layoutX="51.0" layoutY="48.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Carrier" />
-                              <Text fx:id="spCarrier" layoutX="148.0" layoutY="48.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Carrier" />
-                              <Text fx:id="spBattleship" layoutX="139.0" layoutY="65.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Battleship" />
-                              <Text fx:id="spCruiser" layoutX="148.0" layoutY="82.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Cruiser" />
-                              <Text fx:id="spSubmarine" layoutX="138.0" layoutY="99.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Submarine" />
-                              <Text fx:id="spDestroyer" layoutX="141.0" layoutY="116.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Destroyer" />
+                              <Text fx:id="opponentBattleship" layoutX="42.0" layoutY="65.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Battleship" />
+                              <Text fx:id="opponentCruiser" layoutX="50.0" layoutY="82.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Cruiser" />
+                              <Text fx:id="opponentSubmarine" layoutX="40.0" layoutY="99.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Submarine" />
+                              <Text fx:id="opponentDestroyer" layoutX="42.0" layoutY="116.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Destroyer" />
+                              <Text fx:id="opponentCarrier" layoutX="51.0" layoutY="48.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Carrier" />
+                              <Text fx:id="playerCarrier" layoutX="148.0" layoutY="48.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Carrier" />
+                              <Text fx:id="playerBattleship" layoutX="139.0" layoutY="65.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Battleship" />
+                              <Text fx:id="playerCruiser" layoutX="148.0" layoutY="82.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Cruiser" />
+                              <Text fx:id="playerSubmarine" layoutX="138.0" layoutY="99.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Submarine" />
+                              <Text fx:id="playerDestroyer" layoutX="141.0" layoutY="116.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Destroyer" />
                            </children>
                         </AnchorPane>
                       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="252.0" prefWidth="221.0">
@@ -365,7 +365,7 @@
                                  </image>
                               </ImageView>
                               <ChoiceBox fx:id="OrientationChoice" layoutX="101.0" layoutY="38.0" prefHeight="17.0" prefWidth="131.0" />
-                              <Button fx:id="sAutoShips" layoutX="117.0" layoutY="106.0" mnemonicParsing="false" text="Automate Ships" />
+                              <Button fx:id="autoShips" layoutX="117.0" layoutY="106.0" mnemonicParsing="false" text="Automate Ships" />
                            </children>
                         </AnchorPane>
                     </items>

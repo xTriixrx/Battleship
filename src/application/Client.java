@@ -16,7 +16,7 @@ public class Client extends Thread implements Observable, Observer
     private static int count = 0;
     private String address;
     private int port;
-    private static Ccontroller c;
+    private static BoardController c;
     private int turn = 0;
     private static boolean over = false;
     private static boolean sSending = false;
@@ -33,10 +33,10 @@ public class Client extends Thread implements Observable, Observer
     { 
     	this.address = address;
     	this.port = port;
-    	c = new Ccontroller();
+    	c = new BoardController(1);
     	c.registerObserver((Observer)this);
     	registerObserver(c);
-    	c.setClient(this);
+    	
     	System.out.println(c.getID());
     } 
   
@@ -88,7 +88,7 @@ public class Client extends Thread implements Observable, Observer
             	turn = input.readInt();
             	out.writeUTF("Client recieved " + turn + " from Server...");
             	out.flush();
-            	c.setTurn(turn);
+            	c.setCurrentTurn(turn);
             	count++;
             	isShipsSet(ShipsSet);
             	}
