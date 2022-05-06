@@ -1,7 +1,7 @@
 package application;
 
-public interface ClientObservable {
-	public void registerObserver(CcontrollerObserver c);
+public interface Observable {
+	public void registerObserver(Observer s);
 	public void removeObserver();
 	public void notifyObserver(String s);
 }

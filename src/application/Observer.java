@@ -1,5 +1,5 @@
 package application;
 
-public interface CcontrollerObserver {
+public interface Observer {
 	public void update(String s);
 }

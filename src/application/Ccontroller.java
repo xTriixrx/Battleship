@@ -30,7 +30,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
 
-public class Ccontroller implements Initializable, CcontrollerObservable, CcontrollerObserver {
+public class Ccontroller implements Initializable, Observable, Observer {
 	
     @FXML
     private GridPane CopponentGrid;
@@ -84,7 +84,7 @@ public class Ccontroller implements Initializable, CcontrollerObservable, Ccontr
 	private static final int clientTurn = 1;
 	private static DataInputStream cIn = null;
 	private static DataOutputStream cOut = null;
-	private static ClientObserver cobs;
+	private static Observer cobs;
 	private static String toSend;
 	private static String toRecieve;
 	private static boolean myTurn = true;
@@ -396,7 +396,7 @@ public class Ccontroller implements Initializable, CcontrollerObservable, Ccontr
 	}
 
 	@Override
-	public void registerObserver(ClientObserver c) {
+	public void registerObserver(Observer c) {
 		cobs = c;
 		
 	}

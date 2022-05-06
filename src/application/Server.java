@@ -9,7 +9,7 @@ import javax.swing.JOptionPane;
 
 import java.io.*; 
   
-public class Server extends Thread implements ServerObservable, ServerObserver
+public class Server extends Thread implements Observable, Observer
 { 
     //initialize socket and input stream 
     private Socket          socket   = null; 
@@ -27,14 +27,14 @@ public class Server extends Thread implements ServerObservable, ServerObserver
     private static boolean CruiserSet = false;
     private static boolean SubmarineSet = false;
     private static boolean DestroyerSet = false;
-    public static ScontrollerObserver sCobs;
+    public static Observer sCobs;
   
     // constructor with port 
     public Server(int port) 
     { 
     	this.port = port;
     	c = new Scontroller();
-    	c.registerObserver((ServerObserver)this);
+    	c.registerObserver((Observer)this);
     	registerObserver(c);
     	c.setServer(this);
     	System.out.println(c.getID());
@@ -265,7 +265,7 @@ public class Server extends Thread implements ServerObservable, ServerObserver
 	}
 
 	@Override
-	public void registerObserver(ScontrollerObserver c) {
+	public void registerObserver(Observer c) {
 		sCobs = c;
 		
 	}

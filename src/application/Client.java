@@ -6,7 +6,7 @@ import javax.swing.JOptionPane;
 
 import java.io.*; 
   
-public class Client extends Thread implements ClientObservable, ClientObserver
+public class Client extends Thread implements Observable, Observer
 { 
 	
     // initialize socket and input output streams 
@@ -26,7 +26,7 @@ public class Client extends Thread implements ClientObservable, ClientObserver
     private static boolean CruiserSet = false;
     private static boolean SubmarineSet = false;
     private static boolean DestroyerSet = false;
-    private static CcontrollerObserver cCobs;
+    private static Observer cCobs;
   
     // constructor to put ip address and port 
     public Client(String address, int port) 
@@ -34,7 +34,7 @@ public class Client extends Thread implements ClientObservable, ClientObserver
     	this.address = address;
     	this.port = port;
     	c = new Ccontroller();
-    	c.registerObserver((ClientObserver)this);
+    	c.registerObserver((Observer)this);
     	registerObserver(c);
     	c.setClient(this);
     	System.out.println(c.getID());
@@ -210,7 +210,7 @@ public class Client extends Thread implements ClientObservable, ClientObserver
     }
 
 	@Override
-	public void registerObserver(CcontrollerObserver c) {
+	public void registerObserver(Observer c) {
 		cCobs = c;
 		
 	}

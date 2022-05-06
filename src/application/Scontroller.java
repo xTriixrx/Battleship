@@ -35,7 +35,7 @@ import javafx.scene.media.MediaPlayer;
 import java.io.File;
 import java.nio.file.Paths;
 
-public class Scontroller implements Initializable, ScontrollerObserver, ScontrollerObservable {
+public class Scontroller implements Initializable, Observer, Observable {
 
 	@FXML
 	private GridPane SopponentGrid;
@@ -91,7 +91,7 @@ public class Scontroller implements Initializable, ScontrollerObserver, Scontrol
 	private static final int serverTurn = 2;
 	private static DataInputStream sIn;
 	private static DataOutputStream sOut;
-	private static ServerObserver sobs;
+	private static Observer sobs;
 	private static String toSend;
 	private static String toRecieve;
 	private static boolean myTurn = true;
@@ -417,7 +417,7 @@ public class Scontroller implements Initializable, ScontrollerObserver, Scontrol
 	}
 
 	@Override
-	public void registerObserver(ServerObserver s) {
+	public void registerObserver(Observer s) {
 		sobs = s;
 
 	}
