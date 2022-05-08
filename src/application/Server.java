@@ -9,7 +9,7 @@ import javax.swing.JOptionPane;
 
 import java.io.*; 
   
-public class Server extends Thread implements Observable, Observer
+public class Server implements Runnable, Observable, Observer
 { 
     //initialize socket and input stream 
     private Socket          socket   = null; 
@@ -279,8 +279,10 @@ public class Server extends Thread implements Observable, Observer
 	
     public static void main(String args[]) throws UnknownHostException 
     { 
-    	Thread server = new Server(5000);
-    	server.start();
+    	Runnable server = new Server(5000);
+    	Thread serverThread = new Thread(server);
+    	serverThread.start();
+    	
     	sMain.launchGUI(args, (Server) server, c);
     }
 }

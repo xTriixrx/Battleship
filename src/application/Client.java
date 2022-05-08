@@ -6,7 +6,7 @@ import javax.swing.JOptionPane;
 
 import java.io.*; 
   
-public class Client extends Thread implements Observable, Observer
+public class Client implements Runnable, Observable, Observer
 { 
 	
     // initialize socket and input output streams 
@@ -290,9 +290,10 @@ public class Client extends Thread implements Observable, Observer
 	
     public static void main(String args[]) throws UnknownHostException 
     { 
-    	Thread client = new Client(Server.ServerAddress(), 5000);
-    	client.start();
+    	Runnable client = new Client(Server.ServerAddress(), 5000);
+    	Thread clientThread = new Thread(client);
+    	clientThread.start();
+    	
 		cMain.launchGUI(args, (Client) client, c);
     }
-		
 } 
