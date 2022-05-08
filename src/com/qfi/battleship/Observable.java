@@ -1,4 +1,4 @@
-package application;
+package com.qfi.battleship;
 
 public interface Observable {
 	public void registerObserver(Observer s);

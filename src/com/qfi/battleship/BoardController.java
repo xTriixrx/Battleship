@@ -1,4 +1,4 @@
-package application;
+package com.qfi.battleship;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

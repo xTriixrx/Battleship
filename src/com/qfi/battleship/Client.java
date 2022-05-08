@@ -1,4 +1,4 @@
-package application;
+package com.qfi.battleship;
 // A Java program for a Client 
 import java.net.*;
 

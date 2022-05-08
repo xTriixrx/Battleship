@@ -1,4 +1,4 @@
-package application;
+package com.qfi.battleship;
 // A Java program for a Server 
 import java.net.*;
 import java.util.ArrayList;

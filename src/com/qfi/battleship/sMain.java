@@ -1,19 +1,16 @@
-package application;
-	
-import java.net.UnknownHostException;
+package com.qfi.battleship;
 
 import javax.swing.JOptionPane;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
-import javafx.stage.Stage;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
 
+public class sMain extends Application {
 
-public class cMain extends Application {
-	private static Client client;
+	private static Server server;
 	private static BoardController controller;
 	private static int count = 0;
 	
@@ -22,21 +19,23 @@ public class cMain extends Application {
 		try {
 			FXMLLoader loader = new FXMLLoader();
 			System.out.println(controller.getID());
+			
 			loader.setController(controller);
 
-			primaryStage.setTitle("Network Battleship Client");
-			loader.setLocation(getClass().getResource("/application/BattleshipLayout.fxml"));
+			primaryStage.setTitle("Network Battleship Server");
+			
+			loader.setLocation(getClass().getResource("layout/BattleshipLayout.fxml"));
 			Parent root = null;
 			root = loader.load();
 			
 			Scene scene = new Scene(root, 800, 600);
-			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+			scene.getStylesheets().add(getClass().getResource("styles/application.css").toExternalForm());
 			
 			primaryStage.setScene(scene);
-			if(controller.getCurrentTurn() == 1)
-				infoBox("It is your turn first!", "Player 1");
+			if(controller.getCurrentTurn() == 2)
+				infoBox("It is your turn first!", "Player 2");
 			else
-				infoBox("It is player 2's turn first...", "Player 1");
+				infoBox("It is player 1's turn first...", "Player 2");
 			primaryStage.maximizedProperty().addListener((observable, oldValue, newValue) -> {
 	            if (newValue)
 	                primaryStage.setMaximized(false);
@@ -49,11 +48,11 @@ public class cMain extends Application {
 	
     public static void infoBox(String infoMessage, String titleBar)
     {
-        JOptionPane.showMessageDialog(null, infoMessage, "Client: " + titleBar, JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(null, infoMessage, "Server: " + titleBar, JOptionPane.INFORMATION_MESSAGE);
     }
 	
-	public static void launchGUI(String[] args, Client c, BoardController con) {
-		client = c;
+	public static void launchGUI(String[] args, Server s, BoardController con) {
+		server = s;
 		controller = con;
 		launch(args);
 	}

@@ -1,4 +1,4 @@
-package application;
+package com.qfi.battleship;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
