@@ -5,3 +5,5 @@ This is a network based Battleship implementation utilizing the JavaFX GUI frame
 
 Instructions to run the game as well as configuring JavaFX will be provided some time in the future. Currently the game runs directly out of an IDE with the JavaFX library attached to the project as a user library
 </p>
+
+<p align="center"> <img src="https://github.com/xTriixrx/Battleship/blob/master/imgs/battleship-gui.PNG" /> </p>
