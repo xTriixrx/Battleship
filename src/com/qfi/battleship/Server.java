@@ -19,7 +19,7 @@ public class Server implements Runnable, Observable, Observer
     private static boolean over = false;
     private static int count = 0;
     private int port;
-    private static BoardController c;
+    private static BoardController controller;
     private int turn = 0;
     private static boolean ShipsSet = false;
     private static boolean CarrierSet = false;
@@ -33,13 +33,17 @@ public class Server implements Runnable, Observable, Observer
     public Server(int port) 
     { 
     	this.port = port;
-    	c = new BoardController(2);
-    	c.registerObserver((Observer)this);
-    	registerObserver(c);
+    	controller = new BoardController(2);
+    	controller.registerObserver((Observer)this);
+    	registerObserver(controller);
     	
-    	System.out.println(c.getID());
+    	System.out.println(controller.getID());
     	turn = (int) (Math.random() * 2 + 1);
-    	c.setCurrentTurn(turn);
+    	controller.setCurrentTurn(turn);
+    }
+    
+    public BoardController getController() {
+    	return controller;
     }
     
     public DataInputStream getServerInput() {
@@ -146,27 +150,27 @@ public class Server implements Runnable, Observable, Observer
     public void isShipsSet(boolean isSet) {
     	while(!isSet) {
     		System.out.println("");
-    	if(c.getArmada().isCarrierSet()) {
+    	if(controller.getArmada().isCarrierSet()) {
     		CarrierSet = true;
     		System.out.println("Carrier is Set.");
     	}
     	
-    	if(c.getArmada().isBattleshipSet()) {
+    	if(controller.getArmada().isBattleshipSet()) {
     		BattleshipSet = true;
     		System.out.println("Battleship is Set.");
     	}
     	
-    	if(c.getArmada().isCruiserSet()) {
+    	if(controller.getArmada().isCruiserSet()) {
     		CruiserSet = true;
     		System.out.println("Cruiser is Set.");
     	}
     	
-    	if(c.getArmada().isSubmarineSet()) {
+    	if(controller.getArmada().isSubmarineSet()) {
     		SubmarineSet = true;
     		System.out.println("Submarine is Set.");
     	}
     	
-    	if(c.getArmada().isDestroyerSet()) {
+    	if(controller.getArmada().isDestroyerSet()) {
     		DestroyerSet = true;
     		System.out.println("Destroyer is Set.");
     	}
@@ -276,13 +280,4 @@ public class Server implements Runnable, Observable, Observer
 		sCobs.update(s);
 		
 	}
-	
-    public static void main(String args[]) throws UnknownHostException 
-    { 
-    	Runnable server = new Server(5000);
-    	Thread serverThread = new Thread(server);
-    	serverThread.start();
-    	
-    	sMain.launchGUI(args, (Server) server, c);
-    }
 }

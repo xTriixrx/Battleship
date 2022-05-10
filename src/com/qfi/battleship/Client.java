@@ -16,7 +16,7 @@ public class Client implements Runnable, Observable, Observer
     private static int count = 0;
     private String address;
     private int port;
-    private static BoardController c;
+    private static BoardController controller;
     private int turn = 0;
     private static boolean over = false;
     private static boolean sSending = false;
@@ -33,13 +33,16 @@ public class Client implements Runnable, Observable, Observer
     { 
     	this.address = address;
     	this.port = port;
-    	c = new BoardController(1);
-    	c.registerObserver((Observer)this);
-    	registerObserver(c);
+    	controller = new BoardController(1);
+    	controller.registerObserver((Observer)this);
+    	registerObserver(controller);
     	
-    	System.out.println(c.getID());
+    	System.out.println(controller.getID());
     } 
   
+    public BoardController getController() {
+    	return controller;
+    }
     public DataInputStream getClientInput() {
     	return input;
     }
@@ -88,7 +91,7 @@ public class Client implements Runnable, Observable, Observer
             	turn = input.readInt();
             	out.writeUTF("Client recieved " + turn + " from Server...");
             	out.flush();
-            	c.setCurrentTurn(turn);
+            	controller.setCurrentTurn(turn);
             	count++;
             	isShipsSet(ShipsSet);
             	}
@@ -154,27 +157,27 @@ public class Client implements Runnable, Observable, Observer
     public void isShipsSet(boolean isSet) { 
     	while(!isSet) {
     		System.out.println("");
-      	if(c.getArmada().isCarrierSet()) {
+      	if(controller.getArmada().isCarrierSet()) {
       		CarrierSet = true;
       		System.out.println("Carrier is Set.");
       	}
       	
-      	if(c.getArmada().isBattleshipSet()) {
+      	if(controller.getArmada().isBattleshipSet()) {
       		BattleshipSet = true;
       		System.out.println("Battleship is Set.");
       	}
       	
-      	if(c.getArmada().isCruiserSet()) {
+      	if(controller.getArmada().isCruiserSet()) {
       		CruiserSet = true;
       		System.out.println("Cruiser is Set.");
       	}
       	
-      	if(c.getArmada().isSubmarineSet()) {
+      	if(controller.getArmada().isSubmarineSet()) {
       		SubmarineSet = true;
       		System.out.println("Submarine is Set.");
       	}
       	
-      	if(c.getArmada().isDestroyerSet()) {
+      	if(controller.getArmada().isDestroyerSet()) {
       		DestroyerSet = true;
       		System.out.println("Destroyer is Set.");
       	}
@@ -287,13 +290,4 @@ public class Client implements Runnable, Observable, Observer
 				e.printStackTrace();
 			}
 	}
-	
-    public static void main(String args[]) throws UnknownHostException 
-    { 
-    	Runnable client = new Client(Server.ServerAddress(), 5000);
-    	Thread clientThread = new Thread(client);
-    	clientThread.start();
-    	
-		cMain.launchGUI(args, (Client) client, c);
-    }
 } 
