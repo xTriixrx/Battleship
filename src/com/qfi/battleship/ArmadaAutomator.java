@@ -1,12 +1,17 @@
 package com.qfi.battleship;
 
 import java.util.List;
+import java.util.Map;
+
 import javafx.scene.Node;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.security.SecureRandom;
 import org.apache.logging.log4j.Logger;
+
+import com.qfi.battleship.Armada.ArmadaType;
+
 import javafx.collections.ObservableList;
 import org.apache.logging.log4j.LogManager;
 
@@ -67,8 +72,9 @@ public class ArmadaAutomator
 	 * Main public method to be called by the controller in order to automate the Armada placement.
 	 * 
 	 * @param buttonList An unsorted observable list of nodes containing button's.
+	 * @param styles A map of styles based on the type of ship that is being placed.
 	 */
-	public void automateArmadaPlacement(ObservableList<Node> buttonList)
+	public void automateArmadaPlacement(ObservableList<Node> buttonList, Map<ArmadaType, String> styles)
 	{
 		List<String> usedButtons = new ArrayList<>();
 		
@@ -80,7 +86,7 @@ public class ArmadaAutomator
 		placeShip(destroyerAdd, usedButtons, Armada.DESTROYER_SIZE);
 		
 		// Highlight all players ships that were placed by automator
-		highlightPlacement(buttonList, usedButtons);
+		highlightPlacement(buttonList, usedButtons, styles);
 	}
 	
 	/**
@@ -233,8 +239,9 @@ public class ArmadaAutomator
 	 * 
 	 * @param buttonList An unordered list of nodes which contains buttons.
 	 * @param shipPos A list of all ship positions that were generated.
+	 * @param styles A map of styles based on the type of ship that is being placed.
 	 */
-	private void highlightPlacement(ObservableList<Node> buttonList, List<String> shipPos)
+	private void highlightPlacement(ObservableList<Node> buttonList, List<String> shipPos, Map<ArmadaType, String> styles)
 	{
 		for (String pos : shipPos)
 		{
@@ -243,10 +250,46 @@ public class ArmadaAutomator
 				// If node id is matched with the current position, highlight the node
 				if (matchNodeID(node, pos))
 				{
-					highlightNode(node);
+					String style = determineStyle(pos, styles);
+					highlightNode(node, style);
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Will determine the type of style that needs to be applied for the given position.
+	 * 
+	 * @param position A matched position that needs to be highlighted.
+	 * @param styles A map of styles based on the type of ship that is being placed.
+	 * @return String
+	 */
+	private String determineStyle(String position, Map<ArmadaType, String> styles)
+	{
+		String style = "";
+		
+		if (armada.getDestroyer().contains(position))
+		{
+			style = styles.get(ArmadaType.DESTROYER);
+		}
+		else if (armada.getSubmarine().contains(position))
+		{
+			style = styles.get(ArmadaType.SUBMARINE);
+		}
+		else if (armada.getCruiser().contains(position))
+		{
+			style = styles.get(ArmadaType.CRUISER);
+		}
+		else if (armada.getBattleShip().contains(position))
+		{
+			style = styles.get(ArmadaType.BATTLESHIP);
+		}
+		else if (armada.getCarrier().contains(position))
+		{
+			style = styles.get(ArmadaType.CARRIER);
+		}
+		
+		return style;
 	}
 	
 	/**
@@ -268,7 +311,7 @@ public class ArmadaAutomator
 				
 			}
 			else if (node.getId().length() == (STANDARD_ID_LENGTH + 1) &&
-						pos.length() == (STANDARD_ID_LENGTH - 2))
+						pos.length() == (STANDARD_ID_LENGTH))
 			{
 				return nodeMatchLength4(node.getId(), pos);
 			}
@@ -334,9 +377,17 @@ public class ArmadaAutomator
 	 * 
 	 * @param node A matching node that needs to be highlighted and disabled.
 	 */
-	private void highlightNode(Node node)
+	private void highlightNode(Node node, String style)
 	{
 		node.setDisable(true);
-		node.setStyle(BUTTON_SET_STYLE);
+		
+		if (!style.isEmpty())
+		{
+			node.setStyle(style);
+		}
+		else
+		{
+			node.setStyle(BUTTON_SET_STYLE);
+		}
 	}
 }

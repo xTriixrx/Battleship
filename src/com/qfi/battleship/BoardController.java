@@ -1,7 +1,9 @@
 package com.qfi.battleship;
 
 import java.net.URL;
+import java.util.Map;
 import javafx.fxml.FXML;
+import java.util.HashMap;
 import javafx.scene.Node;
 import javafx.scene.text.Text;
 import java.util.ResourceBundle;
@@ -89,6 +91,7 @@ public class BoardController implements Initializable, Observer, Observable
 	private String orientation = HORIZONTAL;
 	private ArmadaAutomator automator = null;
 	private ObservableList<Node> buttonList = null;
+	private Map<ArmadaType, String> stylesMap = null;
 	private DragDropController dragDropController = null;
 	private Logger logger = LogManager.getLogger(BoardController.class);
 	
@@ -114,7 +117,9 @@ public class BoardController implements Initializable, Observer, Observable
 	{
 		armada = new Armada();
 		automator = new ArmadaAutomator(armada);
-
+		
+		populateStyles();
+		
 		if (whoami == 1) // client
 		{
 			myTurn = clientTurn;
@@ -127,6 +132,19 @@ public class BoardController implements Initializable, Observer, Observable
 			mySymbol = serverSymbol;
 			opponentTurn = clientTurn;
 		}
+	}
+	
+	/**
+	 * Populates the styles map.
+	 */
+	private void populateStyles()
+	{
+		stylesMap = new HashMap<>();
+		stylesMap.put(ArmadaType.DESTROYER, DESTROYER_SET_STYLE);
+		stylesMap.put(ArmadaType.SUBMARINE, SUBMARINE_SET_STYLE);
+		stylesMap.put(ArmadaType.CRUISER, CRUISER_SET_STYLE);
+		stylesMap.put(ArmadaType.BATTLESHIP, BATTLESHIP_SET_STYLE);
+		stylesMap.put(ArmadaType.CARRIER, CARRIER_SET_STYLE);
 	}
 
 	/**
@@ -708,7 +726,7 @@ public class BoardController implements Initializable, Observer, Observable
 			pictureThree.setDisable(true);
 			pictureFour.setDisable(true);
 			pictureFive.setDisable(true);
-			automator.automateArmadaPlacement(buttonList);
+			automator.automateArmadaPlacement(buttonList, stylesMap);
 			armada.DisplayArmadaPosition();
 			autoShips.setDisable(true);
 			notifyObserver("SHIPS");
