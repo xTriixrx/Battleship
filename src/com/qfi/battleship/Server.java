@@ -42,16 +42,9 @@ public class Server implements Runnable, Observable, Observer
     	controller.setCurrentTurn(turn);
     }
     
-    public BoardController getController() {
+    public BoardController getController()
+    {
     	return controller;
-    }
-    
-    public DataInputStream getServerInput() {
-    	return in;
-    }
-    
-    public DataOutputStream getServerOutput() {
-    	return out;
     }
     
     public static void infoBox(String infoMessage, String titleBar)

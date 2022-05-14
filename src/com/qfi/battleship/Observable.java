@@ -1,7 +1,13 @@
 package com.qfi.battleship;
 
-public interface Observable {
-	public void registerObserver(Observer s);
+/**
+ * 
+ * @author Vincent Nigro
+ * @version 1.0.0
+ */
+public interface Observable
+{
 	public void removeObserver();
 	public void notifyObserver(String s);
+	public void registerObserver(Observer s);
 }

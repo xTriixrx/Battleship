@@ -40,15 +40,9 @@ public class Client implements Runnable, Observable, Observer
     	System.out.println(controller.getID());
     } 
   
-    public BoardController getController() {
+    public BoardController getController()
+    {
     	return controller;
-    }
-    public DataInputStream getClientInput() {
-    	return input;
-    }
-    
-    public DataOutputStream getClientOutput() {
-    	return out;
     }
     
     public static void infoBox(String infoMessage, String titleBar)

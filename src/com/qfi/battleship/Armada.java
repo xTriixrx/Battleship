@@ -1,11 +1,15 @@
 package com.qfi.battleship;
 
 import java.util.ArrayList;
+import java.util.List;
 
-import javafx.scene.control.Button;
-
-public class Armada {
-	
+public class Armada
+{
+	public static final short CARRIER_SIZE = 5;
+	public static final short CRUISER_SIZE = 3;
+	public static final short SUBMARINE_SIZE = 3;
+	public static final short DESTROYER_SIZE = 2;
+	public static final short BATTLESHIP_SIZE = 4;
 	private ArrayList<String> carrier = new ArrayList<String>();
 	private ArrayList<String> battleship = new ArrayList<String>();
 	private ArrayList<String> cruiser = new ArrayList<String>();
@@ -301,9 +305,25 @@ public class Armada {
 		}
 	}
 	
+	public void addToCarrier(List<String> carrierPos) {
+		if(carrier.isEmpty()) {
+			carrier.addAll(carrierPos);
+		}else {
+			System.out.println("Carrier position is already set");
+		}
+	}
+	
 	public void addToBattleship(String pos) {
 		if(battleship.size() < 4) {
 			battleship.add(pos);
+		}else {
+			System.out.println("Battleship position is already set");
+		}
+	}
+	
+	public void addToBattleship(List<String> battleshipPos) {
+		if(battleship.isEmpty()) {
+			battleship.addAll(battleshipPos);
 		}else {
 			System.out.println("Battleship position is already set");
 		}
@@ -317,6 +337,14 @@ public class Armada {
 		}
 	}
 	
+	public void addToCruiser(List<String> cruiserPos) {
+		if(cruiser.isEmpty()) {
+			cruiser.addAll(cruiserPos);
+		}else {
+			System.out.println("Cruise position is already set");
+		}
+	}
+	
 	public void addToSubmarine(String pos) {
 		if(submarine.size() < 3) {
 			submarine.add(pos);
@@ -325,9 +353,26 @@ public class Armada {
 		}
 	}
 	
+
+	public void addToSubmarine(List<String> submarinePos) {
+		if(submarine.isEmpty()) {
+			submarine.addAll(submarinePos);
+		}else {
+			System.out.println("Submarine position is already set");
+		}
+	}
+	
 	public void addToDestroyer(String pos) {
 		if(destroyer.size() < 2) {
 			destroyer.add(pos);
+		}else {
+			System.out.println("Destroyer position is already set");
+		}
+	}
+	
+	public void addToDestroyer(List<String> destroyerPos) {
+		if(destroyer.isEmpty()) {
+			destroyer.addAll(destroyerPos);
 		}else {
 			System.out.println("Destroyer position is already set");
 		}

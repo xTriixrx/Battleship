@@ -1,5 +1,11 @@
 package com.qfi.battleship;
 
-public interface Observer {
+/**
+ * 
+ * @author Vincent Nigro
+ * @version 1.0.0
+ */
+public interface Observer
+{
 	public void update(String s);
 }
