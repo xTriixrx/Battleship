@@ -142,6 +142,14 @@ public class Server implements Runnable, Observable, Observer
     
     public void isShipsSet(boolean isSet) {
     	while(!isSet) {
+    		try
+    		{
+    			Thread.sleep(500);
+    		}
+    		catch (Throwable t)
+    		{
+    			
+    		}
     		System.out.println("");
     	if(controller.getArmada().isCarrierSet()) {
     		CarrierSet = true;

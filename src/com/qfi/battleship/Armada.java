@@ -5,6 +5,14 @@ import java.util.List;
 
 public class Armada
 {
+	protected enum ArmadaType
+	{
+		DESTROYER,
+		SUBMARINE,
+		CRUISER,
+		BATTLESHIP,
+		CARRIER,
+	}
 	public static final short CARRIER_SIZE = 5;
 	public static final short CRUISER_SIZE = 3;
 	public static final short SUBMARINE_SIZE = 3;
