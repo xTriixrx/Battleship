@@ -225,6 +225,12 @@ public class BoardController implements Initializable, Observer, Observable
 		sobs = s;
 
 	}
+	
+	@Override
+	public void notifyObserver(String str)
+	{
+		sobs.update(str);
+	}
 
 	@Override
 	public void removeObserver() {
@@ -232,38 +238,33 @@ public class BoardController implements Initializable, Observer, Observable
 	}
 
 
-	private EventHandler<MouseEvent> mouseClickEvent = new EventHandler<MouseEvent>()
+	private EventHandler<MouseEvent> mouseClickEvent = (event) ->
 	{
-		@Override
-		public void handle(MouseEvent e)
-		{
-			System.out.println("CONTROLLER " + myTurn + ": current turn is: " + currentTurn);
+		System.out.println("CONTROLLER " + myTurn + ": current turn is: " + currentTurn);
 
-			if (currentTurn == myTurn && isShipsSet)
-			{
-				toSend = ((Node) e.getTarget()).getId();
-				toSend = new StringBuilder(toSend).append(mySymbol).toString();
-				((Button) e.getTarget()).setDisable(true);
-				((Button) e.getTarget()).setMouseTransparent(false);
-				System.out.println(toSend);
-				myTurnFlag = true;
-				notifyObserver(toSend);
-				pictureOne.setDisable(true);
-				pictureTwo.setDisable(true);
-				pictureThree.setDisable(true);
-				pictureFour.setDisable(true);
-				pictureFive.setDisable(true);
-				autoShips.setDisable(true);
-			}
+		if (currentTurn == myTurn && isShipsSet)
+		{
+			toSend = ((Node) event.getTarget()).getId();
+			toSend = new StringBuilder(toSend).append(mySymbol).toString();
+			((Button) event.getTarget()).setDisable(true);
+			((Button) event.getTarget()).setMouseTransparent(false);
+			System.out.println(toSend);
+			myTurnFlag = true;
+			notifyObserver(toSend);
+			pictureOne.setDisable(true);
+			pictureTwo.setDisable(true);
+			pictureThree.setDisable(true);
+			pictureFour.setDisable(true);
+			pictureFive.setDisable(true);
+			autoShips.setDisable(true);
 		}
 	};
 
-	@Override
-	public void notifyObserver(String str)
-	{
-		sobs.update(str);
-	}
-
+	/**
+	 * 
+	 * @param pos
+	 * @param HM
+	 */
 	public void updateOpponentGrid(String pos, String HM)
 	{
 		for (Node node : opponentGrid.getChildren())
@@ -290,6 +291,11 @@ public class BoardController implements Initializable, Observer, Observable
 		currentTurn = opponentTurn;
 	}
 
+	/**
+	 * 
+	 * @param pos
+	 * @param HM
+	 */
 	public void updateplayerGrid(String pos, String HM) {
 		for (Node node : playerGrid.getChildren()) {
 			if (node.getId() != null) {
@@ -391,6 +397,10 @@ public class BoardController implements Initializable, Observer, Observable
 		}
 	}
 
+	/**
+	 * 
+	 * @param s
+	 */
 	@Override
 	public void update(String s) {
 		System.out.println("SC: Received " + s + ".");
@@ -476,48 +486,41 @@ public class BoardController implements Initializable, Observer, Observable
 		{
 			if (target.getId() != null)
 			{
-				target.setOnDragOver(new EventHandler<DragEvent>()
+				//
+				target.setOnDragOver((event) ->
 				{
-					public void handle(DragEvent event)
+					/* data is dragged over the target */
+					/*
+					 * accept it only if it is not dragged from the same node and if it has a string
+					 * data
+					 */
+					if (event.getGestureSource() != target && event.getDragboard().hasString())
 					{
-						/* data is dragged over the target */
-						/*
-						 * accept it only if it is not dragged from the same node and if it has a string
-						 * data
-						 */
-						if (event.getGestureSource() != target && event.getDragboard().hasString())
-						{
-							/* allow for moving */
-							event.acceptTransferModes(TransferMode.ANY);
-						}
-
-						event.consume();
+						/* allow for moving */
+						event.acceptTransferModes(TransferMode.ANY);
 					}
+
+					event.consume();
 				});
 				
-				target.setOnDragEntered(new EventHandler<DragEvent>()
+				//
+				target.setOnDragEntered((event) ->
 				{
-					@Override
-					public void handle(DragEvent event)
+					//
+					if (isValidStride(target, shipSize))
 					{
-						//
-						if (isValidStride(target, shipSize))
-						{
-							playerGrid.setCursor(Cursor.DEFAULT);
-							highlightImage(type, (Button) target, dragStyle, shipSize);
-						}
-
-						event.consume();
+						playerGrid.setCursor(Cursor.DEFAULT);
+						highlightImage(type, (Button) target, dragStyle, shipSize);
 					}
+
+					event.consume();
 				});
 				
-				target.setOnDragExited(new EventHandler<DragEvent>()
+				//
+				target.setOnDragExited((event) ->
 				{
-					public void handle(DragEvent event)
-					{
-						unHighlightImage((Button) target, shipSize);
-						event.consume();
-					}
+					unHighlightImage((Button) target, shipSize);
+					event.consume();
 				});
 			}
 		}
@@ -528,28 +531,21 @@ public class BoardController implements Initializable, Observer, Observable
 	 * @param image
 	 */
 	private void configureDragAndDrop(ImageView image) {
-		image.setOnDragDetected(new EventHandler<MouseEvent>()
+		image.setOnDragDetected((event) ->
 		{
-			@Override
-			public void handle(MouseEvent event)
-			{
-				Dragboard db = image.startDragAndDrop(TransferMode.ANY);
+			Dragboard db = image.startDragAndDrop(TransferMode.ANY);
 
-				ClipboardContent content = new ClipboardContent();
-				content.putString("");
-				db.setContent(content);
+			ClipboardContent content = new ClipboardContent();
+			content.putString("");
+			db.setContent(content);
 
-				event.consume();
-			}
+			event.consume();
 		});
 		
 		// Start source drag done
-		image.setOnDragDone(new EventHandler<DragEvent>()
+		image.setOnDragDone((event) ->
 		{
-			public void handle(DragEvent event)
-			{
-				event.consume();
-			}
+			event.consume();
 		});
 		// End Source Drag Done
 	}
@@ -567,21 +563,18 @@ public class BoardController implements Initializable, Observer, Observable
 		{
 			if (target.getId() != null)
 			{
-				target.setOnDragDropped(new EventHandler<DragEvent>()
+				target.setOnDragDropped((event) ->
 				{
-					public void handle(DragEvent event)
+					//
+					if (isValidStride(target, size))
 					{
-						//
-						if (isValidStride(target, size))
-						{
-							dropImage(type, (Button) target, style, size);
-							image.setDisable(true);
-						}
-						
-						//
-						event.setDropCompleted(true);
-						event.consume();
+						dropImage(type, (Button) target, style, size);
+						image.setDisable(true);
 					}
+					
+					//
+					event.setDropCompleted(true);
+					event.consume();
 				});
 			}
 		}
@@ -668,95 +661,68 @@ public class BoardController implements Initializable, Observer, Observable
 	/**
 	 *
 	 */
-	private EventHandler<MouseEvent> PictureOneClickEvent = new EventHandler<MouseEvent>()
+	private EventHandler<MouseEvent> PictureOneClickEvent = (event) ->
 	{
-		@Override
-		public void handle(MouseEvent e)
-		{
-			autoShips.setDisable(true);
-			configureDragAndDrop(pictureOne);
-			setDrag(ArmadaType.DESTROYER, Armada.DESTROYER_SIZE, DESTROYER_SET_STYLE);
-			configureDroppedImage(pictureOne, ArmadaType.DESTROYER, Armada.DESTROYER_SIZE, DESTROYER_SET_STYLE);
-		}
+		autoShips.setDisable(true);
+		configureDragAndDrop(pictureOne);
+		setDrag(ArmadaType.DESTROYER, Armada.DESTROYER_SIZE, DESTROYER_SET_STYLE);
+		configureDroppedImage(pictureOne, ArmadaType.DESTROYER, Armada.DESTROYER_SIZE, DESTROYER_SET_STYLE);
 	};
 	
 	/**
 	 *
 	 */
-	private EventHandler<MouseEvent> PictureTwoClickEvent = new EventHandler<MouseEvent>()
+	private EventHandler<MouseEvent> PictureTwoClickEvent = (event) ->
 	{
-		@Override
-		public void handle(MouseEvent e)
-		{
-			autoShips.setDisable(true);
-			configureDragAndDrop(pictureTwo);
-			setDrag(ArmadaType.SUBMARINE, Armada.SUBMARINE_SIZE, SUBMARINE_SET_STYLE);
-			configureDroppedImage(pictureTwo, ArmadaType.SUBMARINE, Armada.SUBMARINE_SIZE, SUBMARINE_SET_STYLE);
-		}
+		autoShips.setDisable(true);
+		configureDragAndDrop(pictureTwo);
+		setDrag(ArmadaType.SUBMARINE, Armada.SUBMARINE_SIZE, SUBMARINE_SET_STYLE);
+		configureDroppedImage(pictureTwo, ArmadaType.SUBMARINE, Armada.SUBMARINE_SIZE, SUBMARINE_SET_STYLE);
 	};
 	
 	/**
 	 *
 	 */
-	private EventHandler<MouseEvent> PictureThreeClickEvent = new EventHandler<MouseEvent>()
+	private EventHandler<MouseEvent> PictureThreeClickEvent = (event) ->
 	{
-		@Override
-		public void handle(MouseEvent e)
-		{
-			autoShips.setDisable(true);
-			configureDragAndDrop(pictureThree);
-			setDrag(ArmadaType.CRUISER, Armada.CRUISER_SIZE, CRUISER_SET_STYLE);
-			configureDroppedImage(pictureThree, ArmadaType.CRUISER, Armada.CRUISER_SIZE, CRUISER_SET_STYLE);
-		}
+		autoShips.setDisable(true);
+		configureDragAndDrop(pictureThree);
+		setDrag(ArmadaType.CRUISER, Armada.CRUISER_SIZE, CRUISER_SET_STYLE);
+		configureDroppedImage(pictureThree, ArmadaType.CRUISER, Armada.CRUISER_SIZE, CRUISER_SET_STYLE);
 	};
 	
 	/**
 	 * 
 	 */
-	private EventHandler<MouseEvent> PictureFourClickEvent = new EventHandler<MouseEvent>()
+	private EventHandler<MouseEvent> PictureFourClickEvent = (event) ->
 	{
-		@Override
-		public void handle(MouseEvent e)
-		{
-			autoShips.setDisable(true);
-			configureDragAndDrop(pictureFour);
-			setDrag(ArmadaType.BATTLESHIP, Armada.BATTLESHIP_SIZE, BATTLESHIP_SET_STYLE);
-			configureDroppedImage(pictureFour, ArmadaType.BATTLESHIP, Armada.BATTLESHIP_SIZE, BATTLESHIP_SET_STYLE);
-		}
+		autoShips.setDisable(true);
+		configureDragAndDrop(pictureFour);
+		setDrag(ArmadaType.BATTLESHIP, Armada.BATTLESHIP_SIZE, BATTLESHIP_SET_STYLE);
+		configureDroppedImage(pictureFour, ArmadaType.BATTLESHIP, Armada.BATTLESHIP_SIZE, BATTLESHIP_SET_STYLE);
+	};
+	
+	private EventHandler<MouseEvent> PictureFiveClickEvent = (event) -> 
+	{
+		autoShips.setDisable(true);
+		configureDragAndDrop(pictureFive);
+		setDrag(ArmadaType.CARRIER, Armada.CARRIER_SIZE, CARRIER_SET_STYLE);
+		configureDroppedImage(pictureFive, ArmadaType.CARRIER, Armada.CARRIER_SIZE, CARRIER_SET_STYLE);
 	};
 	
 	/**
 	 * 
 	 */
-	private EventHandler<MouseEvent> PictureFiveClickEvent = new EventHandler<MouseEvent>()
+	private EventHandler<MouseEvent> automateArmada = (event) ->
 	{
-		@Override
-		public void handle(MouseEvent e)
-		{
-			autoShips.setDisable(true);
-			configureDragAndDrop(pictureFive);
-			setDrag(ArmadaType.CARRIER, Armada.CARRIER_SIZE, CARRIER_SET_STYLE);
-			configureDroppedImage(pictureFive, ArmadaType.CARRIER, Armada.CARRIER_SIZE, CARRIER_SET_STYLE);
-		}
-	};
-	
-	/**
-	 * 
-	 */
-	private EventHandler<MouseEvent> automateArmada = new EventHandler<MouseEvent>()
-	{
-		@Override
-		public void handle(MouseEvent e)
-		{
-			pictureOne.setDisable(true);
-			pictureTwo.setDisable(true);
-			pictureThree.setDisable(true);
-			pictureFour.setDisable(true);
-			pictureFive.setDisable(true);
-			automator.automateArmadaPlacement(buttonList, stylesMap);
-			armada.logArmadaPosition();
-			autoShips.setDisable(true);
-			notifyObserver("SHIPS");
-		}
+		pictureOne.setDisable(true);
+		pictureTwo.setDisable(true);
+		pictureThree.setDisable(true);
+		pictureFour.setDisable(true);
+		pictureFive.setDisable(true);
+		automator.automateArmadaPlacement(buttonList, stylesMap);
+		armada.logArmadaPosition();
+		autoShips.setDisable(true);
+		notifyObserver("SHIPS");
 	};
 }
