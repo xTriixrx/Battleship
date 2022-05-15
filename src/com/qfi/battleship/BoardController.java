@@ -462,35 +462,45 @@ public class BoardController implements Initializable, Observer, Observable
 			myTurnFlag = false;
 		}
 	}
-
-
+	
 	/**
 	 * 
 	 * @param type
 	 * @param shipSize
 	 * @param dragStyle
 	 */
-	private void setDrag(ArmadaType type, int shipSize, String dragStyle) {
+	private void setDrag(ArmadaType type, int shipSize, String dragStyle)
+	{
+		for (Node target : playerGrid.getChildren())
+		{
+			if (target.getId() != null)
+			{
+				target.setOnDragOver(new EventHandler<DragEvent>()
+				{
+					public void handle(DragEvent event)
+					{
+						/* data is dragged over the target */
+						/*
+						 * accept it only if it is not dragged from the same node and if it has a string
+						 * data
+						 */
+						if (event.getGestureSource() != target && event.getDragboard().hasString())
+						{
+							/* allow for moving */
+							event.acceptTransferModes(TransferMode.ANY);
+						}
 
-		for (Node target : playerGrid.getChildren()) {
-			if (target.getId() != null) {
-				target.setOnDragEntered(new EventHandler<DragEvent>() {
+						event.consume();
+					}
+				});
+				
+				target.setOnDragEntered(new EventHandler<DragEvent>()
+				{
 					@Override
-					public void handle(DragEvent event) {
-						/* the drag-and-drop gesture entered the target */
-						/* show to the user that it is an actual gesture target */
-						boolean valid = false;
-						
-						if (orientation.equalsIgnoreCase(HORIZONTAL))
-						{
-							valid = dragDropController.freeStrideHorizontal(target, shipSize);
-						}
-						else if (orientation.equalsIgnoreCase(VERTICAL))
-						{
-							valid = dragDropController.freeStrideVertical(target, shipSize);
-						}
-						
-						if (valid)
+					public void handle(DragEvent event)
+					{
+						//
+						if (isValidStride(target, shipSize))
 						{
 							playerGrid.setCursor(Cursor.DEFAULT);
 							highlightImage(type, (Button) target, dragStyle, shipSize);
@@ -499,21 +509,16 @@ public class BoardController implements Initializable, Observer, Observable
 						event.consume();
 					}
 				});
-			}
-
-		}
-
-		for (Node target : playerGrid.getChildren()) {
-			if (target.getId() != null) {
-				target.setOnDragExited(new EventHandler<DragEvent>() {
-					public void handle(DragEvent event) {
-						/* mouse moved away, remove the graphical cues */
+				
+				target.setOnDragExited(new EventHandler<DragEvent>()
+				{
+					public void handle(DragEvent event)
+					{
 						unHighlightImage((Button) target, shipSize);
 						event.consume();
 					}
 				});
 			}
-
 		}
 	}
 
@@ -522,10 +527,11 @@ public class BoardController implements Initializable, Observer, Observable
 	 * @param image
 	 */
 	private void configureDragAndDrop(ImageView image) {
-		image.setOnDragDetected(new EventHandler<MouseEvent>() {
-
+		image.setOnDragDetected(new EventHandler<MouseEvent>()
+		{
 			@Override
-			public void handle(MouseEvent event) {
+			public void handle(MouseEvent event)
+			{
 				Dragboard db = image.startDragAndDrop(TransferMode.ANY);
 
 				ClipboardContent content = new ClipboardContent();
@@ -534,38 +540,13 @@ public class BoardController implements Initializable, Observer, Observable
 
 				event.consume();
 			}
-
 		});
-
-		for (Node target : playerGrid.getChildren()) {
-			if (target.getId() != null) {
-				target.setOnDragOver(new EventHandler<DragEvent>() {
-					public void handle(DragEvent event) {
-						/* data is dragged over the target */
-						/*
-						 * accept it only if it is not dragged from the same node and if it has a string
-						 * data
-						 */
-						if (event.getGestureSource() != target && event.getDragboard().hasString()) {
-							/* allow for moving */
-							event.acceptTransferModes(TransferMode.ANY);
-						}
-
-						event.consume();
-					}
-				});
-			}
-
-		}
-
+		
 		// Start source drag done
-		image.setOnDragDone(new EventHandler<DragEvent>() {
-			public void handle(DragEvent event) {
-				/* the drag and drop gesture ended */
-				/* if the data was successfully moved, clear it */
-				if (event.getTransferMode() == TransferMode.MOVE) {
-					
-				}
+		image.setOnDragDone(new EventHandler<DragEvent>()
+		{
+			public void handle(DragEvent event)
+			{
 				event.consume();
 			}
 		});
@@ -589,29 +570,42 @@ public class BoardController implements Initializable, Observer, Observable
 				{
 					public void handle(DragEvent event)
 					{
-						boolean valid = false;
-						
-						if (orientation.equalsIgnoreCase(HORIZONTAL))
-						{
-							valid = dragDropController.freeStrideHorizontal(target, size);
-						}
-						else if (orientation.equalsIgnoreCase(VERTICAL))
-						{
-							valid = dragDropController.freeStrideVertical(target, size);
-						}
-						
-						if (valid)
+						//
+						if (isValidStride(target, size))
 						{
 							dropImage(type, (Button) target, style, size);
 							image.setDisable(true);
 						}
 						
+						//
 						event.setDropCompleted(true);
 						event.consume();
 					}
 				});
 			}
 		}
+	}
+	
+	/**
+	 * 
+	 * @param target
+	 * @param size
+	 * @return boolean
+	 */
+	private boolean isValidStride(Node target, int size)
+	{
+		boolean valid = false;
+		
+		if (orientation.equalsIgnoreCase(HORIZONTAL))
+		{
+			valid = dragDropController.freeStrideHorizontal(target, size);
+		}
+		else if (orientation.equalsIgnoreCase(VERTICAL))
+		{
+			valid = dragDropController.freeStrideVertical(target, size);
+		}
+		
+		return valid;
 	}
 	
 	/**

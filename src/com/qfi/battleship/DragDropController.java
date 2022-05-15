@@ -44,13 +44,22 @@ public class DragDropController
 		this.buttonList = buttonList;
 	}
 	
+	/**
+	 * Public interface function for determining whether a horizontal block of button's are not blocked by existing
+	 * ships that have been placed. This function will return true if the set of blocks in the horizontal range are free
+	 * to be highlighted/dropped by the user and false if an existing ship position is within the horizontal range.
+	 * 
+	 * @param target The current contextual target button, is where the mouse is currently.
+	 * @param size The size of the ship that is being checked.
+	 * @return boolean
+	 */
 	public boolean freeStrideHorizontal(Node target, int size)
 	{
 		boolean available = true;
 		char startPos = target.getId().charAt(STANDARD_COL_POS);
 		char endPos = convertToColumnLetter((startPos - CHARACTER_SHIFT) + (size - 1));
 		
-		// Iterate through each button and if on horizontal range, set the background to be highlighted
+		// Iterate through each button and if on horizontal range, check to see if the button is in the armada
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
 			Node button = buttonList.get(i);
@@ -67,13 +76,22 @@ public class DragDropController
 		return available;
 	}
 	
+	/**
+	 * Public interface function for determining whether a vertical block of button's are not blocked by existing
+	 * ships that have been placed. This function will return true if the set of blocks in the vertical range are free
+	 * to be highlighted/dropped by the user and false if an existing ship position is within the vertical range.
+	 * 
+	 * @param target The current contextual target button, is where the mouse is currently.
+	 * @param size The size of the ship that is being checked.
+	 * @return boolean
+	 */
 	public boolean freeStrideVertical(Node target, int size)
 	{
 		boolean available = true;
 		int startRow = Integer.parseInt(target.getId().substring(STANDARD_ROW_POS));
 		int endRow = startRow + (size - 1);
 		
-		// Iterate through each button and if on vertical range, set the background to be highlighted
+		// Iterate through each button and if on vertical range, check to see if the button is in the armada
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
 			Node button = buttonList.get(i);
