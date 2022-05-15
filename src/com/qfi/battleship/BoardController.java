@@ -301,7 +301,6 @@ public class BoardController implements Initializable, Observer, Observable
 			if (node.getId() != null) {
 				if (node.getId().equals(pos)) {
 					if (HM.equals(HIT)) {
-						node.setDisable(true);
 						node.setMouseTransparent(false);
 						node.setStyle("-fx-background-color: red");
 						if (!CarrierSunk && armada.isCarrierSunk()) {
@@ -386,7 +385,6 @@ public class BoardController implements Initializable, Observer, Observable
 							}
 						}
 					} else if (HM.equals(MISS)) {
-						node.setDisable(true);
 						node.setMouseTransparent(false);
 						node.setStyle("-fx-background-color: white");
 					}

@@ -379,8 +379,6 @@ public class ArmadaAutomator
 	 */
 	private void highlightNode(Node node, String style)
 	{
-		node.setDisable(true);
-		
 		if (!style.isEmpty())
 		{
 			node.setStyle(style);

@@ -186,7 +186,7 @@ public class DragDropController
 
 		// If the target node is disabled and is in the armada, it has just been
 		// dropped and needs to be recolored to the appropriate ship color.
-		if (target.isDisabled() && inArmada(target.getId().substring(STANDARD_COL_POS)))
+		if (inArmada(target.getId().substring(STANDARD_COL_POS)))
 		{
 			target.setStyle(determineStyle(target.getId().substring(STANDARD_COL_POS)));
 		}
@@ -204,7 +204,7 @@ public class DragDropController
 			{
 				// If the node is disabled and is in the armada, it has just been
 				// dropped and needs to be recolored to the appropriate ship color.
-				if (button.isDisabled() && inArmada(button.getId().substring(STANDARD_COL_POS)))
+				if (inArmada(button.getId().substring(STANDARD_COL_POS)))
 				{
 					button.setStyle(determineStyle(button.getId().substring(STANDARD_COL_POS)));
 				}
@@ -235,7 +235,7 @@ public class DragDropController
 
 		// If the target node is disabled and is in the armada, it has just been
 		// dropped and needs to be recolored to the appropriate ship color.
-		if (target.isDisabled() && inArmada(target.getId().substring(STANDARD_COL_POS)))
+		if (inArmada(target.getId().substring(STANDARD_COL_POS)))
 		{
 			target.setStyle(determineStyle(target.getId().substring(STANDARD_COL_POS)));
 		}
@@ -253,7 +253,7 @@ public class DragDropController
 			{
 				// If the node is disabled and is in the armada, it has just been
 				// dropped and needs to be recolored to the appropriate ship color.
-				if (button.isDisabled() && inArmada(button.getId().substring(STANDARD_COL_POS)))
+				if (inArmada(button.getId().substring(STANDARD_COL_POS)))
 				{
 					button.setStyle(determineStyle(button.getId().substring(STANDARD_COL_POS)));
 				}
@@ -292,7 +292,6 @@ public class DragDropController
 			{
 				addToArmada(type, button.getId().substring(STANDARD_COL_POS));
 				
-				button.setDisable(true);
 				button.setStyle(style);
 				logger.trace("buttonID: {} is in horizontal range.", button.getId());
 			}
@@ -323,7 +322,6 @@ public class DragDropController
 			{
 				addToArmada(type, button.getId().substring(STANDARD_COL_POS));
 				
-				button.setDisable(true);
 				button.setStyle(style);
 				logger.trace("buttonID: {} is in vertical range.", button.getId());
 			}
