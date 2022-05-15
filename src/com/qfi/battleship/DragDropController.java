@@ -44,6 +44,52 @@ public class DragDropController
 		this.buttonList = buttonList;
 	}
 	
+	public boolean freeStrideHorizontal(Node target, int size)
+	{
+		boolean available = true;
+		char startPos = target.getId().charAt(STANDARD_COL_POS);
+		char endPos = convertToColumnLetter((startPos - CHARACTER_SHIFT) + (size - 1));
+		
+		// Iterate through each button and if on horizontal range, set the background to be highlighted
+		for (int i = 0; i < TOTAL_BUTTONS; i++)
+		{
+			Node button = buttonList.get(i);
+			if (inHorizontalRange(button.getId(), target.getId(), startPos, endPos))
+			{
+				if (inArmada(button.getId().substring(STANDARD_COL_POS)))
+				{
+					available = false;
+					break;
+				}
+			}
+		}
+		
+		return available;
+	}
+	
+	public boolean freeStrideVertical(Node target, int size)
+	{
+		boolean available = true;
+		int startRow = Integer.parseInt(target.getId().substring(STANDARD_ROW_POS));
+		int endRow = startRow + (size - 1);
+		
+		// Iterate through each button and if on vertical range, set the background to be highlighted
+		for (int i = 0; i < TOTAL_BUTTONS; i++)
+		{
+			Node button = buttonList.get(i);
+			if (inVerticalRange(button.getId(), target.getId(), startRow, endRow))
+			{
+				if (inArmada(button.getId().substring(STANDARD_COL_POS)))
+				{
+					available = false;
+					break;
+				}
+			}
+		}
+		
+		return available;
+	}
+	
 	/**
 	 * Public interface function for highlighting the appropriate horizontal buttons when dragging a ship
 	 * across the player board during the placement stage.
@@ -66,8 +112,11 @@ public class DragDropController
 			Node button = buttonList.get(i);
 			if (inHorizontalRange(button.getId(), target.getId(), startPos, endPos))
 			{
-				button.setStyle(style);
-				logger.trace("buttonID: {} is in horizontal range.", button.getId());
+				if (!inArmada(button.getId().substring(STANDARD_COL_POS)))
+				{
+					button.setStyle(style);
+					logger.trace("buttonID: {} is in horizontal range.", button.getId());
+				}
 			}
 		}
 	}
@@ -94,8 +143,11 @@ public class DragDropController
 			Node button = buttonList.get(i);
 			if (inVerticalRange(button.getId(), target.getId(), startRow, endRow))
 			{
-				button.setStyle(style);
-				logger.trace("buttonID: {} is in vertical range.", button.getId());
+				if (!inArmada(button.getId().substring(STANDARD_COL_POS)))
+				{
+					button.setStyle(style);
+					logger.trace("buttonID: {} is in vertical range.", button.getId());
+				}
 			}
 		}
 	}

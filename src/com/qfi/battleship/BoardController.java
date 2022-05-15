@@ -4,6 +4,8 @@ import java.net.URL;
 import java.util.Map;
 import javafx.fxml.FXML;
 import java.util.HashMap;
+
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.text.Text;
 import java.util.ResourceBundle;
@@ -477,7 +479,23 @@ public class BoardController implements Initializable, Observer, Observable
 					public void handle(DragEvent event) {
 						/* the drag-and-drop gesture entered the target */
 						/* show to the user that it is an actual gesture target */
-						highlightImage(type, (Button) target, dragStyle, shipSize);
+						boolean valid = false;
+						
+						if (orientation.equalsIgnoreCase(HORIZONTAL))
+						{
+							valid = dragDropController.freeStrideHorizontal(target, shipSize);
+						}
+						else if (orientation.equalsIgnoreCase(VERTICAL))
+						{
+							valid = dragDropController.freeStrideVertical(target, shipSize);
+						}
+						
+						if (valid)
+						{
+							playerGrid.setCursor(Cursor.DEFAULT);
+							highlightImage(type, (Button) target, dragStyle, shipSize);
+						}
+
 						event.consume();
 					}
 				});
@@ -546,7 +564,7 @@ public class BoardController implements Initializable, Observer, Observable
 				/* the drag and drop gesture ended */
 				/* if the data was successfully moved, clear it */
 				if (event.getTransferMode() == TransferMode.MOVE) {
-					image.setDisable(true);
+					
 				}
 				event.consume();
 			}
@@ -571,7 +589,23 @@ public class BoardController implements Initializable, Observer, Observable
 				{
 					public void handle(DragEvent event)
 					{
-						dropImage(type, (Button) target, style, size);
+						boolean valid = false;
+						
+						if (orientation.equalsIgnoreCase(HORIZONTAL))
+						{
+							valid = dragDropController.freeStrideHorizontal(target, size);
+						}
+						else if (orientation.equalsIgnoreCase(VERTICAL))
+						{
+							valid = dragDropController.freeStrideVertical(target, size);
+						}
+						
+						if (valid)
+						{
+							dropImage(type, (Button) target, style, size);
+							image.setDisable(true);
+						}
+						
 						event.setDropCompleted(true);
 						event.consume();
 					}
