@@ -107,9 +107,9 @@ public class BoardController implements Initializable, Observer, Observable
 	private static final String HORIZONTAL = "Horizontal";
 	private static final String CRUISER_SET_STYLE = "-fx-background-color: aqua";
 	private static final String CARRIER_SET_STYLE = "-fx-background-color: orange";
-	private static final String BATTLESHIP_SET_STYLE = "-fx-background-color: red";
 	private static final String DESTROYER_SET_STYLE = "-fx-background-color: black";
 	private static final String SUBMARINE_SET_STYLE = "-fx-background-color: green";
+	private static final String BATTLESHIP_SET_STYLE = "-fx-background-color: #ff007f";
 
 	/**
 	 * 
