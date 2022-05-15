@@ -1,5 +1,6 @@
 package com.qfi.battleship;
 
+import java.util.Map;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import org.apache.logging.log4j.Logger;
@@ -17,15 +18,16 @@ import com.qfi.battleship.Armada.ArmadaType;
 public class DragDropController
 {
 	private Armada armada = null;
+	private Map<ArmadaType, String> styles = null;
 	private ObservableList<Node> buttonList = null;
 	private Logger logger = LogManager.getLogger(DragDropController.class);
 	
-	protected static final int TOTAL_BUTTONS = 100;
-	protected static final short UPPER_BOUND = 10;
-	protected static final short CHARACTER_SHIFT = 64;
-	protected static final short STANDARD_COL_POS = 1;
-	protected static final short STANDARD_ROW_POS = 2;
-	protected static final char OUT_OF_BOUNDS_COL = 'Z';
+	private static final short UPPER_BOUND = 10;
+	private static final int TOTAL_BUTTONS = 100;
+	private static final short CHARACTER_SHIFT = 64;
+	private static final short STANDARD_COL_POS = 1;
+	private static final short STANDARD_ROW_POS = 2;
+	private static final char OUT_OF_BOUNDS_COL = 'Z';
 	private static final String BACKGROUND_BUTTON_STYLE = "-fx-background-color: blue";
 	
 	/**
@@ -33,9 +35,11 @@ public class DragDropController
 	 * 
 	 * @param buttonList An unsorted observable list of nodes containing button's.
 	 * @param armada An Armada object provided by the parent controller.
+	 * @param styles A map of styles based on the type of ship that is being placed.
 	 */
-	DragDropController(ObservableList<Node> buttonList, Armada armada)
+	DragDropController(ObservableList<Node> buttonList, Armada armada, Map<ArmadaType, String> styles)
 	{
+		this.styles = styles;
 		this.armada = armada;
 		this.buttonList = buttonList;
 	}
@@ -109,9 +113,18 @@ public class DragDropController
 		char endPos = startPos;
 		
 		logger.info("Unhighlighting all button's within the horizontal range.");
-		
-		// Sets the target node to be unhighlighted
-		target.setStyle(BACKGROUND_BUTTON_STYLE);
+
+		// If the target node is disabled and is in the armada, it has just been
+		// dropped and needs to be recolored to the appropriate ship color.
+		if (target.isDisabled() && inArmada(target.getId().substring(STANDARD_COL_POS)))
+		{
+			target.setStyle(determineStyle(target.getId().substring(STANDARD_COL_POS)));
+		}
+		else
+		{
+			// Sets the target node to be unhighlighted
+			target.setStyle(BACKGROUND_BUTTON_STYLE);
+		}
 		
 		// Iterate through each button and if on horizontal range, set the background to be unhighlighted
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
@@ -119,7 +132,18 @@ public class DragDropController
 			Node button = buttonList.get(i);
 			if (!inHorizontalRange(button.getId(), target.getId(), startPos, endPos))
 			{
-				button.setStyle(BACKGROUND_BUTTON_STYLE);
+				// If the node is disabled and is in the armada, it has just been
+				// dropped and needs to be recolored to the appropriate ship color.
+				if (button.isDisabled() && inArmada(button.getId().substring(STANDARD_COL_POS)))
+				{
+					button.setStyle(determineStyle(button.getId().substring(STANDARD_COL_POS)));
+				}
+				else
+				{
+					// Sets the target node to be unhighlighted
+					button.setStyle(BACKGROUND_BUTTON_STYLE);
+				}
+				
 				logger.trace("buttonID: {} is not in horizontal range.", button.getId());
 			}
 		}
@@ -138,9 +162,18 @@ public class DragDropController
 		int endRow = startRow;
 		
 		logger.info("Unhighlighting all button's within the vertical range.");
-		
-		// Sets the target node to be unhighlighted
-		target.setStyle(BACKGROUND_BUTTON_STYLE);
+
+		// If the target node is disabled and is in the armada, it has just been
+		// dropped and needs to be recolored to the appropriate ship color.
+		if (target.isDisabled() && inArmada(target.getId().substring(STANDARD_COL_POS)))
+		{
+			target.setStyle(determineStyle(target.getId().substring(STANDARD_COL_POS)));
+		}
+		else
+		{
+			// Sets the target node to be unhighlighted
+			target.setStyle(BACKGROUND_BUTTON_STYLE);
+		}
 		
 		// Iterate through each button and if on vertical range, set the background to be unhighlighted
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
@@ -148,7 +181,18 @@ public class DragDropController
 			Node button = buttonList.get(i);
 			if (!inVerticalRange(button.getId(), target.getId(), startRow, endRow))
 			{
-				button.setStyle(BACKGROUND_BUTTON_STYLE);
+				// If the node is disabled and is in the armada, it has just been
+				// dropped and needs to be recolored to the appropriate ship color.
+				if (button.isDisabled() && inArmada(button.getId().substring(STANDARD_COL_POS)))
+				{
+					button.setStyle(determineStyle(button.getId().substring(STANDARD_COL_POS)));
+				}
+				else
+				{
+					// Sets the node to be unhighlighted
+					button.setStyle(BACKGROUND_BUTTON_STYLE);
+				}
+				
 				logger.trace("buttonID: {} is not in vertical range.", button.getId());
 			}
 		}
@@ -328,6 +372,73 @@ public class DragDropController
 		{
 			armada.addToCarrier(buttonID);
 		}
+	}
+	
+	/**
+	 * Will determine if a position exists within the armada.
+	 * 
+	 * @param position A matched position that needs to be found in the armada.
+	 * @return String
+	 */
+	private boolean inArmada(String position)
+	{
+		if (armada.getDestroyer().contains(position))
+		{
+			return true;
+		}
+		else if (armada.getSubmarine().contains(position))
+		{
+			return true;
+		}
+		else if (armada.getCruiser().contains(position))
+		{
+			return true;
+		}
+		else if (armada.getBattleShip().contains(position))
+		{
+			return true;
+		}
+		else if (armada.getCarrier().contains(position))
+		{
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Will determine the type of style that needs to be applied for the given position.
+	 * 
+	 * @param position A matched position that needs to be highlighted.
+	 * @param styles A map of styles based on the type of ship that is being placed.
+	 * @return String
+	 */
+	private String determineStyle(String position)
+	{
+		String style = "";
+		
+		if (armada.getDestroyer().contains(position))
+		{
+			style = styles.get(ArmadaType.DESTROYER);
+		}
+		else if (armada.getSubmarine().contains(position))
+		{
+			style = styles.get(ArmadaType.SUBMARINE);
+		}
+		else if (armada.getCruiser().contains(position))
+		{
+			style = styles.get(ArmadaType.CRUISER);
+		}
+		else if (armada.getBattleShip().contains(position))
+		{
+			style = styles.get(ArmadaType.BATTLESHIP);
+		}
+		else if (armada.getCarrier().contains(position))
+		{
+			style = styles.get(ArmadaType.CARRIER);
+		}
+		
+		return style;
 	}
 	
 	/**

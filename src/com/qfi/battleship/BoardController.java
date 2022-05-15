@@ -165,7 +165,7 @@ public class BoardController implements Initializable, Observer, Observable
 			}
 		}
 		
-		dragDropController = new DragDropController(buttonList, armada);
+		dragDropController = new DragDropController(buttonList, armada, stylesMap);
 		
 		autoShips.setStyle("-fx-background-color: white");
 		pictureOne.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, PictureOneClickEvent);
@@ -478,6 +478,7 @@ public class BoardController implements Initializable, Observer, Observable
 						/* the drag-and-drop gesture entered the target */
 						/* show to the user that it is an actual gesture target */
 						highlightImage(type, (Button) target, dragStyle, shipSize);
+						event.consume();
 					}
 				});
 			}
@@ -496,7 +497,6 @@ public class BoardController implements Initializable, Observer, Observable
 			}
 
 		}
-
 	}
 
 	/**
@@ -549,7 +549,6 @@ public class BoardController implements Initializable, Observer, Observable
 					image.setDisable(true);
 				}
 				event.consume();
-//				dropImage()
 			}
 		});
 		// End Source Drag Done
@@ -573,7 +572,6 @@ public class BoardController implements Initializable, Observer, Observable
 					public void handle(DragEvent event)
 					{
 						dropImage(type, (Button) target, style, size);
-						image.setDisable(true);
 						event.setDropCompleted(true);
 						event.consume();
 					}
