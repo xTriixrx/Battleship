@@ -451,9 +451,9 @@ public class BoardController implements Initializable, Observer, Observable
 			armada.updateArmada(t);
 
 			if (isHit)
-				HorM = "Hit";
+				HorM = HIT;
 			else
-				HorM = "Miss";
+				HorM = MISS;
 
 			updateplayerGrid(t, HorM);
 
