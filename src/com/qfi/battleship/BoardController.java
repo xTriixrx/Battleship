@@ -4,18 +4,17 @@ import java.net.URL;
 import java.util.Map;
 import javafx.fxml.FXML;
 import java.util.HashMap;
-
-import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.Cursor;
 import javafx.scene.text.Text;
 import java.util.ResourceBundle;
 import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
-import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.AnchorPane;
@@ -103,9 +102,12 @@ public class BoardController implements Initializable, Observer, Observable
 	private static final String MISS = "Miss";
 	private static final char clientSymbol = 'Z';
 	private static final char serverSymbol = 'X';
+	private static final Color SUNK_COLOR = Color.RED;
 	private static final String VERTICAL = "Vertical";
 	private static final String HORIZONTAL = "Horizontal";
+	private static final String BUTTON_HIT_STYLE = "-fx-background-color: red";
 	private static final String CRUISER_SET_STYLE = "-fx-background-color: aqua";
+	private static final String BUTTON_MISS_STYLE = "-fx-background-color: white";
 	private static final String CARRIER_SET_STYLE = "-fx-background-color: orange";
 	private static final String DESTROYER_SET_STYLE = "-fx-background-color: black";
 	private static final String SUBMARINE_SET_STYLE = "-fx-background-color: green";
@@ -183,6 +185,12 @@ public class BoardController implements Initializable, Observer, Observable
 				.addListener((ObservableValue<? extends String> observable, String oldValue,
 						String newValue) -> orientation = newValue);
 	}
+	
+	private void setSunkShipText(Text ship)
+	{
+		ship.setFill(SUNK_COLOR);
+		ship.setStrikethrough(true);
+	}
 
 	public void initMouseEvent(Button b)
 	{
@@ -237,29 +245,6 @@ public class BoardController implements Initializable, Observer, Observable
 		sobs = null;
 	}
 
-
-	private EventHandler<MouseEvent> mouseClickEvent = (event) ->
-	{
-		System.out.println("CONTROLLER " + myTurn + ": current turn is: " + currentTurn);
-
-		if (currentTurn == myTurn && isShipsSet)
-		{
-			toSend = ((Node) event.getTarget()).getId();
-			toSend = new StringBuilder(toSend).append(mySymbol).toString();
-			((Button) event.getTarget()).setDisable(true);
-			((Button) event.getTarget()).setMouseTransparent(false);
-			System.out.println(toSend);
-			myTurnFlag = true;
-			notifyObserver(toSend);
-			pictureOne.setDisable(true);
-			pictureTwo.setDisable(true);
-			pictureThree.setDisable(true);
-			pictureFour.setDisable(true);
-			pictureFive.setDisable(true);
-			autoShips.setDisable(true);
-		}
-	};
-
 	/**
 	 * 
 	 * @param pos
@@ -275,11 +260,11 @@ public class BoardController implements Initializable, Observer, Observable
 				{
 					if (HM.equals(HIT))
 					{
-						node.setStyle("-fx-background-color: red");
+						node.setStyle(BUTTON_HIT_STYLE);
 					}
 					else if (HM.equals(MISS))
 					{
-						node.setStyle("-fx-background-color: white");
+						node.setStyle(BUTTON_MISS_STYLE);
 					}
 					
 					break;
@@ -296,97 +281,111 @@ public class BoardController implements Initializable, Observer, Observable
 	 * @param pos
 	 * @param HM
 	 */
-	public void updateplayerGrid(String pos, String HM) {
-		for (Node node : playerGrid.getChildren()) {
-			if (node.getId() != null) {
-				if (node.getId().equals(pos)) {
-					if (HM.equals(HIT)) {
+	public void updateplayerGrid(String pos, String HM)
+	{
+		for (Node node : playerGrid.getChildren())
+		{
+			if (node.getId() != null)
+			{
+				if (node.getId().equals(pos))
+				{
+					if (HM.equals(HIT))
+					{
 						node.setMouseTransparent(false);
-						node.setStyle("-fx-background-color: red");
-						if (!CarrierSunk && armada.isCarrierSunk()) {
+						node.setStyle(BUTTON_HIT_STYLE);
+						
+						if (!CarrierSunk && armada.isCarrierSunk())
+						{
 							CarrierSunk = true;
 							if(CarrierSunk && BattleshipSunk && CruiserSunk && 
-									SubmarineSunk && DestroyerSunk) {
+									SubmarineSunk && DestroyerSunk)
+							{
 								System.out.println("CARRIER SUNK");
-								playerCarrier.setStyle("-fx-text-fill: red;");
-								playerCarrier.setStyle("-fx-strikethrough: true");
+								setSunkShipText(playerCarrier);
 								notifyObserver("OVER");
 							}
-							else {
-							CarrierSunk = true;
-							System.out.println("CARRIER SUNK");
-							playerCarrier.setStyle("-fx-text-fill: red;");
-							playerCarrier.setStyle("-fx-strikethrough: true");
-							notifyObserver("CARRIER");
+							else
+							{
+								CarrierSunk = true;
+								System.out.println("CARRIER SUNK");
+								setSunkShipText(playerCarrier);
+								notifyObserver("CARRIER");
 							}
 						}
-						if (!BattleshipSunk && armada.isBattleshipSunk()) {
+						
+						if (!BattleshipSunk && armada.isBattleshipSunk())
+						{
 							BattleshipSunk = true;
 							if(CarrierSunk && BattleshipSunk && CruiserSunk && 
-									SubmarineSunk && DestroyerSunk) {
+									SubmarineSunk && DestroyerSunk)
+							{
 								System.out.println("BATTLESHIP SUNK");
-								playerBattleship.setStyle("-fx-text-fill: red;");
-								playerBattleship.setStyle("-fx-strikethrough: true");
+								setSunkShipText(playerBattleship);
 								notifyObserver("OVER");
 							}
-							else {
-							System.out.println("BATTLESHIP SUNK");
-							playerBattleship.setStyle("-fx-text-fill: red;");
-							playerBattleship.setStyle("-fx-strikethrough: true");
-							notifyObserver("BATTLESHIP");
+							else
+							{
+								System.out.println("BATTLESHIP SUNK");
+								setSunkShipText(playerBattleship);
+								notifyObserver("BATTLESHIP");
 							}
 						}
-						if (!CruiserSunk && armada.isCruiserSunk()) {
+						if (!CruiserSunk && armada.isCruiserSunk())
+						{
 							CruiserSunk = true;
 							if(CarrierSunk && BattleshipSunk && CruiserSunk && 
-									SubmarineSunk && DestroyerSunk) {
+									SubmarineSunk && DestroyerSunk)
+							{
 								System.out.println("CRUISER SUNK");
-								playerCruiser.setStyle("-fx-text-fill: red;");
-								playerCruiser.setStyle("-fx-strikethrough: true");
+								setSunkShipText(playerCruiser);
 								notifyObserver("OVER");
 							}
-							else {
-							System.out.println("CRUISER SUNK");
-							playerCruiser.setStyle("-fx-text-fill: red;");
-							playerCruiser.setStyle("-fx-strikethrough: true");
-							notifyObserver("CRUISER");
+							else
+							{
+								System.out.println("CRUISER SUNK");
+								setSunkShipText(playerCruiser);
+								notifyObserver("CRUISER");
 							}
 						}
-						if (!SubmarineSunk && armada.isSubmarineSunk()) {
+						if (!SubmarineSunk && armada.isSubmarineSunk())
+						{
 							SubmarineSunk = true;
 							if(CarrierSunk && BattleshipSunk && CruiserSunk && 
-									SubmarineSunk && DestroyerSunk) {
+									SubmarineSunk && DestroyerSunk)
+							{
 								System.out.println("SUBMARINE SUNK");
-								playerSubmarine.setStyle("-fx-text-fill: red;");
-								playerSubmarine.setStyle("-fx-strikethrough: true");
+								setSunkShipText(playerSubmarine);
 								notifyObserver("OVER");
 							}
-							else {
-							System.out.println("SUBMARINE SUNK");
-							playerSubmarine.setStyle("-fx-text-fill: red;");
-							playerSubmarine.setStyle("-fx-strikethrough: true");
-							notifyObserver("SUBMARINE");
+							else
+							{
+								System.out.println("SUBMARINE SUNK");
+								setSunkShipText(playerSubmarine);
+								notifyObserver("SUBMARINE");
 							}
 						}
-						if (!DestroyerSunk && armada.isDestroyerSunk()) {
+						if (!DestroyerSunk && armada.isDestroyerSunk())
+						{
 							DestroyerSunk = true;
 							if(CarrierSunk && BattleshipSunk && CruiserSunk && 
-									SubmarineSunk && DestroyerSunk) {
+									SubmarineSunk && DestroyerSunk)
+							{
 								System.out.println("DESTROYER SUNK");
-								playerDestroyer.setStyle("-fx-text-fill: red;");
-								playerDestroyer.setStyle("-fx-strikethrough: true");
+								setSunkShipText(playerDestroyer);
 								notifyObserver("OVER");
 							}
-							else {
-							System.out.println("DESTROYER SUNK");
-							playerDestroyer.setStyle("-fx-text-fill: red;");
-							playerDestroyer.setStyle("-fx-strikethrough: true");
-							notifyObserver("DESTROYER");
+							else
+							{
+								System.out.println("DESTROYER SUNK");
+								setSunkShipText(playerDestroyer);
+								notifyObserver("DESTROYER");
 							}
 						}
-					} else if (HM.equals(MISS)) {
+					}
+					else if (HM.equals(MISS))
+					{
 						node.setMouseTransparent(false);
-						node.setStyle("-fx-background-color: white");
+						node.setStyle(BUTTON_MISS_STYLE);
 					}
 					
 					break;
@@ -403,28 +402,29 @@ public class BoardController implements Initializable, Observer, Observable
 	public void update(String s) {
 		System.out.println("SC: Received " + s + ".");
 
-		if (s.equals("SET")) {
+		if (s.equals("SET"))
+		{
 			isShipsSet = true;
 		}
-		else if(s.equals("CARRIER")) {
-			opponentCarrier.setStyle("-fx-text-fill: red;");
-			opponentCarrier.setStyle("-fx-strikethrough: true");
+		else if(s.equals("CARRIER"))
+		{
+			setSunkShipText(opponentCarrier);
 		}
-		else if(s.equals("BATTLESHIP")) {
-			opponentBattleship.setStyle("-fx-text-fill: red;");
-			opponentBattleship.setStyle("-fx-strikethrough: true");
+		else if(s.equals("BATTLESHIP"))
+		{
+			setSunkShipText(opponentBattleship);
 		}
-		else if(s.equals("CRUISER")) {
-			opponentCruiser.setStyle("-fx-text-fill: red;");
-			opponentCruiser.setStyle("-fx-strikethrough: true");
+		else if(s.equals("CRUISER"))
+		{
+			setSunkShipText(opponentCruiser);
 		}
-		else if(s.equals("SUBMARINE")) {
-			opponentSubmarine.setStyle("-fx-text-fill: red;");
-			opponentSubmarine.setStyle("-fx-strikethrough: true");
+		else if(s.equals("SUBMARINE"))
+		{
+			setSunkShipText(opponentSubmarine);
 		}
-		else if(s.equals("DESTROYER")) {
-			opponentDestroyer.setStyle("-fx-text-fill: red;");
-			opponentDestroyer.setStyle("-fx-strikethrough: true");
+		else if(s.equals("DESTROYER"))
+		{
+			setSunkShipText(opponentDestroyer);
 		}
 		else if (currentTurn == myTurn && myTurnFlag)
 		{
@@ -655,6 +655,31 @@ public class BoardController implements Initializable, Observer, Observable
 			dragDropController.dropVertical(type, target, dropStyle, size);
 		}
 	}
+	
+	/**
+	 * 
+	 */
+	private EventHandler<MouseEvent> mouseClickEvent = (event) ->
+	{
+		System.out.println("CONTROLLER " + myTurn + ": current turn is: " + currentTurn);
+
+		if (currentTurn == myTurn && isShipsSet)
+		{
+			toSend = ((Node) event.getTarget()).getId();
+			toSend = new StringBuilder(toSend).append(mySymbol).toString();
+			((Button) event.getTarget()).setDisable(true);
+			((Button) event.getTarget()).setMouseTransparent(false);
+			System.out.println(toSend);
+			myTurnFlag = true;
+			notifyObserver(toSend);
+			pictureOne.setDisable(true);
+			pictureTwo.setDisable(true);
+			pictureThree.setDisable(true);
+			pictureFour.setDisable(true);
+			pictureFive.setDisable(true);
+			autoShips.setDisable(true);
+		}
+	};
 
 	/**
 	 *
