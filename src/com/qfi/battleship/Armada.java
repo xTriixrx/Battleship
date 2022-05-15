@@ -1,10 +1,41 @@
 package com.qfi.battleship;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
+/**
+ * 
+ * @author Vincent.Nigro
+ * @version 1.0.0
+ */
 public class Armada
 {
+	public static final short CARRIER_SIZE = 5;
+	public static final short CRUISER_SIZE = 3;
+	public static final short SUBMARINE_SIZE = 3;
+	public static final short DESTROYER_SIZE = 2;
+	public static final short BATTLESHIP_SIZE = 4;
+	
+	private boolean carrierSunk;
+	private boolean battleshipSunk;
+	private boolean cruiserSunk;
+	private boolean submarineSunk;
+	private boolean destroyerSunk;
+	private int health;
+	private List<String> m_carrier = new ArrayList<String>();
+	private List<String> m_cruiser = new ArrayList<String>();
+	private List<String> m_submarine = new ArrayList<String>();
+	private List<String> m_destroyer = new ArrayList<String>();
+	private List<String> m_battleship = new ArrayList<String>();
+	private Logger m_logger = LogManager.getLogger(Armada.class);
+	
+	/**
+	 * 
+	 * @author Vincent.Nigro
+	 * @version 1.0.0
+	 */
 	protected enum ArmadaType
 	{
 		DESTROYER,
@@ -13,130 +44,77 @@ public class Armada
 		BATTLESHIP,
 		CARRIER,
 	}
-	public static final short CARRIER_SIZE = 5;
-	public static final short CRUISER_SIZE = 3;
-	public static final short SUBMARINE_SIZE = 3;
-	public static final short DESTROYER_SIZE = 2;
-	public static final short BATTLESHIP_SIZE = 4;
-	private ArrayList<String> carrier = new ArrayList<String>();
-	private ArrayList<String> battleship = new ArrayList<String>();
-	private ArrayList<String> cruiser = new ArrayList<String>();
-	private ArrayList<String> submarine = new ArrayList<String>();
-	private ArrayList<String> destroyer = new ArrayList<String>();
-	private boolean carrierSunk;
-	private boolean battleshipSunk;
-	private boolean cruiserSunk;
-	private boolean submarineSunk;
-	private boolean destroyerSunk;
-	private int health;
-	private boolean over;
 	
-	public Armada() {
+	/**
+	 * Armada constructor.
+	 */
+	public Armada()
+	{
 		health = 5;
-		over = false;
 		carrierSunk = false;
-		battleshipSunk = false;
 		cruiserSunk = false;
 		submarineSunk = false;
 		destroyerSunk = false;
+		battleshipSunk = false;
 	}
 	
-	public boolean calculateHit(String hitTarget) {
-		
-		boolean isHit = false;
-		
-		for(int i = 0; i < this.getBattleShip().size(); i++) {
-			if(hitTarget.charAt(1) == this.getBattleShip().get(i).charAt(0)
-					&& hitTarget.charAt(2) == this.getBattleShip().get(i).charAt(1)) {
-				isHit = true;
-			}
+	/**
+	 * 
+	 * @param hitTarget
+	 * @return
+	 */
+	public boolean calculateHit(String hitTarget)
+	{
+		if (m_destroyer.contains(hitTarget))
+		{
+			return true;
+		}
+		else if (m_submarine.contains(hitTarget))
+		{
+			return true;
+		}
+		else if (m_cruiser.contains(hitTarget))
+		{
+			return true;
+		}
+		else if (m_battleship.contains(hitTarget))
+		{
+			return true;
+		}
+		else if (m_carrier.contains(hitTarget))
+		{
+			return true;
 		}
 		
-		if(!isHit) {
-			for(int i = 0; i < this.getCarrier().size(); i++) {
-				if(hitTarget.charAt(1) == this.getCarrier().get(i).charAt(0)
-						&& hitTarget.charAt(2) == this.getCarrier().get(i).charAt(1)) {
-					isHit = true;
-				}
-			}
-		}
-		
-		if(!isHit) {
-			for(int i = 0; i < this.getCruiser().size(); i++) {
-				if(hitTarget.charAt(1) == this.getCruiser().get(i).charAt(0)
-						&& hitTarget.charAt(2) == this.getCruiser().get(i).charAt(1)) {
-					isHit = true;
-				}
-			}
-		}
-		
-		if(!isHit) {
-			for(int i = 0; i < this.getSubmarine().size(); i++) {
-				if(hitTarget.charAt(1) == this.getSubmarine().get(i).charAt(0)
-						&& hitTarget.charAt(2) == this.getSubmarine().get(i).charAt(1)) {
-					isHit = true;
-				}
-			}
-		}
-		
-		if(!isHit) {
-			for(int i = 0; i < this.getDestroyer().size(); i++) {
-				if(hitTarget.charAt(1) == this.getDestroyer().get(i).charAt(0)
-						&& hitTarget.charAt(2) == this.getDestroyer().get(i).charAt(1)) {
-					isHit = true;
-				}
-			}
-		}
-		
-		return isHit;
+		return false;
 		
 	}
 	
-	public void updateArmada(String hitTarget) {
-		
-		boolean isHit = false;
-		
-		for(int i = 0; i < this.getBattleShip().size(); i++) {
-			if(hitTarget.charAt(1) == this.getBattleShip().get(i).charAt(0)
-					&& hitTarget.charAt(2) == this.getBattleShip().get(i).charAt(1)) {
-				this.battleship.remove(i);
-			}
+	/**
+	 * 
+	 * @param hitTarget
+	 */
+	public void updateArmada(String hitTarget)
+	{	
+		if (m_destroyer.contains(hitTarget))
+		{
+			m_destroyer.remove(hitTarget);
 		}
-		
-		if(!isHit) {
-			for(int i = 0; i < this.getCarrier().size(); i++) {
-				if(hitTarget.charAt(1) == this.getCarrier().get(i).charAt(0)
-						&& hitTarget.charAt(2) == this.getCarrier().get(i).charAt(1)) {
-					this.carrier.remove(i);
-				}
-			}
+		else if (m_submarine.contains(hitTarget))
+		{
+			m_submarine.remove(hitTarget);
 		}
-		
-		if(!isHit) {
-			for(int i = 0; i < this.getCruiser().size(); i++) {
-				if(hitTarget.charAt(1) == this.getCruiser().get(i).charAt(0)
-						&& hitTarget.charAt(2) == this.getCruiser().get(i).charAt(1)) {
-					this.cruiser.remove(i);
-				}
-			}
+		else if (m_cruiser.contains(hitTarget))
+		{
+			m_cruiser.remove(hitTarget);
 		}
-		
-		if(!isHit) {
-			for(int i = 0; i < this.getSubmarine().size(); i++) {
-				if(hitTarget.charAt(1) == this.getSubmarine().get(i).charAt(0)
-						&& hitTarget.charAt(2) == this.getSubmarine().get(i).charAt(1)) {
-					this.submarine.remove(i);
-				}
-			}
+		else if (m_battleship.contains(hitTarget))
+		{
+			m_battleship.remove(hitTarget);
 		}
-		
-		if(!isHit) {
-			for(int i = 0; i < this.getDestroyer().size(); i++) {
-				if(hitTarget.charAt(1) == this.getDestroyer().get(i).charAt(0)
-						&& hitTarget.charAt(2) == this.getDestroyer().get(i).charAt(1)) {
-					this.destroyer.remove(i);
-				}
-			}
+		else if (m_carrier.contains(hitTarget))
+		{
+			m_carrier.remove(hitTarget);
 		}
 		
 	}
@@ -150,7 +128,6 @@ public class Armada
 	public boolean isArmadaSunk() {
 		if(health == 0 && carrierSunk && battleshipSunk &&
 				cruiserSunk && submarineSunk && destroyerSunk) {
-			over = true;
 			return true;
 		}
 		else
@@ -167,7 +144,7 @@ public class Armada
 	}
 	
 	public boolean isBattleshipSunk() {
-		if(getBattleShip().size() == 0) {
+		if(getBattleship().size() == 0) {
 			health--;
 			battleshipSunk = true;
 			return true;
@@ -209,7 +186,7 @@ public class Armada
 			return true;
 	}
 	public boolean isBattleshipSet() {
-		if(getBattleShip().size() == 0)
+		if(getBattleship().size() == 0)
 			return false;
 		else
 			return true;
@@ -233,157 +210,294 @@ public class Armada
 			return true;
 	}
 	
-	public ArrayList<String> getCarrier(){
-		return carrier;
+	/**
+	 * Public interface for logging the allocated positions for the Armada.
+	 */
+	public void logArmadaPosition()
+	{
+		logPosition(ArmadaType.DESTROYER, m_destroyer);
+		logPosition(ArmadaType.SUBMARINE, m_submarine);
+		logPosition(ArmadaType.CRUISER, m_cruiser);
+		logPosition(ArmadaType.BATTLESHIP, m_battleship);
+		logPosition(ArmadaType.CARRIER, m_carrier);
 	}
 	
-	public ArrayList<String> getBattleShip(){
-		return battleship;
-	}
-	
-	public ArrayList<String> getCruiser(){
-		return cruiser;
-	}
-	
-	public ArrayList<String> getSubmarine(){
-		return submarine;
-	}
-	
-	public ArrayList<String> getDestroyer(){
-		return destroyer;
-	}
-	
-	public void DisplayArmadaPosition() {
-		System.out.println("Destroyer Position:");
-		DisplayDestroyerPosition();
+	/**
+	 * Generic logging function that uses a ArmadaType enumeration value and a list of strings representing a ships
+	 * position to log the blocks allocated for that given ship type.
+	 * 
+	 * @param type An ArmadaType enum representing the type of ship that is being loggied.
+	 * @param ship
+	 */
+	private void logPosition(ArmadaType type, List<String> ship)
+	{
+		String shipPositions = "";
 		
-		System.out.println("Submarine Position: ");
-		DisplaySubmarinePosition();
+		for (String position : ship)
+		{
+			shipPositions += position + " ";
+		}
 		
-		System.out.println("Cruiser Position: ");
-		DisplayCruiserPosition();
-		
-		System.out.println("Battleship Position: ");
-		DisplayBattleshipPosition();
-		
-		System.out.println("Carrier Position: ");
-		DisplayCarrierPosition();
+		m_logger.debug("{} Position: {}", type, shipPositions);
 	}
 	
-	public void DisplayCarrierPosition() {
-		for(int i = 0; i < carrier.size(); i++) {
-			System.out.print(carrier.get(i) + " ");
+	/**
+	 * Adds a list strings representing positions for the carrier ship. If the Armada member list for carrier
+	 * is empty and the parameter list provided is the same size as the expected carrier size the parameter list will
+	 * be added into the internal member list for the carrier.
+	 * 
+	 * @param carrierPos A list of strings representing multiple blocks for a carrier.
+	 */
+	public void addToCarrier(List<String> carrierPos)
+	{
+		if (m_carrier.isEmpty())
+		{
+			m_carrier.addAll(carrierPos);
 		}
-		System.out.println();
-	}
-	
-	public void DisplayBattleshipPosition() {
-		for(int i = 0; i < battleship.size(); i++) {
-			System.out.print(battleship.get(i) + " ");
+		else if (carrierPos.size() != CARRIER_SIZE)
+		{
+			m_logger.debug("Attempted to add {} positions when only needed {}, received positions: {}.",
+				carrierPos.size(), CARRIER_SIZE, carrierPos);
 		}
-		System.out.println();
-	}
-	
-	public void DisplayDestroyerPosition() {
-		for(int i = 0; i < destroyer.size(); i++) {
-			System.out.print(destroyer.get(i) + " ");
-		}
-		System.out.println();
-	}
-	
-	public void DisplaySubmarinePosition() {
-		for(int i = 0; i < submarine.size(); i++) {
-			System.out.print(submarine.get(i) + " ");
-		}
-		System.out.println();
-	}
-	
-	public void DisplayCruiserPosition() {
-		for(int i = 0; i < cruiser.size(); i++) {
-			System.out.print(cruiser.get(i) + " ");
-		}
-		System.out.println();
-	}
-	
-	public void addToCarrier(String pos) {
-		if(carrier.size() < 5) {
-			carrier.add(pos);
-		}else {
-			System.out.println("Carrier position is already set");
+		else
+		{
+			m_logger.debug("Carrier position is already set.");
 		}
 	}
 	
-	public void addToCarrier(List<String> carrierPos) {
-		if(carrier.isEmpty()) {
-			carrier.addAll(carrierPos);
-		}else {
-			System.out.println("Carrier position is already set");
+	/**
+	 * Adds a list strings representing positions for the battleship ship. If the Armada member list for battleship
+	 * is empty and the parameter list provided is the same size as the expected battleship size the parameter list will
+	 * be added into the internal member list for the battleship.
+	 * 
+	 * @param battleshipPos A list of strings representing multiple blocks for a battleship.
+	 */
+	public void addToBattleship(List<String> battleshipPos)
+	{
+		if (m_battleship.isEmpty())
+		{
+			m_battleship.addAll(battleshipPos);
+		}
+		else if (battleshipPos.size() != BATTLESHIP_SIZE)
+		{
+			m_logger.debug("Attempted to add {} positions when only needed {}, received positions: {}.",
+				battleshipPos.size(), BATTLESHIP_SIZE, battleshipPos);
+		}
+		else
+		{
+			m_logger.debug("Battleship position is already set.");
 		}
 	}
 	
-	public void addToBattleship(String pos) {
-		if(battleship.size() < 4) {
-			battleship.add(pos);
-		}else {
-			System.out.println("Battleship position is already set");
+	/**
+	 * Adds a list strings representing positions for the cruiser ship. If the Armada member list for cruiser
+	 * is empty and the parameter list provided is the same size as the expected cruiser size the parameter list will
+	 * be added into the internal member list for the cruiser.
+	 * 
+	 * @param cruiserPos A list of strings representing multiple blocks for a cruiser.
+	 */
+	public void addToCruiser(List<String> cruiserPos)
+	{
+		if (m_cruiser.isEmpty())
+		{
+			m_cruiser.addAll(cruiserPos);
+		}
+		else if (cruiserPos.size() != CRUISER_SIZE)
+		{
+			m_logger.debug("Attempted to add {} positions when only needed {}, received positions: {}.",
+				cruiserPos.size(), CRUISER_SIZE, cruiserPos);
+		}
+		else
+		{
+			m_logger.debug("Cruise position is already set.");
 		}
 	}
 	
-	public void addToBattleship(List<String> battleshipPos) {
-		if(battleship.isEmpty()) {
-			battleship.addAll(battleshipPos);
-		}else {
-			System.out.println("Battleship position is already set");
+	/**
+	 * Adds a list strings representing positions for the submarine ship. If the Armada member list for submarine
+	 * is empty and the parameter list provided is the same size as the expected submarine size the parameter list will
+	 * be added into the internal member list for the submarine.
+	 * 
+	 * @param submarinePos A list of strings representing multiple blocks for a submarine.
+	 */
+	public void addToSubmarine(List<String> submarinePos)
+	{
+		if (m_submarine.isEmpty())
+		{
+			m_submarine.addAll(submarinePos);
+		}
+		else if (submarinePos.size() != SUBMARINE_SIZE)
+		{
+			m_logger.debug("Attempted to add {} positions when only needed {}, received positions: {}.",
+				submarinePos.size(), SUBMARINE_SIZE, submarinePos);
+		}
+		else
+		{
+			m_logger.debug("Submarine position is already set.");
 		}
 	}
 	
-	public void addToCruiser(String pos) {
-		if(cruiser.size() < 3) {
-			cruiser.add(pos);
-		}else {
-			System.out.println("Cruise position is already set");
+	/**
+	 * Adds a list strings representing positions for the destroyer ship. If the Armada member list for destroyer
+	 * is empty and the parameter list provided is the same size as the expected destroyer size the parameter list will
+	 * be added into the internal member list for the destroyer.
+	 * 
+	 * @param destroyerPos A list of strings representing multiple blocks for a destroyer.
+	 */
+	public void addToDestroyer(List<String> destroyerPos)
+	{
+		if (m_destroyer.isEmpty() && destroyerPos.size() == DESTROYER_SIZE)
+		{
+			m_destroyer.addAll(destroyerPos);
+		}
+		else if (destroyerPos.size() != DESTROYER_SIZE)
+		{
+			m_logger.debug("Attempted to add {} positions when only needed {}, received positions: {}.",
+				destroyerPos.size(), DESTROYER_SIZE, destroyerPos);
+		}
+		else
+		{
+			m_logger.debug("Destroyer position is already set.");
 		}
 	}
 	
-	public void addToCruiser(List<String> cruiserPos) {
-		if(cruiser.isEmpty()) {
-			cruiser.addAll(cruiserPos);
-		}else {
-			System.out.println("Cruise position is already set");
+	/**
+	 * Adds a single block position to the carrier if and only if the size of the Armada member list for carrier is 
+	 * smaller than the expected carrier size.
+	 * 
+	 * @param pos A string representing a single block position for a carrier.
+	 */
+	public void addToCarrier(String pos)
+	{
+		if (m_carrier.size() < CARRIER_SIZE)
+		{
+			m_carrier.add(pos);
+		}
+		else
+		{
+			m_logger.debug("Carrier position is already set.");
 		}
 	}
 	
-	public void addToSubmarine(String pos) {
-		if(submarine.size() < 3) {
-			submarine.add(pos);
-		}else {
-			System.out.println("Submarine position is already set");
+	/**
+	 * Adds a single block position to the battleship if and only if the size of the Armada member list for battleship is 
+	 * smaller than the expected battleship size.
+	 * 
+	 * @param pos A string representing a single block position for a battleship.
+	 */
+	public void addToBattleship(String pos)
+	{
+		if (m_battleship.size() < BATTLESHIP_SIZE)
+		{
+			m_battleship.add(pos);
+		}
+		else
+		{
+			m_logger.debug("Battleship position is already set.");
 		}
 	}
 	
+	/**
+	 * Adds a single block position to the cruiser if and only if the size of the Armada member list for cruiser is 
+	 * smaller than the expected cruiser size.
+	 * 
+	 * @param pos A string representing a single block position for a cruiser.
+	 */
+	public void addToCruiser(String pos)
+	{
+		if (m_cruiser.size() < CRUISER_SIZE)
+		{
+			m_cruiser.add(pos);
+		}
+		else
+		{
+			m_logger.debug("Cruise position is already set.");
+		}
+	}
+	
+	/**
+	 * Adds a single block position to the submarine if and only if the size of the Armada member list for submarine is 
+	 * smaller than the expected submarine size.
+	 * 
+	 * @param pos A string representing a single block position for a submarine.
+	 */
+	public void addToSubmarine(String pos)
+	{
+		if (m_submarine.size() < SUBMARINE_SIZE)
+		{
+			m_submarine.add(pos);
+		}
+		else
+		{
+			m_logger.debug("Submarine position is already set.");
+		}
+	}
+	
+	/**
+	 * Adds a single block position to the destroyer if and only if the size of the Armada member list for destroyer is 
+	 * smaller than the expected destroyer size.
+	 * 
+	 * @param pos A string representing a single block position for a destroyer.
+	 */
+	public void addToDestroyer(String pos)
+	{
+		if (m_destroyer.size() < DESTROYER_SIZE)
+		{
+			m_destroyer.add(pos);
+		}
+		else
+		{
+			m_logger.debug("Destroyer position is already set.");
+		}
+	}
 
-	public void addToSubmarine(List<String> submarinePos) {
-		if(submarine.isEmpty()) {
-			submarine.addAll(submarinePos);
-		}else {
-			System.out.println("Submarine position is already set");
-		}
+	/**
+	 * Accessor for getting carrier list.
+	 * 
+	 * @return List<String>
+	 */
+	public List<String> getCarrier()
+	{
+		return m_carrier;
 	}
 	
-	public void addToDestroyer(String pos) {
-		if(destroyer.size() < 2) {
-			destroyer.add(pos);
-		}else {
-			System.out.println("Destroyer position is already set");
-		}
+	/**
+	 * Accessor for getting battleship list.
+	 * 
+	 * @return List<String>
+	 */
+	public List<String> getBattleship()
+	{
+		return m_battleship;
 	}
 	
-	public void addToDestroyer(List<String> destroyerPos) {
-		if(destroyer.isEmpty()) {
-			destroyer.addAll(destroyerPos);
-		}else {
-			System.out.println("Destroyer position is already set");
-		}
+	/**
+	 * Accessor for getting cruiser list.
+	 * 
+	 * @return List<String>
+	 */
+	public List<String> getCruiser()
+	{
+		return m_cruiser;
 	}
-
+	
+	/**
+	 * Accessor for getting submarine list.
+	 * 
+	 * @return List<String>
+	 */
+	public List<String> getSubmarine()
+	{
+		return m_submarine;
+	}
+	
+	/**
+	 * Accessor for getting destroyer list.
+	 * 
+	 * @return List<String>
+	 */
+	public List<String> getDestroyer()
+	{
+		return m_destroyer;
+	}
 }

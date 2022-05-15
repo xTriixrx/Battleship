@@ -280,7 +280,7 @@ public class ArmadaAutomator
 		{
 			style = styles.get(ArmadaType.CRUISER);
 		}
-		else if (armada.getBattleShip().contains(position))
+		else if (armada.getBattleship().contains(position))
 		{
 			style = styles.get(ArmadaType.BATTLESHIP);
 		}

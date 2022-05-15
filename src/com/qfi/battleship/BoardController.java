@@ -446,9 +446,10 @@ public class BoardController implements Initializable, Observer, Observable
 				temp.deleteCharAt(4);
 				t = temp.toString();
 			}
-
-			boolean isHit = armada.calculateHit(t);
-			armada.updateArmada(t);
+			
+			String boardPos = t.substring(1); 
+			boolean isHit = armada.calculateHit(boardPos);
+			armada.updateArmada(boardPos);
 
 			if (isHit)
 				HorM = HIT;
@@ -753,7 +754,7 @@ public class BoardController implements Initializable, Observer, Observable
 			pictureFour.setDisable(true);
 			pictureFive.setDisable(true);
 			automator.automateArmadaPlacement(buttonList, stylesMap);
-			armada.DisplayArmadaPosition();
+			armada.logArmadaPosition();
 			autoShips.setDisable(true);
 			notifyObserver("SHIPS");
 		}

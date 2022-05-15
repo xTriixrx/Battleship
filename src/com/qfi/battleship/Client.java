@@ -190,6 +190,7 @@ public class Client implements Runnable, Observable, Observer
       		System.out.println("SET");
       		isSet = true;
       		notifyObserver("SET");
+      		controller.getArmada().logArmadaPosition();
       		infoBox("Ships are Set!", "Player 1");
       	}
       	

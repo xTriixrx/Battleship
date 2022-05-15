@@ -181,6 +181,7 @@ public class Server implements Runnable, Observable, Observer
     		System.out.println("SET");
     		isSet = true;
     		notifyObserver("SET");
+    		controller.getArmada().logArmadaPosition();
     		infoBox("Ships are Set!", "Player 2");
     	}
     	
