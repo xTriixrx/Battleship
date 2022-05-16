@@ -29,6 +29,13 @@ public class Armada
 	private List<String> m_submarine = new ArrayList<String>();
 	private List<String> m_destroyer = new ArrayList<String>();
 	private List<String> m_battleship = new ArrayList<String>();
+	
+	// Copies for maintaining saved position states
+	private List<String> m_carrierCopy = new ArrayList<String>();
+	private List<String> m_cruiserCopy = new ArrayList<String>();
+	private List<String> m_submarineCopy = new ArrayList<String>();
+	private List<String> m_destroyerCopy = new ArrayList<String>();
+	private List<String> m_battleshipCopy = new ArrayList<String>();
 	private Logger m_logger = LogManager.getLogger(Armada.class);
 	
 	/**
@@ -135,7 +142,7 @@ public class Armada
 	}
 	
 	public boolean isCarrierSunk() {
-		if(getCarrier().size() == 0) {
+		if(getCarrier().size() == 0 && !carrierSunk) {
 			health--;
 			carrierSunk = true;
 			return true;
@@ -144,7 +151,7 @@ public class Armada
 	}
 	
 	public boolean isBattleshipSunk() {
-		if(getBattleship().size() == 0) {
+		if(getBattleship().size() == 0 && !battleshipSunk) {
 			health--;
 			battleshipSunk = true;
 			return true;
@@ -153,7 +160,7 @@ public class Armada
 	}
 	
 	public boolean isCruiserSunk() {
-		if(getCruiser().size() == 0) {
+		if(getCruiser().size() == 0 && !cruiserSunk) {
 			health--;
 			cruiserSunk = true;
 			return true;
@@ -162,7 +169,7 @@ public class Armada
 	}
 	
 	public boolean isSubmarineSunk() {
-		if(getSubmarine().size() == 0) {
+		if(getSubmarine().size() == 0 && !submarineSunk) {
 			health--;
 			submarineSunk = true;
 			return true;
@@ -171,7 +178,7 @@ public class Armada
 	}
 	
 	public boolean isDestroyerSunk() {
-		if(getDestroyer().size() == 0) {
+		if(getDestroyer().size() == 0 && !destroyerSunk) {
 			health--;
 			destroyerSunk = true;
 			return true;
@@ -253,6 +260,7 @@ public class Armada
 		if (m_carrier.isEmpty())
 		{
 			m_carrier.addAll(carrierPos);
+			m_carrierCopy.addAll(carrierPos);
 		}
 		else if (carrierPos.size() != CARRIER_SIZE)
 		{
@@ -277,6 +285,7 @@ public class Armada
 		if (m_battleship.isEmpty())
 		{
 			m_battleship.addAll(battleshipPos);
+			m_battleshipCopy.addAll(battleshipPos);
 		}
 		else if (battleshipPos.size() != BATTLESHIP_SIZE)
 		{
@@ -301,6 +310,7 @@ public class Armada
 		if (m_cruiser.isEmpty())
 		{
 			m_cruiser.addAll(cruiserPos);
+			m_cruiserCopy.addAll(cruiserPos);
 		}
 		else if (cruiserPos.size() != CRUISER_SIZE)
 		{
@@ -325,6 +335,7 @@ public class Armada
 		if (m_submarine.isEmpty())
 		{
 			m_submarine.addAll(submarinePos);
+			m_submarineCopy.addAll(submarinePos);
 		}
 		else if (submarinePos.size() != SUBMARINE_SIZE)
 		{
@@ -349,6 +360,7 @@ public class Armada
 		if (m_destroyer.isEmpty() && destroyerPos.size() == DESTROYER_SIZE)
 		{
 			m_destroyer.addAll(destroyerPos);
+			m_destroyerCopy.addAll(destroyerPos);
 		}
 		else if (destroyerPos.size() != DESTROYER_SIZE)
 		{
@@ -372,6 +384,11 @@ public class Armada
 		if (m_carrier.size() < CARRIER_SIZE)
 		{
 			m_carrier.add(pos);
+			
+			if (m_carrier.size() == CRUISER_SIZE)
+			{
+				m_carrierCopy.addAll(m_carrier);
+			}
 		}
 		else
 		{
@@ -390,6 +407,11 @@ public class Armada
 		if (m_battleship.size() < BATTLESHIP_SIZE)
 		{
 			m_battleship.add(pos);
+			
+			if (m_battleship.size() == CRUISER_SIZE)
+			{
+				m_battleshipCopy.addAll(m_battleship);
+			}
 		}
 		else
 		{
@@ -408,6 +430,11 @@ public class Armada
 		if (m_cruiser.size() < CRUISER_SIZE)
 		{
 			m_cruiser.add(pos);
+			
+			if (m_cruiser.size() == CRUISER_SIZE)
+			{
+				m_cruiserCopy.addAll(m_cruiser);
+			}
 		}
 		else
 		{
@@ -426,6 +453,11 @@ public class Armada
 		if (m_submarine.size() < SUBMARINE_SIZE)
 		{
 			m_submarine.add(pos);
+			
+			if (m_submarine.size() == CRUISER_SIZE)
+			{
+				m_submarineCopy.addAll(m_submarine);
+			}
 		}
 		else
 		{
@@ -444,6 +476,11 @@ public class Armada
 		if (m_destroyer.size() < DESTROYER_SIZE)
 		{
 			m_destroyer.add(pos);
+			
+			if (m_destroyer.size() == CRUISER_SIZE)
+			{
+				m_destroyerCopy.addAll(m_destroyer);
+			}
 		}
 		else
 		{

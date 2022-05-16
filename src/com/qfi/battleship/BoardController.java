@@ -7,6 +7,7 @@ import java.util.HashMap;
 import javafx.scene.Node;
 import javafx.scene.Cursor;
 import javafx.scene.text.Text;
+import javafx.scene.paint.Color;
 import java.util.ResourceBundle;
 import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
@@ -14,7 +15,6 @@ import javafx.scene.control.Button;
 import javafx.scene.input.Dragboard;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
-import javafx.scene.paint.Color;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.AnchorPane;
@@ -84,11 +84,6 @@ public class BoardController implements Initializable, Observer, Observable
 	private Armada armada = null;
 	private boolean myTurnFlag = true;
 	private boolean isShipsSet = false;
-	private boolean CarrierSunk = false;
-	private boolean CruiserSunk = false;
-	private boolean SubmarineSunk = false;
-	private boolean DestroyerSunk = false;
-	private boolean BattleshipSunk = false;
 	private String orientation = HORIZONTAL;
 	private ArmadaAutomator automator = null;
 	private ObservableList<Node> buttonList = null;
@@ -102,10 +97,12 @@ public class BoardController implements Initializable, Observer, Observable
 	private static final String MISS = "Miss";
 	private static final char clientSymbol = 'Z';
 	private static final char serverSymbol = 'X';
+	private static final String OVER_MSG = "OVER";
 	private static final Color SUNK_COLOR = Color.RED;
 	private static final String VERTICAL = "Vertical";
 	private static final String HORIZONTAL = "Horizontal";
 	private static final String BUTTON_HIT_STYLE = "-fx-background-color: red";
+	private static final String AUTO_SHIPS_STYLE = "-fx-background-color: white";
 	private static final String CRUISER_SET_STYLE = "-fx-background-color: aqua";
 	private static final String BUTTON_MISS_STYLE = "-fx-background-color: white";
 	private static final String CARRIER_SET_STYLE = "-fx-background-color: orange";
@@ -171,7 +168,7 @@ public class BoardController implements Initializable, Observer, Observable
 		
 		dragDropController = new DragDropController(buttonList, armada, stylesMap);
 		
-		autoShips.setStyle("-fx-background-color: white");
+		autoShips.setStyle(AUTO_SHIPS_STYLE);
 		pictureOne.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, PictureOneClickEvent);
 		pictureTwo.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, PictureTwoClickEvent);
 		pictureThree.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, PictureThreeClickEvent);
@@ -275,13 +272,45 @@ public class BoardController implements Initializable, Observer, Observable
 		notifyObserver(Integer.toString(opponentTurn));
 		currentTurn = opponentTurn;
 	}
+	
+	/**
+	 * 
+	 * @param shipText
+	 * @param isShipSunk
+	 * @return boolean
+	 */
+	public boolean update(Text shipText, boolean isShipSunk)
+	{
+		boolean justSunk = false;
+		
+		// If the shipText has not been striked and the ship has sunk, we have an update
+		if (!shipText.isStrikethrough() && isShipSunk)
+		{
+			justSunk = true;
+			setSunkShipText(shipText);
+			
+			logger.debug("{} SUNK", shipText.getText());
+			
+			// If armada has sunk, the game is over
+			if (armada.isArmadaSunk())
+			{
+				notifyObserver(OVER_MSG);
+			}
+			else // notify observer to share sunk ship detail to opponent
+			{
+				notifyObserver(shipText.getText().toUpperCase());
+			}
+		}
+		
+		return justSunk;
+	}
 
 	/**
 	 * 
 	 * @param pos
 	 * @param HM
 	 */
-	public void updateplayerGrid(String pos, String HM)
+	public void updatePlayerGrid(String pos, String HM)
 	{
 		for (Node node : playerGrid.getChildren())
 		{
@@ -291,95 +320,30 @@ public class BoardController implements Initializable, Observer, Observable
 				{
 					if (HM.equals(HIT))
 					{
+						boolean updated = false;
 						node.setMouseTransparent(false);
 						node.setStyle(BUTTON_HIT_STYLE);
 						
-						if (!CarrierSunk && armada.isCarrierSunk())
+						updated = update(playerCruiser, armada.isCruiserSunk());
+					
+						if (!updated)
 						{
-							CarrierSunk = true;
-							if(CarrierSunk && BattleshipSunk && CruiserSunk && 
-									SubmarineSunk && DestroyerSunk)
-							{
-								System.out.println("CARRIER SUNK");
-								setSunkShipText(playerCarrier);
-								notifyObserver("OVER");
-							}
-							else
-							{
-								CarrierSunk = true;
-								System.out.println("CARRIER SUNK");
-								setSunkShipText(playerCarrier);
-								notifyObserver("CARRIER");
-							}
+							updated = update(playerCarrier, armada.isCarrierSunk());
 						}
 						
-						if (!BattleshipSunk && armada.isBattleshipSunk())
+						if (!updated)
 						{
-							BattleshipSunk = true;
-							if(CarrierSunk && BattleshipSunk && CruiserSunk && 
-									SubmarineSunk && DestroyerSunk)
-							{
-								System.out.println("BATTLESHIP SUNK");
-								setSunkShipText(playerBattleship);
-								notifyObserver("OVER");
-							}
-							else
-							{
-								System.out.println("BATTLESHIP SUNK");
-								setSunkShipText(playerBattleship);
-								notifyObserver("BATTLESHIP");
-							}
+							updated = update(playerDestroyer, armada.isDestroyerSunk());
 						}
-						if (!CruiserSunk && armada.isCruiserSunk())
+					
+						if (!updated)
 						{
-							CruiserSunk = true;
-							if(CarrierSunk && BattleshipSunk && CruiserSunk && 
-									SubmarineSunk && DestroyerSunk)
-							{
-								System.out.println("CRUISER SUNK");
-								setSunkShipText(playerCruiser);
-								notifyObserver("OVER");
-							}
-							else
-							{
-								System.out.println("CRUISER SUNK");
-								setSunkShipText(playerCruiser);
-								notifyObserver("CRUISER");
-							}
+							updated = update(playerSubmarine, armada.isSubmarineSunk());
 						}
-						if (!SubmarineSunk && armada.isSubmarineSunk())
+					
+						if (!updated)
 						{
-							SubmarineSunk = true;
-							if(CarrierSunk && BattleshipSunk && CruiserSunk && 
-									SubmarineSunk && DestroyerSunk)
-							{
-								System.out.println("SUBMARINE SUNK");
-								setSunkShipText(playerSubmarine);
-								notifyObserver("OVER");
-							}
-							else
-							{
-								System.out.println("SUBMARINE SUNK");
-								setSunkShipText(playerSubmarine);
-								notifyObserver("SUBMARINE");
-							}
-						}
-						if (!DestroyerSunk && armada.isDestroyerSunk())
-						{
-							DestroyerSunk = true;
-							if(CarrierSunk && BattleshipSunk && CruiserSunk && 
-									SubmarineSunk && DestroyerSunk)
-							{
-								System.out.println("DESTROYER SUNK");
-								setSunkShipText(playerDestroyer);
-								notifyObserver("OVER");
-							}
-							else
-							{
-								System.out.println("DESTROYER SUNK");
-								setSunkShipText(playerDestroyer);
-								notifyObserver("DESTROYER");
-							}
+							updated = update(playerBattleship, armada.isBattleshipSunk());
 						}
 					}
 					else if (HM.equals(MISS))
@@ -399,7 +363,8 @@ public class BoardController implements Initializable, Observer, Observable
 	 * @param s
 	 */
 	@Override
-	public void update(String s) {
+	public void update(String s)
+	{
 		System.out.println("SC: Received " + s + ".");
 
 		if (s.equals("SET"))
@@ -460,11 +425,15 @@ public class BoardController implements Initializable, Observer, Observable
 			armada.updateArmada(boardPos);
 
 			if (isHit)
+			{
 				HorM = HIT;
+			}
 			else
+			{
 				HorM = MISS;
+			}
 
-			updateplayerGrid(t, HorM);
+			updatePlayerGrid(t, HorM);
 
 			notifyObserver(HorM + Integer.toString(myTurn));
 			currentTurn = myTurn;
@@ -725,6 +694,9 @@ public class BoardController implements Initializable, Observer, Observable
 		configureDroppedImage(pictureFour, ArmadaType.BATTLESHIP, Armada.BATTLESHIP_SIZE, BATTLESHIP_SET_STYLE);
 	};
 	
+	/**
+	 * 
+	 */
 	private EventHandler<MouseEvent> PictureFiveClickEvent = (event) -> 
 	{
 		autoShips.setDisable(true);
