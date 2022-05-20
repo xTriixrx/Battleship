@@ -89,6 +89,8 @@ public class GUIDriver extends Application
 	            if (newValue)
 	                primaryStage.setMaximized(false);
 	        });
+			
+			primaryStage.setOnCloseRequest(event -> controller.shutdown());
 			primaryStage.show();
 		} catch(Exception e) {
 			e.printStackTrace();

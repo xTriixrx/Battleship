@@ -119,8 +119,13 @@ public class Client implements Runnable, Observable, Observer
         	System.exit(0);
     }
     
-    public void receiveFromServer(String l) {
-		if(l.equals("OVER")) {
+    public void receiveFromServer(String l)
+    {
+    	if (l.equalsIgnoreCase("SHUTDOWN"))
+    	{
+			System.exit(0);
+    	}
+    	else if(l.equals("OVER")) {
 			infoBox("You Won! (:", "Player 1");
 			try {
 				Thread.sleep(1000);
@@ -242,7 +247,21 @@ public class Client implements Runnable, Observable, Observer
 	}
 	
 	public void updateResponse(String str, StringBuilder build) {
-		if(str.equals("SHIPS")) {
+		if (str.equalsIgnoreCase("SHUTDOWN"))
+		{
+			try
+			{
+				out.writeUTF(str);
+				out.flush();
+			}
+			catch (Exception e)
+			{
+				
+			}
+			
+			System.exit(0);
+		}
+		else if(str.equals("SHIPS")) {
 			CarrierSet = true;
 			BattleshipSet = true;
 			CruiserSet = true;

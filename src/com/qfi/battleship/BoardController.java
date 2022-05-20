@@ -9,6 +9,8 @@ import javafx.scene.Cursor;
 import javafx.scene.text.Text;
 import javafx.scene.paint.Color;
 import java.util.ResourceBundle;
+
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -21,6 +23,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.input.TransferMode;
 import org.apache.logging.log4j.Logger;
 import javafx.collections.ObservableList;
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.input.ClipboardContent;
 import org.apache.logging.log4j.LogManager;
@@ -146,6 +149,14 @@ public class BoardController implements Initializable, Observer, Observable
 		stylesMap.put(ArmadaType.CRUISER, CRUISER_SET_STYLE);
 		stylesMap.put(ArmadaType.BATTLESHIP, BATTLESHIP_SET_STYLE);
 		stylesMap.put(ArmadaType.CARRIER, CARRIER_SET_STYLE);
+	}
+	
+	/**
+	 * Called by stage when one player closes their respective window.
+	 */
+	public void shutdown()
+	{
+		notifyObserver("SHUTDOWN");
 	}
 
 	/**

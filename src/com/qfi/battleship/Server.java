@@ -111,8 +111,13 @@ public class Server implements Runnable, Observable, Observer
     		System.exit(0);
     }
     
-    public void receiveFromClient(String l) {
-    	if(l.equals("OVER")) {
+    public void receiveFromClient(String l)
+    {
+    	if (l.equalsIgnoreCase("SHUTDOWN"))
+    	{
+			System.exit(0);
+    	}
+    	else if(l.equals("OVER")) {
 			infoBox("You Won! (:", "Player 2");
 			try {
 				Thread.sleep(1000);
@@ -208,12 +213,27 @@ public class Server implements Runnable, Observable, Observer
 	@Override
 	public void update(String s) {
 		System.out.println("Server: Recieved " + s + " from SC.");
+		
 		StringBuilder t = new StringBuilder(s);
 		updateResponse(s,t);
 	}
 	
 	public void updateResponse(String str, StringBuilder build) {
-		if(str.equals("SHIPS")) {
+		if (str.equalsIgnoreCase("SHUTDOWN"))
+		{
+			try
+			{
+				out.writeUTF(str);
+				out.flush();
+			}
+			catch (Exception e)
+			{
+				
+			}
+			
+			System.exit(0);
+		}
+		else if(str.equals("SHIPS")) {
 			CarrierSet = true;
 			BattleshipSet = true;
 			CruiserSet = true;
