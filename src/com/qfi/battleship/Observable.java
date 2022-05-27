@@ -7,7 +7,6 @@ package com.qfi.battleship;
  */
 public interface Observable
 {
-	public void removeObserver();
-	public void notifyObserver(String s);
-	public void registerObserver(Observer s);
+	public void notifyObserver(String update);
+	public void registerObserver(Observer observer);
 }

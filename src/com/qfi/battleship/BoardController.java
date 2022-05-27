@@ -237,20 +237,15 @@ public class BoardController implements Initializable, Observer, Observable
 	
 
 	@Override
-	public void registerObserver(Observer s) {
-		sobs = s;
-
+	public void registerObserver(Observer observer)
+	{
+		sobs = observer;
 	}
 	
 	@Override
-	public void notifyObserver(String str)
+	public void notifyObserver(String update)
 	{
-		sobs.update(str);
-	}
-
-	@Override
-	public void removeObserver() {
-		sobs = null;
+		sobs.update(update);
 	}
 
 	/**
@@ -405,6 +400,7 @@ public class BoardController implements Initializable, Observer, Observable
 		else if (currentTurn == myTurn && myTurnFlag)
 		{
 			StringBuilder temp = new StringBuilder(toSend);
+
 			String t = "";
 			if (temp.length() == 4) {
 				temp.deleteCharAt(3);
@@ -446,7 +442,7 @@ public class BoardController implements Initializable, Observer, Observable
 
 			updatePlayerGrid(t, HorM);
 
-			notifyObserver(HorM + Integer.toString(myTurn));
+			notifyObserver(HorM);
 			currentTurn = myTurn;
 			myTurnFlag = false;
 		}

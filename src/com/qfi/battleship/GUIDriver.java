@@ -1,14 +1,12 @@
 package com.qfi.battleship;
 
 import java.util.Map;
-
-import javax.swing.JOptionPane;
-
-import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.scene.Parent;
+import javafx.fxml.FXMLLoader;
+import javax.swing.JOptionPane;
+import javafx.application.Application;
 
 public class GUIDriver extends Application
 {
@@ -23,8 +21,6 @@ public class GUIDriver extends Application
 	private static final String TYPE = "type";
 	private static final String HOST = "host";
 	private static final String PORT = "port";
-	private static final String SERVER = "server";
-	private static final String CLIENT = "client";
 	
 	@Override
 	public void init()
@@ -40,19 +36,19 @@ public class GUIDriver extends Application
 		type = kwargList.get(TYPE);
 		port = Integer.parseInt(kwargList.get(PORT));
 		
-		if (type.equalsIgnoreCase(SERVER))
+		if (type.equalsIgnoreCase(Player.SERVER))
 		{
 			instanceNumber = 2;
-			logic = new Server(port);
-			controller = ((Server) logic).getController();
-			instanceName = SERVER.substring(0, 1).toUpperCase() + SERVER.substring(1);
+			logic = new Player(Player.SERVER_ID, host, port);
+			controller = ((Player) logic).getController();
+			instanceName = Player.toUppercase(Player.SERVER);
 		}
-		else if (type.equalsIgnoreCase(CLIENT))
+		else if (type.equalsIgnoreCase(Player.CLIENT))
 		{
 			instanceNumber = 1;
-			logic = new Client(host, port);
-			controller = ((Client) logic).getController();
-			instanceName = CLIENT.substring(0, 1).toUpperCase() + CLIENT.substring(1);
+			logic = new Player(Player.CLIENT_ID, host, port);
+			controller = ((Player) logic).getController();
+			instanceName = Player.toUppercase(Player.CLIENT);
 		}
 		else
 		{
