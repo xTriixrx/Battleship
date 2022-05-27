@@ -27,7 +27,6 @@ public class Player implements Runnable, Observable, Observer
 	private boolean over = false;
 	private Socket socket = null;
 	private Observer observer = null;
-	private boolean ShipsSet = false;
 	private DataInputStream in = null;
 	private SecureRandom random = null;
 	private ServerSocket server = null;
@@ -156,8 +155,7 @@ public class Player implements Runnable, Observable, Observer
 			line = in.readUTF(); 
 			logger.info("Server received: {} from client.", line);
 			lineCount++;
-			isShipsSet(false);
-			ShipsSet = true;
+			isShipsSet();
 		}
 		catch (Exception e)
 		{
@@ -177,8 +175,7 @@ public class Player implements Runnable, Observable, Observer
 			out.flush();
 			controller.setCurrentTurn(currentTurn);
 			lineCount++;
-			isShipsSet(false);
-			ShipsSet = true;
+			isShipsSet();
 		}
 		catch (Exception e)
 		{
@@ -330,7 +327,6 @@ public class Player implements Runnable, Observable, Observer
 		}
 		else if (str.equals("SHIPS"))
 		{
-			ShipsSet = true;
 			CarrierSet = true;
 			CruiserSet = true;
 			SubmarineSet = true;
@@ -399,8 +395,10 @@ public class Player implements Runnable, Observable, Observer
 	 * 
 	 * @param isSet
 	 */
-	public void isShipsSet(boolean isSet)
+	public void isShipsSet()
 	{
+		boolean isSet = false;
+		
 		while (!isSet)
 		{
 			try
