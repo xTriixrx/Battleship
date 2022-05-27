@@ -156,7 +156,8 @@ public class Player implements Runnable, Observable, Observer
 			line = in.readUTF(); 
 			logger.info("Server received: {} from client.", line);
 			lineCount++;
-			isShipsSet(ShipsSet);
+			isShipsSet(false);
+			ShipsSet = true;
 		}
 		catch (Exception e)
 		{
@@ -176,7 +177,8 @@ public class Player implements Runnable, Observable, Observer
 			out.flush();
 			controller.setCurrentTurn(currentTurn);
 			lineCount++;
-			isShipsSet(ShipsSet);
+			isShipsSet(false);
+			ShipsSet = true;
 		}
 		catch (Exception e)
 		{
