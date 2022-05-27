@@ -17,6 +17,11 @@ public class Armada
 	public static final short SUBMARINE_SIZE = 3;
 	public static final short DESTROYER_SIZE = 2;
 	public static final short BATTLESHIP_SIZE = 4;
+	public static final String CARRIER_NAME = "CARRIER";
+	public static final String CRUISER_NAME = "CRUISER";
+	public static final String SUBMARINE_NAME = "SUBMARINE";
+	public static final String DESTROYER_NAME = "DESTROYER";
+	public static final String BATTLESHIP_NAME = "BATTLESHIP";
 	
 	private boolean carrierSunk;
 	private boolean battleshipSunk;

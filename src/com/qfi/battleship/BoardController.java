@@ -31,7 +31,7 @@ import com.qfi.battleship.Armada.ArmadaType;
  * @author Vincent.Nigro
  * @version 1.0.0
  */
-public class BoardController implements Initializable, Observer, Observable
+public class BoardController implements Initializable, Observer, Observable, Controller
 {
 	@FXML
 	private GridPane opponentGrid;
@@ -171,6 +171,7 @@ public class BoardController implements Initializable, Observer, Observable
 			if (node.getId() != null)
 			{
 				initMouseEvent((Button) node);
+				node.setDisable(true);
 			}
 		}
 		
@@ -202,9 +203,16 @@ public class BoardController implements Initializable, Observer, Observable
 		b.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_CLICKED, mouseClickEvent);
 	}
 
+	@Override
 	public Armada getArmada()
 	{
 		return armada;
+	}
+	
+	@Override
+	public void setCurrentTurn(int t)
+	{
+		currentTurn = t;
 	}
 
 	public void setIsShipsSet(boolean s)
@@ -220,11 +228,6 @@ public class BoardController implements Initializable, Observer, Observable
 	public int getCurrentTurn()
 	{
 		return currentTurn;
-	}
-
-	public void setCurrentTurn(int t)
-	{
-		currentTurn = t;
 	}
 
 	public int getID()
@@ -367,6 +370,13 @@ public class BoardController implements Initializable, Observer, Observable
 		if (s.equals("SET"))
 		{
 			isShipsSet = true;
+			for (Node node : opponentGrid.getChildren())
+			{
+				if (node.getId() != null)
+				{
+					node.setDisable(false);
+				}
+			}
 		}
 		else if(s.equals("CARRIER"))
 		{
@@ -636,7 +646,7 @@ public class BoardController implements Initializable, Observer, Observable
 			toSend = new StringBuilder(toSend).append(mySymbol).toString();
 			((Button) event.getTarget()).setDisable(true);
 			((Button) event.getTarget()).setMouseTransparent(false);
-			logger.info("Controller {}: sending {} to opponent.", toSend);
+			logger.info("Controller {}: sending {} to opponent.", getID(), toSend);
 			myTurnFlag = true;
 			observer.update(toSend);
 			pictureOne.setDisable(true);

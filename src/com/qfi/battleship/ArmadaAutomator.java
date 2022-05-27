@@ -69,6 +69,24 @@ public class ArmadaAutomator
 	}
 	
 	/**
+	 * Main public method to be called by an automated controller in order to automate the Armada placement.
+	 * 
+	 * @param buttonList An unsorted observable list of nodes containing button's.
+	 * @param styles A map of styles based on the type of ship that is being placed.
+	 */
+	public void automateArmadaPlacement()
+	{
+		List<String> usedButtons = new ArrayList<>();
+		
+		// Place ships onto player's board
+		placeShip(carrierAdd, usedButtons, Armada.CARRIER_SIZE);
+		placeShip(battleshipAdd, usedButtons, Armada.BATTLESHIP_SIZE);
+		placeShip(cruiserAdd, usedButtons, Armada.CRUISER_SIZE);
+		placeShip(submarineAdd, usedButtons, Armada.SUBMARINE_SIZE);
+		placeShip(destroyerAdd, usedButtons, Armada.DESTROYER_SIZE);
+	}
+	
+	/**
 	 * Main public method to be called by the controller in order to automate the Armada placement.
 	 * 
 	 * @param buttonList An unsorted observable list of nodes containing button's.

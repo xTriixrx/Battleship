@@ -35,8 +35,8 @@ public class Player implements Runnable, Observable, Observer
 	private DataOutputStream out = null;
 	private boolean SubmarineSet = false;
 	private boolean DestroyerSet = false;
+	private Controller controller = null;
 	private boolean BattleshipSet = false;
-	private BoardController controller = null;
 	private Logger logger = LogManager.getLogger(Player.class);
 
 	public static final int CLIENT_ID = 1;
@@ -51,26 +51,25 @@ public class Player implements Runnable, Observable, Observer
 	 * @param address
 	 * @param port
 	 */
-	public Player(int whoami, String address, int port)
+	public Player(Controller controller, int whoami, String address, int port)
 	{
 		if (whoami == 1) // client
 		{
 			myID = CLIENT_ID;
-			myName = toUppercase(CLIENT);
+			myName = capitalize(CLIENT);
 		}
 		else if (whoami == 2) // server
 		{
 			myID = SERVER_ID;
-			myName = toUppercase(SERVER);
+			myName = capitalize(SERVER);
 		}
 
 		this.port = port;
 		this.address = address;
+		this.controller = controller;
 		
-		// 
-		controller = new BoardController(myID);
-		controller.register((Observer)this);
-		register(controller);
+		((Observable) controller).register((Observer) this);
+		register((Observer) controller);
 
 		// byte seed for the SecureRandom object
 		byte[] seed = ByteBuffer.allocate(Long.SIZE / Byte.SIZE)
@@ -84,8 +83,6 @@ public class Player implements Runnable, Observable, Observer
 			currentTurn = random.nextInt(MAX_PLAYERS) + 1;
 			controller.setCurrentTurn(currentTurn);
 		}
-
-		logger.debug("Controller ID: " + controller.getID());
 	}
 
 	/**
@@ -108,6 +105,30 @@ public class Player implements Runnable, Observable, Observer
 				if (lineCount == 0)
 				{
 					performHandshake();
+					
+					try
+					{
+						out.writeUTF("READY");
+						out.flush();
+					}
+					catch (Exception e)
+					{
+
+					}
+					
+					while (!(message = in.readUTF()).equals("READY"))
+					{
+						try
+						{
+							Thread.sleep(500);
+						}
+						catch (Exception e)
+						{
+							logger.error(e, e);
+						}
+					}
+					
+					observer.update("SET");
 				}
 				else // Process message by opponent
 				{
@@ -282,23 +303,23 @@ public class Player implements Runnable, Observable, Observer
 				logger.error(e, e);
 			}
 		}
-		else if(opponentMessage.equals("CARRIER"))
+		else if(opponentMessage.equals(Armada.CARRIER_NAME))
 		{
 			infoBox("You sunk your opponents Carrier!", "Player " + myID);
 		}
-		else if(opponentMessage.equals("BATTLESHIP"))
+		else if(opponentMessage.equals(Armada.BATTLESHIP_NAME))
 		{
 			infoBox("You sunk your opponents Battleship!", "Player " + myID);
 		}
-		else if(opponentMessage.equals("CRUISER"))
+		else if(opponentMessage.equals(Armada.CRUISER_NAME))
 		{
 			infoBox("You sunk your opponents Cruiser!", "Player " + myID);
 		}
-		else if(opponentMessage.equals("SUBMARINE"))
+		else if(opponentMessage.equals(Armada.SUBMARINE_NAME))
 		{
 			infoBox("You sunk your opponents Submarine!", "Player " + myID);
 		}
-		else if(opponentMessage.equals("DESTROYER"))
+		else if(opponentMessage.equals(Armada.DESTROYER_NAME))
 		{
 			infoBox("You sunk your opponents Destroyer!", "Player " + myID);
 		}
@@ -338,25 +359,25 @@ public class Player implements Runnable, Observable, Observer
 			infoBox("You lost :(", "Player " + myID);
 			over = true;
 		}
-		else if (str.equals("CARRIER"))
+		else if (str.equals(Armada.CARRIER_NAME))
 		{
-			infoBox("Your Carrier has been sunk!","Player " + myID);
+			infoBox("Your Carrier has been sunk!", "Player " + myID);
 		}
-		else if (str.equals("BATTLESHIP"))
+		else if (str.equals(Armada.BATTLESHIP_NAME))
 		{
-			infoBox("Your Battleship has been sunk!","Player " + myID);
+			infoBox("Your Battleship has been sunk!", "Player " + myID);
 		}
-		else if (str.equals("CRUISER"))
+		else if (str.equals(Armada.CRUISER_NAME))
 		{
-			infoBox("Your Cruiser has been sunk!","Player " + myID);
+			infoBox("Your Cruiser has been sunk!", "Player " + myID);
 		}
-		else if (str.equals("SUBMARINE"))
+		else if (str.equals(Armada.SUBMARINE_NAME))
 		{
-			infoBox("Your Submarine has been sunk!","Player " + myID);
+			infoBox("Your Submarine has been sunk!", "Player " + myID);
 		}
-		else if (str.equals("DESTROYER"))
+		else if (str.equals(Armada.DESTROYER_NAME))
 		{
-			infoBox("Your Destroyer has been sunk!","Player " + myID);
+			infoBox("Your Destroyer has been sunk!", "Player " + myID);
 		}
 		else if (build.length() == 4)
 		{
@@ -398,7 +419,7 @@ public class Player implements Runnable, Observable, Observer
 	public void isShipsSet()
 	{
 		boolean isSet = false;
-		
+		String setLog = "{} is Set.";
 		while (!isSet)
 		{
 			try
@@ -413,31 +434,31 @@ public class Player implements Runnable, Observable, Observer
 			if (controller.getArmada().isCarrierSet() && !CarrierSet)
 			{
 				CarrierSet = true;
-				logger.info("Carrier is Set.");
+				logger.info(setLog, capitalize(Armada.CARRIER_NAME.toLowerCase()));
 			}
 
 			if (controller.getArmada().isBattleshipSet() && !BattleshipSet)
 			{
 				BattleshipSet = true;
-				logger.info("Battleship is Set.");
+				logger.info(setLog, capitalize(Armada.BATTLESHIP_NAME.toLowerCase()));
 			}
 
 			if (controller.getArmada().isCruiserSet() && !CruiserSet)
 			{
 				CruiserSet = true;
-				logger.info("Cruiser is Set.");
+				logger.info(setLog, capitalize(Armada.CRUISER_NAME.toLowerCase()));
 			}
 
 			if (controller.getArmada().isSubmarineSet() && !SubmarineSet)
 			{
 				SubmarineSet = true;
-				logger.info("Submarine is Set.");
+				logger.info(setLog, capitalize(Armada.SUBMARINE_NAME.toLowerCase()));
 			}
 
 			if (controller.getArmada().isDestroyerSet() && !DestroyerSet)
 			{
 				DestroyerSet = true;
-				logger.info("Destroyer is Set.");
+				logger.info(setLog, capitalize(Armada.DESTROYER_NAME.toLowerCase()));
 			}
 
 			if (CarrierSet && BattleshipSet && CruiserSet &&
@@ -445,7 +466,6 @@ public class Player implements Runnable, Observable, Observer
 			{
 				logger.info("All ships are set!");
 				isSet = true;
-				observer.update("SET");
 				controller.getArmada().logArmadaPosition();
 				infoBox("Ships are Set!", "Player " + myID);
 			}
@@ -514,15 +534,6 @@ public class Player implements Runnable, Observable, Observer
 	
 	/**
 	 * 
-	 * @return
-	 */
-	public BoardController getController()
-	{
-		return controller;
-	}
-	
-	/**
-	 * 
 	 * @return String
 	 */
 	public String getName()
@@ -531,11 +542,12 @@ public class Player implements Runnable, Observable, Observer
 	}
 	
 	/**
+	 * Capitalizes a provided string by making the first character in the string uppercase.
 	 * 
-	 * @param string
+	 * @param string The string to capitalize.
 	 * @return String
 	 */
-	public String toUppercase(String string)
+	public String capitalize(String string)
 	{
 		return string.substring(0, 1).toUpperCase() + string.substring(1);
 	}

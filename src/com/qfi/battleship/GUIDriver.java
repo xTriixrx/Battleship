@@ -27,13 +27,17 @@ public class GUIDriver extends Application
 	private Runnable logic = null;
 	private int instanceNumber = 0;
 	private String instanceName = "";
-	private BoardController controller = null;
+	private Controller controller = null;
+	private Runnable runnableOpponent = null;
+	private boolean automatedOpponent = false;
+	private Controller automatedController = null;
 	private Logger logger = LogManager.getLogger(GUIDriver.class);
 	
 	private static final String TYPE = "type";
 	private static final String HOST = "host";
 	private static final String PORT = "port";
 	private static final String ERROR = "error";
+	private static final String AUTOMATED = "automatedOpponent";
 	
 	/**
 	 * This method is called immediately after the Application class is loaded and constructed and prior to the 
@@ -49,10 +53,12 @@ public class GUIDriver extends Application
 		host = kwargList.get(HOST);
 		type = kwargList.get(TYPE);
 		port = Integer.parseInt(kwargList.get(PORT));
+		automatedOpponent = Boolean.parseBoolean(kwargList.get(AUTOMATED));
 		
 		logger.info("Host: {}.", host);
 		logger.info("Port: {}.", port);
 		logger.info("Instance Type: {}.", type);
+		logger.info("Automated opponent: {}.", automatedOpponent);
 		
 		if (type.equalsIgnoreCase(Player.SERVER))
 		{
@@ -72,14 +78,30 @@ public class GUIDriver extends Application
 		}
 		
 		// Instantiate player logic, instanceName, and board controller
-		logic = new Player(instanceNumber, host, port);
+		controller = new BoardController(instanceNumber);
+		logic = new Player(controller, instanceNumber, host, port);
 		instanceName = ((Player) logic).getName();
-		controller = ((Player) logic).getController();
 		
-		// Start the logic thread
-		Thread logicThread = new Thread(logic);
-		logicThread.start();
+		logger.debug("Controller ID: " + controller.getID());
 		
+		//
+		if (automatedOpponent)
+		{
+			if (type.equalsIgnoreCase(Player.SERVER))
+			{
+				startLogic();
+				startAutomatedOpponent(Player.CLIENT_ID);
+			}
+			else if (type.equalsIgnoreCase(Player.CLIENT))
+			{
+				startAutomatedOpponent(Player.SERVER_ID);
+				startLogic();
+			}
+		}
+		else
+		{
+			startLogic();
+		}
 	}
 	
 	/**
@@ -141,6 +163,36 @@ public class GUIDriver extends Application
 		{
 			logger.error(e, e);
 		}
+	}
+	
+	/**
+	 * 
+	 * @param playerID
+	 */
+	private void startAutomatedOpponent(int playerID)
+	{
+		// Instantiate automated controller and runnable player instance of either server or client playerID
+		automatedController = new AutomatedController(playerID);
+		runnableOpponent = new Player(automatedController, playerID, host, port);
+		
+		logger.debug("Automated Controller ID: " + automatedController.getID());
+		
+		Thread automatedLogic = new Thread((Runnable) automatedController);
+		automatedLogic.start();
+		
+		// Instantiate and start automated logic thread
+		Thread automatedThread = new Thread(runnableOpponent);
+		automatedThread.start();
+	}
+	
+	/**
+	 * 
+	 */
+	private void startLogic()
+	{
+		// Start the logic thread
+		Thread logicThread = new Thread(logic);
+		logicThread.start();
 	}
 	
 	/**
