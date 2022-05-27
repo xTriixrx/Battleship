@@ -9,8 +9,6 @@ import javafx.scene.Cursor;
 import javafx.scene.text.Text;
 import javafx.scene.paint.Color;
 import java.util.ResourceBundle;
-
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -23,7 +21,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.input.TransferMode;
 import org.apache.logging.log4j.Logger;
 import javafx.collections.ObservableList;
-import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.input.ClipboardContent;
 import org.apache.logging.log4j.LogManager;
@@ -78,9 +75,9 @@ public class BoardController implements Initializable, Observer, Observable
 	@FXML
 	private ChoiceBox<String> OrientationChoice;
 
-	private Observer sobs;
 	private String toSend;
 	private int myTurn = 0;
+	private Observer observer;
 	private char mySymbol = 'A';
 	private int currentTurn = 0;
 	private int opponentTurn = 0;
@@ -156,7 +153,7 @@ public class BoardController implements Initializable, Observer, Observable
 	 */
 	public void shutdown()
 	{
-		notifyObserver("SHUTDOWN");
+		observer.update("SHUTDOWN");
 	}
 
 	/**
@@ -237,15 +234,9 @@ public class BoardController implements Initializable, Observer, Observable
 	
 
 	@Override
-	public void registerObserver(Observer observer)
+	public void register(Observer observer)
 	{
-		sobs = observer;
-	}
-	
-	@Override
-	public void notifyObserver(String update)
-	{
-		sobs.update(update);
+		this.observer = observer;
 	}
 
 	/**
@@ -275,7 +266,7 @@ public class BoardController implements Initializable, Observer, Observable
 			}
 		}
 		
-		notifyObserver(Integer.toString(opponentTurn));
+		observer.update(Integer.toString(opponentTurn));
 		currentTurn = opponentTurn;
 	}
 	
@@ -300,11 +291,11 @@ public class BoardController implements Initializable, Observer, Observable
 			// If armada has sunk, the game is over
 			if (armada.isArmadaSunk())
 			{
-				notifyObserver(OVER_MSG);
+				observer.update(OVER_MSG);
 			}
 			else // notify observer to share sunk ship detail to opponent
 			{
-				notifyObserver(shipText.getText().toUpperCase());
+				observer.update(shipText.getText().toUpperCase());
 			}
 		}
 		
@@ -371,7 +362,7 @@ public class BoardController implements Initializable, Observer, Observable
 	@Override
 	public void update(String s)
 	{
-		System.out.println("SC: Received " + s + ".");
+		logger.info("Controller {}: Received {}.", getID(), s);
 
 		if (s.equals("SET"))
 		{
@@ -442,7 +433,7 @@ public class BoardController implements Initializable, Observer, Observable
 
 			updatePlayerGrid(t, HorM);
 
-			notifyObserver(HorM);
+			observer.update(HorM);
 			currentTurn = myTurn;
 			myTurnFlag = false;
 		}
@@ -637,7 +628,7 @@ public class BoardController implements Initializable, Observer, Observable
 	 */
 	private EventHandler<MouseEvent> mouseClickEvent = (event) ->
 	{
-		System.out.println("CONTROLLER " + myTurn + ": current turn is: " + currentTurn);
+		logger.info("Controller {}: current turn is: {}", getID(), currentTurn);
 
 		if (currentTurn == myTurn && isShipsSet)
 		{
@@ -645,9 +636,9 @@ public class BoardController implements Initializable, Observer, Observable
 			toSend = new StringBuilder(toSend).append(mySymbol).toString();
 			((Button) event.getTarget()).setDisable(true);
 			((Button) event.getTarget()).setMouseTransparent(false);
-			System.out.println(toSend);
+			logger.info("Controller {}: sending {} to opponent.", toSend);
 			myTurnFlag = true;
-			notifyObserver(toSend);
+			observer.update(toSend);
 			pictureOne.setDisable(true);
 			pictureTwo.setDisable(true);
 			pictureThree.setDisable(true);
@@ -725,6 +716,6 @@ public class BoardController implements Initializable, Observer, Observable
 		automator.automateArmadaPlacement(buttonList, stylesMap);
 		armada.logArmadaPosition();
 		autoShips.setDisable(true);
-		notifyObserver("SHIPS");
+		observer.update("SHIPS");
 	};
 }

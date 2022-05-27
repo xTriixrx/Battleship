@@ -2,7 +2,6 @@ package com.qfi.battleship;
 
 import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import javax.swing.JOptionPane;
@@ -15,13 +14,14 @@ import org.apache.logging.log4j.LogManager;
 /**
  * 
  * @author Vincent.Nigro
- * @version 0.0.1
+ * @version 1.0.0
  */
 public class Player implements Runnable, Observable, Observer
 {
 	private int port = 0;
 	private int myID = 0;
 	private int lineCount = 0;
+	private String myName = "";
 	private String address = "";
 	private int currentTurn = 0;
 	private boolean over = false;
@@ -57,10 +57,12 @@ public class Player implements Runnable, Observable, Observer
 		if (whoami == 1) // client
 		{
 			myID = CLIENT_ID;
+			myName = toUppercase(CLIENT);
 		}
 		else if (whoami == 2) // server
 		{
 			myID = SERVER_ID;
+			myName = toUppercase(SERVER);
 		}
 
 		this.port = port;
@@ -68,8 +70,8 @@ public class Player implements Runnable, Observable, Observer
 		
 		// 
 		controller = new BoardController(myID);
-		controller.registerObserver((Observer)this);
-		registerObserver(controller);
+		controller.register((Observer)this);
+		register(controller);
 
 		// byte seed for the SecureRandom object
 		byte[] seed = ByteBuffer.allocate(Long.SIZE / Byte.SIZE)
@@ -113,7 +115,7 @@ public class Player implements Runnable, Observable, Observer
 					message = in.readUTF();
 					logger.debug("Player received '{}' message from opponent.", message);
 					received(message);
-					notifyObserver(message);
+					observer.update(message);
 				}
 			}
 			catch (Exception e)
@@ -222,10 +224,10 @@ public class Player implements Runnable, Observable, Observer
 		try
 		{
 			server = new ServerSocket(port);
-			System.out.println(ServerAddress());
-			System.out.println("Waiting for a client ...");
+			logger.info("Local Address: {}", ServerAddress());
+			logger.info("Waiting for a client to connect.");
 			socket = server.accept(); 
-			System.out.println("Client accepted"); 
+			logger.info("Client accepted."); 
 		}
 		catch (Exception e)
 		{
@@ -241,7 +243,7 @@ public class Player implements Runnable, Observable, Observer
 		try
 		{
 			socket = new Socket(address, port); 
-			System.out.println("Connected"); 
+			logger.info("Connected"); 
 		}
 		catch (Exception e)
 		{
@@ -252,7 +254,7 @@ public class Player implements Runnable, Observable, Observer
 	@Override
 	public void update(String s)
 	{
-		System.out.println("Received " + s + " from observable controller.");
+		logger.info("Received {} from observable controller.", s);
 		StringBuilder t = new StringBuilder(s);
 		updateResponse(s, t);
 	}
@@ -283,26 +285,31 @@ public class Player implements Runnable, Observable, Observer
 		}
 		else if(opponentMessage.equals("CARRIER"))
 		{
-			infoBox("You sunk your opponents Carrier!","Player " + myID);
+			infoBox("You sunk your opponents Carrier!", "Player " + myID);
 		}
 		else if(opponentMessage.equals("BATTLESHIP"))
 		{
-			infoBox("You sunk your opponents Battleship!","Player " + myID);
+			infoBox("You sunk your opponents Battleship!", "Player " + myID);
 		}
 		else if(opponentMessage.equals("CRUISER"))
 		{
-			infoBox("You sunk your opponents Cruiser!","Player " + myID);
+			infoBox("You sunk your opponents Cruiser!", "Player " + myID);
 		}
 		else if(opponentMessage.equals("SUBMARINE"))
 		{
-			infoBox("You sunk your opponents Submarine!","Player " + myID);
+			infoBox("You sunk your opponents Submarine!", "Player " + myID);
 		}
 		else if(opponentMessage.equals("DESTROYER"))
 		{
-			infoBox("You sunk your opponents Destroyer!","Player " + myID);
+			infoBox("You sunk your opponents Destroyer!", "Player " + myID);
 		}
 	}
 
+	/**
+	 * 
+	 * @param str
+	 * @param build
+	 */
 	public void updateResponse(String str, StringBuilder build)
 	{
 		if (str.equalsIgnoreCase("SHUTDOWN"))
@@ -321,12 +328,12 @@ public class Player implements Runnable, Observable, Observer
 		}
 		else if (str.equals("SHIPS"))
 		{
+			ShipsSet = true;
 			CarrierSet = true;
-			BattleshipSet = true;
 			CruiserSet = true;
 			SubmarineSet = true;
 			DestroyerSet = true;
-			ShipsSet = true;
+			BattleshipSet = true;
 		}
 		else if (str.equals("OVER"))
 		{
@@ -402,45 +409,43 @@ public class Player implements Runnable, Observable, Observer
 			{
 
 			}
-
-			System.out.println("");
-
-			if (controller.getArmada().isCarrierSet())
+			
+			if (controller.getArmada().isCarrierSet() && !CarrierSet)
 			{
 				CarrierSet = true;
-				System.out.println("Carrier is Set.");
+				logger.info("Carrier is Set.");
 			}
 
-			if (controller.getArmada().isBattleshipSet())
+			if (controller.getArmada().isBattleshipSet() && !BattleshipSet)
 			{
 				BattleshipSet = true;
-				System.out.println("Battleship is Set.");
+				logger.info("Battleship is Set.");
 			}
 
-			if (controller.getArmada().isCruiserSet())
+			if (controller.getArmada().isCruiserSet() && !CruiserSet)
 			{
 				CruiserSet = true;
-				System.out.println("Cruiser is Set.");
+				logger.info("Cruiser is Set.");
 			}
 
-			if (controller.getArmada().isSubmarineSet())
+			if (controller.getArmada().isSubmarineSet() && !SubmarineSet)
 			{
 				SubmarineSet = true;
-				System.out.println("Submarine is Set.");
+				logger.info("Submarine is Set.");
 			}
 
-			if (controller.getArmada().isDestroyerSet())
+			if (controller.getArmada().isDestroyerSet() && !DestroyerSet)
 			{
 				DestroyerSet = true;
-				System.out.println("Destroyer is Set.");
+				logger.info("Destroyer is Set.");
 			}
 
 			if (CarrierSet && BattleshipSet && CruiserSet &&
 					SubmarineSet && DestroyerSet)
 			{
-				System.out.println("SET");
+				logger.info("All ships are set!");
 				isSet = true;
-				notifyObserver("SET");
+				observer.update("SET");
 				controller.getArmada().logArmadaPosition();
 				infoBox("Ships are Set!", "Player " + myID);
 			}
@@ -496,23 +501,13 @@ public class Player implements Runnable, Observable, Observer
 			logger.error(e, e); 
 		}
 	}
-	
-	/**
-	 * 
-	 * @param update
-	 */
-	@Override
-	public void notifyObserver(String update)
-	{
-		observer.update(update);
-	}
 
 	/**
 	 * 
 	 * @param observer
 	 */
 	@Override
-	public void registerObserver(Observer observer)
+	public void register(Observer observer)
 	{
 		this.observer = observer;
 	}
@@ -525,21 +520,31 @@ public class Player implements Runnable, Observable, Observer
 	{
 		return controller;
 	}
-
+	
+	/**
+	 * 
+	 * @return String
+	 */
+	public String getName()
+	{
+		return myName;
+	}
+	
 	/**
 	 * 
 	 * @param string
 	 * @return String
 	 */
-	public static String toUppercase(String string)
+	public String toUppercase(String string)
 	{
 		return string.substring(0, 1).toUpperCase() + string.substring(1);
 	}
 
 	/**
+	 * An Java Swing pop up info box for showing basic pop up information to the user during the game.
 	 * 
-	 * @param infoMessage
-	 * @param titleBar
+	 * @param infoMessage The message to be inserted into the pop up message.
+	 * @param titleBar The partial title of the pop up box.
 	 */
 	public void infoBox(String infoMessage, String titleBar)
 	{
