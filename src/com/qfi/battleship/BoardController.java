@@ -21,6 +21,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.input.TransferMode;
 import org.apache.logging.log4j.Logger;
 import javafx.collections.ObservableList;
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.input.ClipboardContent;
 import org.apache.logging.log4j.LogManager;
@@ -155,6 +156,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	 */
 	public void shutdown()
 	{
+		Platform.exit();
 		observer.update("SHUTDOWN");
 	}
 

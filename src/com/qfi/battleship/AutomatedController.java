@@ -157,7 +157,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			else if (!hitShipPositions.contains(lastPosition) && hitShipPositions.size() > 1) // ran off
 			{
 				logger.info("AUTOMATEDCONTROLLER: LAST POSITION MISSED & MULTIPLE HITS");
-				
+
 				String firstHitPosition = hitShipPositions.get(0);
 				String nextHitPosition = hitShipPositions.get(hitShipPositions.indexOf(firstHitPosition) + 1);
 				
@@ -166,6 +166,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 				
 				if (isGuessedPosition(position) || position.isEmpty())
 				{
+					// getRandomCrossPositionProtocol()
 					availablePositions = getCrossPositions(nextHitPosition);
 					
 					if (availablePositions.size() > 0)
@@ -182,6 +183,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			else
 			{
 				logger.info("AUTOMATEDCONTROLLER: CROSS POSITION");
+				// getRandomCrossPositionProtocol()
 				availablePositions = getCrossPositions(hitShipPositions.get(0));
 				
 				if (availablePositions.size() > 0)

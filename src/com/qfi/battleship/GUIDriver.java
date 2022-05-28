@@ -5,7 +5,6 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.scene.Parent;
 import javafx.fxml.FXMLLoader;
-import javax.swing.JOptionPane;
 import javafx.application.Application;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
