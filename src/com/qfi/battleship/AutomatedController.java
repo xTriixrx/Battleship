@@ -112,12 +112,15 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	
 	public void makeGuess(int ammo)
 	{
-		logger.info("AUTOMATEDCONTROLLER: GUESSED POSITIONS: {}", guessedPositions);
+		logger.info("AUTOMATEDCONTROLLER: GUESSED POSITIONS: {}", getGuessedPositions());
 		
 		if (isShipInFocus())
 		{
 			String position = "";
+			List<String> availablePositions = null;
+			
 			String lastPosition = latestGuess;
+			
 			logger.info("HIT SHIP POSITIONS: " + hitShipPositions);
 			
 			if (hitShipPositions.contains(lastPosition) && hitShipPositions.size() > 1) // hit multiple sections
@@ -128,13 +131,27 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 				position = getNextPosition(lastPosition,
 					calculateDirection(lastPosition, prevHitPosition));
 				
-				if (guessedPositions.contains(position))
+				if (isGuessedPosition(position) || position.isEmpty())
 				{
 					String firstHitPosition = hitShipPositions.get(0);
 					String nextHitPosition = hitShipPositions.get(hitShipPositions.indexOf(firstHitPosition) + 1);
 					
 					position = getNextPosition(firstHitPosition,
 						calculateDirection(firstHitPosition, nextHitPosition));
+					
+					if (isGuessedPosition(position) || position.isEmpty())
+					{
+						availablePositions = getCrossPositions(nextHitPosition);
+						if (availablePositions.size() > 0)
+						{
+							position = availablePositions.get(random.nextInt(availablePositions.size()));
+							
+							if (position.isEmpty())
+							{
+								performRandomPositionProtocol();
+							}
+						}
+					}
 				}
 			}
 			else if (!hitShipPositions.contains(lastPosition) && hitShipPositions.size() > 1) // ran off
@@ -147,19 +164,39 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 				position = getNextPosition(firstHitPosition,
 					calculateDirection(firstHitPosition, nextHitPosition));
 				
-				if (guessedPositions.contains(position))
+				if (isGuessedPosition(position) || position.isEmpty())
 				{
-					position = getCrossPosition(firstHitPosition);
+					availablePositions = getCrossPositions(nextHitPosition);
+					
+					if (availablePositions.size() > 0)
+					{
+						position = availablePositions.get(random.nextInt(availablePositions.size()));
+					}
+					
+					if (position.isEmpty())
+					{
+						performRandomPositionProtocol();
+					}
 				}
 			}
 			else
 			{
 				logger.info("AUTOMATEDCONTROLLER: CROSS POSITION");
-				position = getCrossPosition(hitShipPositions.get(0));
+				availablePositions = getCrossPositions(hitShipPositions.get(0));
+				
+				if (availablePositions.size() > 0)
+				{
+					position = availablePositions.get(random.nextInt(availablePositions.size()));
+					
+					if (position.isEmpty())
+					{
+						performRandomPositionProtocol();
+					}
+				}
 			}
 
 			latestGuess = position;
-			guessedPositions.add(latestGuess);
+			addGuessedPosition(latestGuess);
 			logger.info("AUTOMATEDCONTROLLER: GUESS: {}", latestGuess);
 			observer.update(latestGuess);
 			
@@ -171,8 +208,6 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	
 	private String getNextPosition(String contextPosition, int direction)
 	{
-		String position = "";
-		char columnChar = 'a';
 		contextPosition = contextPosition.substring(1, contextPosition.length() - 1);
 		
 		int column = (int) (contextPosition.charAt(0) - 64);
@@ -195,40 +230,38 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			row--;
 		}
 		
-		columnChar = (char) (column + 64);
+		if (column > 10 || row > 10)
+		{
+			return "";
+		}
 		
-		position = "0";
-		position += columnChar;
-		position += row;
-		position += mySymbol;
-		
-		return position;
+		return makePosition((char) (column + 64), row);
 	}
 	
-	private int calculateDirection(String p1, String p2)
+	private int calculateDirection(String start, String end)
 	{
 		int direction = 0;
-		p1 = p1.substring(1, p1.length() - 1);
-		p2 = p2.substring(1, p2.length() - 1);
+		end = end.substring(1, end.length() - 1);
+		start = start.substring(1, start.length() - 1);
 		
-		int c1 = (int) (p1.charAt(0) - 64);
-		int c2 = (int) (p2.charAt(0) - 64);
-		int r1 = Integer.parseInt(p1.substring(1));
-		int r2 = Integer.parseInt(p2.substring(1));
+		int endColumn = (int) (end.charAt(0) - 64);
+		int startColumn = (int) (start.charAt(0) - 64);
+		int endRow = Integer.parseInt(end.substring(1));
+		int startRow = Integer.parseInt(start.substring(1));
 		
-		if (c1 > c2)
+		if (startColumn > endColumn)
 		{
 			direction = RIGHT_DIRECTION;
 		}
-		else if (c2 > c1)
+		else if (endColumn > startColumn)
 		{
 			direction = LEFT_DIRECTION;
 		}
-		else if (r1 > r2)
+		else if (startRow > endRow)
 		{
 			direction = UP_DIRECTION;
 		}
-		else if (r2 > r1)
+		else if (endRow > startRow)
 		{
 			direction = DOWN_DIRECTION;
 		}
@@ -238,65 +271,56 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		return direction;
 	}
 	
-	private String getCrossPosition(String focusPosition)
+	private List<String> getCrossPositions(String focusPosition)
 	{
-		String position = "";
+		List<String> positions = new ArrayList<>();
 		focusPosition = focusPosition.substring(1, focusPosition.length() - 1);
+
+		int column = (int) (focusPosition.charAt(0) - 64);
+		int row = Integer.parseInt(focusPosition.substring(1));
 		
-		do
-		{
-			int column = (int) (focusPosition.charAt(0) - 64);
-			int row = Integer.parseInt(focusPosition.substring(1));
-			
-			logger.info("AUTOMATEDCONTROLLER: Captured Row: {}.", row);
-			logger.info("AUTOMATEDCONTROLLER: Captured column: {}.", column);
-			
-			int upOrDown = random.nextInt(2) + 1;
-			int verticalOrHorizontal = random.nextInt(2) + 1;
-			
-			if (verticalOrHorizontal == 1) // vertical
-			{
-				if (upOrDown == 1) // up
-				{
-					row++;
-				}
-				else // down
-				{
-					row--;
-				}
-			}
-			else // horizontal
-			{
-				if (upOrDown == 1) // left column
-				{
-					column--;
-				}
-				else // right column
-				{
-					column++;
-				}
-			}
-			
-			char columnChar = (char) (column + 64);
-			
-			position = "O";
-			position += columnChar;
-			position += row;
-			position += mySymbol;
-			logger.info("Attempting random position: {}", position);
-		} while (guessedPositions.contains(position));
+		logger.debug("AUTOMATEDCONTROLLER: Captured Row: {}.", row);
+		logger.debug("AUTOMATEDCONTROLLER: Captured column: {}.", column);
+		
+		// If all positions are available will return in order of 
+		positions.add(makePosition((char) (column + 64), row + 1));
+		positions.add(makePosition((char) (column + 64), row - 1));
+		positions.add(makePosition((char) ((column + 1) + 64), row));
+		positions.add(makePosition((char) ((column - 1) + 64), row));
+		
+		positions.removeAll(getGuessedPositions());
+
+		logger.debug("AUTOMATEDCONTROLLER: Available cross position: {}", positions);
+		
+		return positions;
+	}
+	
+	private String makePosition(char column, int row)
+	{
+		String position = "O";
+		
+		position += column;
+		position += row;
+		position += mySymbol;
 		
 		return position;
 	}
 	
+	/**
+	 * 
+	 */
 	private void performRandomPositionProtocol()
 	{
 		latestGuess = getRandomPosition();
-		guessedPositions.add(latestGuess);
+		addGuessedPosition(latestGuess);
 		logger.info("AUTOMATEDCONTROLLER: GUESS: {}", latestGuess);
 		observer.update(latestGuess);
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
 	private String getRandomPosition()
 	{
 		int row = 0;
@@ -309,13 +333,9 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			row = random.nextInt(10) + 1;
 			column = random.nextInt(10) + 1;
 			columnChar = (char) (column + 64);
-			
-			position = "O";
-			position += columnChar;
-			position += row;
-			position += mySymbol;
+			position = makePosition(columnChar, row);
 			logger.trace("Attempting random position: {}", position);
-		} while (guessedPositions.contains(position));
+		} while (isGuessedPosition(position));
 		
 		return position;
 	}
@@ -481,6 +501,38 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		}
 	}
 	
+	private List<String> getGuessedPositions()
+	{
+		List<String> copy = null;
+		
+		synchronized (turnMutex)
+		{
+			copy = new ArrayList<>(guessedPositions);
+		}
+		
+		return copy;
+	}
+	
+	private void addGuessedPosition(String pos)
+	{
+		synchronized (turnMutex)
+		{
+			guessedPositions.add(pos);
+		}
+	}
+	
+	private boolean isGuessedPosition(String pos)
+	{
+		boolean guessed = false;
+		
+		synchronized (turnMutex)
+		{
+			guessed = guessedPositions.contains(pos);
+		}
+		
+		return guessed;
+	}
+	
 	private boolean myTurnStatus()
 	{
 		boolean t = false;
@@ -503,7 +555,6 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	public void shutdown()
 	{
 		shutdown = true;
-		observer.update("SHUTDOWN");
 	}
 
 	@Override

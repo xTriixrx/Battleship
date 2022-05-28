@@ -510,7 +510,9 @@ public class Player implements Runnable, Observable, Observer
 	{
 		// close the connections
 		try
-		{ 
+		{
+			controller.shutdown();
+			
 			in.close(); 
 			out.close(); 
 			socket.close();
@@ -524,8 +526,6 @@ public class Player implements Runnable, Observable, Observer
 		{ 
 			logger.error(e, e); 
 		}
-		
-		controller.shutdown();
 	}
 	
 	/**

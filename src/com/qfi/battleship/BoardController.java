@@ -82,6 +82,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	private int currentTurn = 0;
 	private int opponentTurn = 0;
 	private Armada armada = null;
+	private Object turnMutex = null;
 	private boolean myTurnFlag = true;
 	private boolean isShipsSet = false;
 	private String orientation = HORIZONTAL;
@@ -117,6 +118,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	BoardController(int whoami)
 	{
 		armada = new Armada();
+		turnMutex = new Object();
 		automator = new ArmadaAutomator(armada);
 		
 		populateStyles();
@@ -208,12 +210,6 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	{
 		return armada;
 	}
-	
-	@Override
-	public void setCurrentTurn(int t)
-	{
-		currentTurn = t;
-	}
 
 	public void setIsShipsSet(boolean s)
 	{
@@ -225,9 +221,25 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		return isShipsSet;
 	}
 
+	@Override
+	public void setCurrentTurn(int t)
+	{
+		synchronized (turnMutex)
+		{
+			currentTurn = t;
+		}
+	}
+	
 	public int getCurrentTurn()
 	{
-		return currentTurn;
+		int turn = 0;
+		
+		synchronized (turnMutex)
+		{
+			turn = currentTurn;
+		}
+		
+		return turn;
 	}
 
 	public int getID()
@@ -269,8 +281,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 			}
 		}
 		
-//		observer.update(Integer.toString(opponentTurn));|
-		currentTurn = opponentTurn;
+		setCurrentTurn(opponentTurn);
 	}
 	
 	/**
@@ -398,7 +409,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		{
 			setSunkShipText(opponentDestroyer);
 		}
-		else if (currentTurn == myTurn && myTurnFlag)
+		else if (getCurrentTurn() == myTurn && myTurnFlag)
 		{
 			StringBuilder temp = new StringBuilder(toSend);
 
@@ -413,7 +424,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 
 			updateOpponentGrid(t, s);
 		}
-		else if (currentTurn == opponentTurn)
+		else if (getCurrentTurn() == opponentTurn)
 		{
 			StringBuilder temp = new StringBuilder(s);
 			String HorM = "";
@@ -443,9 +454,9 @@ public class BoardController implements Initializable, Observer, Observable, Con
 
 			updatePlayerGrid(t, HorM);
 
-			observer.update(HorM);
-			currentTurn = myTurn;
+			setCurrentTurn(myTurn);
 			myTurnFlag = false;
+			observer.update(HorM);
 		}
 	}
 	
@@ -638,9 +649,9 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	 */
 	private EventHandler<MouseEvent> mouseClickEvent = (event) ->
 	{
-		logger.info("Controller {}: current turn is: {}", getID(), currentTurn);
+		logger.info("Controller {}: current turn is: {}", getID(), getCurrentTurn());
 
-		if (currentTurn == myTurn && isShipsSet)
+		if (getCurrentTurn() == myTurn && isShipsSet)
 		{
 			toSend = ((Node) event.getTarget()).getId();
 			toSend = new StringBuilder(toSend).append(mySymbol).toString();
