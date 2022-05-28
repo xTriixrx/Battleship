@@ -1,5 +1,7 @@
 package com.qfi.battleship;
 
+import java.util.List;
+import java.util.ArrayList;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import org.apache.logging.log4j.Logger;
@@ -21,9 +23,17 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	private Object turnMutex = null;
 	private Observer observer = null;
 	private boolean shutdown = false;
-	private boolean myTurnFlag = true;
+	private boolean myTurnFlag = false;
 	private SecureRandom random = null;
+	private boolean isShipsSet = false;
+	private boolean isCarrierSunk = false;
+	private boolean isCruiserSunk = false;
+	private boolean isSubmarineSunk = false;
+	private boolean isDestroyerSunk = false;
+	private boolean isBattleshipSunk = false;
 	private ArmadaAutomator automator = null;
+	private List<String> guessedPositions = null;
+	private List<String> guessedPositionsOutcome = null;
 	private Logger logger = LogManager.getLogger(AutomatedController.class);
 	
 	private static final int clientTurn = 1;
@@ -41,9 +51,12 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	{
 		armada = new Armada();
 		turnMutex = new Object();
-		automator = new ArmadaAutomator(armada);
+		guessedPositions = new ArrayList<>();
+		guessedPositionsOutcome = new ArrayList<>();
 		
+		automator = new ArmadaAutomator(armada);
 		automator.automateArmadaPlacement();
+		armada.logArmadaPosition();
 		
 		// byte seed for the SecureRandom object
 		byte[] seed = ByteBuffer.allocate(Long.SIZE / Byte.SIZE)
@@ -71,16 +84,19 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	 */
 	public void run()
 	{
+		int sentAmmo = 0;
+		
 		while (!shutdown)
 		{
-			if (getCurrentTurn() == myTurn && myTurnFlag)
+			if (getCurrentTurn() == myTurn && isShipsSet && !myTurnStatus())
 			{
-				makeGuess();
+				makeGuess(sentAmmo++);
+				setTurnStatus(true);
 			}
 			
 			try
 			{
-				Thread.sleep(1000);
+				Thread.sleep(500);
 			}
 			catch (Exception e)
 			{
@@ -89,23 +105,57 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		}
 	}
 	
-	public void makeGuess()
+	public void makeGuess(int ammo)
 	{
-		String guess = "O";
-		int row = random.nextInt(10) + 1;
-		int column = random.nextInt(10) + 1;
-		char columnChar = (char) (column + 64);
+		int row = 0;
+		int column = 0;
+		String guess = "";
+		char columnChar = 'a';
 		
-		guess += columnChar;
-		guess += row;
-		guess += mySymbol;
+		if (ammo > 0)
+		{
+			String lastOutcome = guessedPositionsOutcome.get(--ammo);
+			
+			if (lastOutcome == HIT)
+			{
+				// Need to get create logic to focus on hit position until ship has sunk.
+				performRandomPositionProtocol();
+				return;
+			}
+		}
 		
-		latestGuess = guess;
+		performRandomPositionProtocol();
+	}
+	
+	private void performRandomPositionProtocol()
+	{
+		latestGuess = getRandomPosition();
+		guessedPositions.add(latestGuess);
+		logger.info("AUTOMATEDCONTROLLER: GUESS: {}", latestGuess);
+		observer.update(latestGuess);
+	}
+	
+	private String getRandomPosition()
+	{
+		int row = 0;
+		int column = 0;
+		String position = "";
+		char columnChar = 'a';
 		
-		logger.info("AUTOMATEDCONTROLLER: GUESS: {}", guess);
+		do
+		{
+			row = random.nextInt(10) + 1;
+			column = random.nextInt(10) + 1;
+			columnChar = (char) (column + 64);
+			
+			position = "O";
+			position += columnChar;
+			position += row;
+			position += mySymbol;
+			logger.trace("Attempting random position: {}", position);
+		} while (guessedPositions.contains(position));
 		
-		myTurnFlag = false;
-		observer.update(guess);
+		return position;
 	}
 	
 	@Override
@@ -116,6 +166,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		if (update.equals("SET"))
 		{
 			logger.info("AUTOMATEDCONTROLLER: SET");
+			isShipsSet = true;
 		}
 		else if (update.equals(Armada.CARRIER_NAME))
 		{
@@ -137,8 +188,9 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		{
 			logger.info("AUTOMATEDCONTROLLER: {}", Armada.DESTROYER_NAME);
 		}
-		else if (getCurrentTurn() == myTurn)
+		else if (getCurrentTurn() == myTurn && myTurnStatus())
 		{
+			guessedPositionsOutcome.add(update);
 			StringBuilder temp = new StringBuilder(latestGuess);
 
 			String t = "";
@@ -151,8 +203,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			}
 			
 			// update internal picture of opponent board
-			
-			observer.update(Integer.toString(opponentTurn));
+
 			setCurrentTurn(opponentTurn);
 		}
 		else if (getCurrentTurn() == opponentTurn)
@@ -173,6 +224,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			String boardPos = t.substring(1); 
 			boolean isHit = armada.calculateHit(boardPos);
 			armada.updateArmada(boardPos);
+			armada.logArmadaPosition();
 			
 			if (isHit)
 			{
@@ -183,11 +235,62 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 				HorM = MISS;
 			}
 			
+			if (isHit)
+			{
+				// Cases: 1) F |= (T & F) ... 2) F |= (T & T) ... 3) T |= (F & T) 
+				isCarrierSunk |= checkShipUpdate((!isCarrierSunk & armada.isCarrierSunk()), Armada.CARRIER_NAME);
+				isCruiserSunk |= checkShipUpdate((!isCruiserSunk & armada.isCruiserSunk()), Armada.CRUISER_NAME);
+				isSubmarineSunk |= checkShipUpdate((!isSubmarineSunk & armada.isSubmarineSunk()), Armada.SUBMARINE_NAME);
+				isDestroyerSunk |= checkShipUpdate((!isDestroyerSunk & armada.isDestroyerSunk()), Armada.DESTROYER_NAME);
+				isBattleshipSunk |= checkShipUpdate((!isBattleshipSunk & armada.isBattleshipSunk()), Armada.BATTLESHIP_NAME);
+			}
+			
 			observer.update(HorM);
+			setTurnStatus(false);
 			setCurrentTurn(myTurn);
-			myTurnFlag = true;
 		}
 		
+	}
+	
+	private boolean checkShipUpdate(boolean shipSunk, String shipName)
+	{
+		if (shipSunk)
+		{
+			// If armada has sunk, the game is over
+			if (armada.isArmadaSunk())
+			{
+				observer.update("OVER");
+			}
+			else
+			{
+				logger.info("{} SUNK", shipName);
+				observer.update(shipName);
+			}
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
+	private void setTurnStatus(boolean t)
+	{
+		synchronized (turnMutex)
+		{
+			myTurnFlag = t;
+		}
+	}
+	
+	private boolean myTurnStatus()
+	{
+		boolean t = false;
+		
+		synchronized (turnMutex)
+		{
+			t = myTurnFlag;
+		}
+		
+		return t;
 	}
 	
 	@Override

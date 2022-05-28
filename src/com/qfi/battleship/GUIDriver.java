@@ -89,18 +89,18 @@ public class GUIDriver extends Application
 		{
 			if (type.equalsIgnoreCase(Player.SERVER))
 			{
-				startLogic();
-				startAutomatedOpponent(Player.CLIENT_ID);
+				startLogic(Player.SERVER);
+				startAutomatedOpponent(Player.CLIENT_ID, Player.CLIENT, Player.CLIENT);
 			}
 			else if (type.equalsIgnoreCase(Player.CLIENT))
 			{
-				startAutomatedOpponent(Player.SERVER_ID);
-				startLogic();
+				startAutomatedOpponent(Player.SERVER_ID, Player.SERVER, Player.SERVER);
+				startLogic(Player.CLIENT);
 			}
 		}
 		else
 		{
-			startLogic();
+			startLogic(type);
 		}
 	}
 	
@@ -169,7 +169,7 @@ public class GUIDriver extends Application
 	 * 
 	 * @param playerID
 	 */
-	private void startAutomatedOpponent(int playerID)
+	private void startAutomatedOpponent(int playerID, String automatedControllerName, String automatedThreadName)
 	{
 		// Instantiate automated controller and runnable player instance of either server or client playerID
 		automatedController = new AutomatedController(playerID);
@@ -178,20 +178,23 @@ public class GUIDriver extends Application
 		logger.debug("Automated Controller ID: " + automatedController.getID());
 		
 		Thread automatedLogic = new Thread((Runnable) automatedController);
+		automatedLogic.setName(automatedControllerName);
 		automatedLogic.start();
 		
 		// Instantiate and start automated logic thread
 		Thread automatedThread = new Thread(runnableOpponent);
+		automatedThread.setName(automatedThreadName);
 		automatedThread.start();
 	}
 	
 	/**
 	 * 
 	 */
-	private void startLogic()
+	private void startLogic(String threadName)
 	{
 		// Start the logic thread
 		Thread logicThread = new Thread(logic);
+		logicThread.setName(threadName);
 		logicThread.start();
 	}
 	

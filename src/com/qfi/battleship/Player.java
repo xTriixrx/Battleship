@@ -402,6 +402,7 @@ public class Player implements Runnable, Observable, Observer
 		{
 			if (!str.equals("SHIPS"))
 			{
+				logger.info("Sending {} to opponent.", str);
 				out.writeUTF(str);
 				out.flush();
 			}

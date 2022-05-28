@@ -269,7 +269,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 			}
 		}
 		
-		observer.update(Integer.toString(opponentTurn));
+//		observer.update(Integer.toString(opponentTurn));|
 		currentTurn = opponentTurn;
 	}
 	
