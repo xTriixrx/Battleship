@@ -27,6 +27,7 @@ public class Player implements Runnable, Observable, Observer
 	private boolean over = false;
 	private Socket socket = null;
 	private Observer observer = null;
+	private boolean automated = false;
 	private DataInputStream in = null;
 	private SecureRandom random = null;
 	private ServerSocket server = null;
@@ -522,6 +523,24 @@ public class Player implements Runnable, Observable, Observer
 			logger.error(e, e); 
 		}
 	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public boolean isAutomated()
+	{
+		return automated;
+	}
+	
+	/**
+	 * 
+	 * @param automated
+	 */
+	public void setAutomated(boolean automated)
+	{
+		this.automated = automated;
+	}
 
 	/**
 	 * 
@@ -561,6 +580,9 @@ public class Player implements Runnable, Observable, Observer
 	 */
 	public void infoBox(String infoMessage, String titleBar)
 	{
-		JOptionPane.showMessageDialog(null, infoMessage, "Server: " + titleBar, JOptionPane.INFORMATION_MESSAGE);
+		if (!isAutomated())
+		{
+			JOptionPane.showMessageDialog(null, infoMessage, "Server: " + titleBar, JOptionPane.INFORMATION_MESSAGE);
+		}
 	}
 }

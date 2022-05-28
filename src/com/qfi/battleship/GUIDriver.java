@@ -71,8 +71,9 @@ public class GUIDriver extends Application
 		else
 		{
 			// Invalid player type
-			String invalid = "Invalid player type {}. Shutting down driver.";
-			infoBox(invalid, ERROR);
+			String invalid = "Invalid player type " + type + ". Shutting down driver.";
+			logic = new Player(controller, instanceNumber, host, port);
+			((Player) logic).infoBox(invalid, ERROR);
 			logger.error(invalid);
 			System.exit(1);
 		}
@@ -137,11 +138,11 @@ public class GUIDriver extends Application
 			// Depending on who's turn it is, create a pop up signifying whos turn it is first.
 			if(controller.getCurrentTurn() == instanceNumber)
 			{
-				infoBox("It is your turn first!", "Player " + Integer.toString(instanceNumber));
+				((Player) logic).infoBox("It is your turn first!", "Player " + Integer.toString(instanceNumber));
 			}
 			else
 			{
-				infoBox("It is the opponents turn first...", "Player " + Integer.toString(instanceNumber));
+				((Player) logic).infoBox("It is the opponents turn first...", "Player " + Integer.toString(instanceNumber));
 			}
 			
 			// Disables maximizing the primary stage
@@ -174,6 +175,7 @@ public class GUIDriver extends Application
 		// Instantiate automated controller and runnable player instance of either server or client playerID
 		automatedController = new AutomatedController(playerID);
 		runnableOpponent = new Player(automatedController, playerID, host, port);
+		((Player) runnableOpponent).setAutomated(true);
 		
 		logger.debug("Automated Controller ID: " + automatedController.getID());
 		
@@ -197,18 +199,7 @@ public class GUIDriver extends Application
 		logicThread.setName(threadName);
 		logicThread.start();
 	}
-	
-	/**
-	 * An Java Swing pop up info box for showing basic pop up information to the user during the game.
-	 * 
-	 * @param infoMessage The message to be inserted into the pop up message.
-	 * @param titleBar The partial title of the pop up box.
-	 */
-	public void infoBox(String infoMessage, String titleBar)
-    {
-        JOptionPane.showMessageDialog(null, infoMessage, instanceName + ": " + titleBar, JOptionPane.INFORMATION_MESSAGE);
-    }
-	
+
 	/**
 	 * Called by the GUIDriverRunner class to inject command line arguments into the Application runtime.
 	 * 
