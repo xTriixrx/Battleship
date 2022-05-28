@@ -107,11 +107,6 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	
 	public void makeGuess(int ammo)
 	{
-		int row = 0;
-		int column = 0;
-		String guess = "";
-		char columnChar = 'a';
-		
 		if (ammo > 0)
 		{
 			String lastOutcome = guessedPositionsOutcome.get(--ammo);
