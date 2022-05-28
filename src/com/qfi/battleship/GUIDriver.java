@@ -85,7 +85,7 @@ public class GUIDriver extends Application
 		
 		logger.debug("Controller ID: " + controller.getID());
 		
-		//
+		// If the automated opponent flag is set, an inverse automated player will also be instantiated.
 		if (automatedOpponent)
 		{
 			if (type.equalsIgnoreCase(Player.SERVER))

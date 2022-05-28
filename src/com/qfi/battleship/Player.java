@@ -303,6 +303,8 @@ public class Player implements Runnable, Observable, Observer
 			{
 				logger.error(e, e);
 			}
+			
+			over = true;
 		}
 		else if(opponentMessage.equals(Armada.CARRIER_NAME))
 		{
@@ -522,6 +524,8 @@ public class Player implements Runnable, Observable, Observer
 		{ 
 			logger.error(e, e); 
 		}
+		
+		controller.shutdown();
 	}
 	
 	/**
@@ -582,7 +586,7 @@ public class Player implements Runnable, Observable, Observer
 	{
 		if (!isAutomated())
 		{
-			JOptionPane.showMessageDialog(null, infoMessage, "Server: " + titleBar, JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(null, infoMessage, myName + ": " + titleBar, JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 }
