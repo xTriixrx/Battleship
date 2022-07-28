@@ -13,6 +13,7 @@
 	<javafx.version>17.0.2</javafx.version>
     <kotlin.version>1.6.10</kotlin.version>
 	<buildDirectory>${project.basedir}/target</buildDirectory>
+	<javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
 	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
   </properties>
@@ -118,10 +119,18 @@
 					</sourceDirs>
 					</configuration>
 				</execution>
-
-
 			</executions>
         </plugin>
+		<!-- https://github.com/openjfx/javafx-maven-plugin -->
+		<plugin>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-maven-plugin</artifactId>
+			<version>${javafx.maven.plugin.version}</version>
+			<configuration>
+				<mainClass>com.qfi.battleship.GUIDriverRunner</mainClass>
+				<commandlineArgs>--type=server --port=5000 --host=127.0.0.1 --automatedOpponent=true</commandlineArgs>
+			</configuration>
+		</plugin>
     </plugins>
     <pluginManagement>
     	<plugins>
