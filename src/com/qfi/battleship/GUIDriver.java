@@ -107,6 +107,8 @@ public class GUIDriver extends Application
 	 * The main entry point for all JavaFX applications the start method is called after the init method has returned
 	 * and, after the system is ready for the application to begin running. This method will set our instantiated controller,
 	 * load the Battleship layout FXML, and set the scene.
+	 *
+	 * @param primaryStage - The primaryStage that is passed from the JavaFX runtime.
 	 */
 	@Override
 	public void start(Stage primaryStage)
@@ -211,7 +213,7 @@ public class GUIDriver extends Application
 	/**
 	 * Called by the GUIDriverRunner class to inject command line arguments into the Application runtime.
 	 * 
-	 * @param args Keyword arguments from the command line injected by the GUIDriverRunner class.
+	 * @param args - Keyword arguments from the command line injected by the GUIDriverRunner class.
 	 */
 	public static void main(String[] args)
 	{

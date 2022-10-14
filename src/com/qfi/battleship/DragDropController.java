@@ -20,7 +20,6 @@ public class DragDropController
 	private Armada armada = null;
 	private Map<ArmadaType, String> styles = null;
 	private ObservableList<Node> buttonList = null;
-	private Logger logger = LogManager.getLogger(DragDropController.class);
 	
 	private static final short UPPER_BOUND = 10;
 	private static final int TOTAL_BUTTONS = 100;
@@ -29,13 +28,14 @@ public class DragDropController
 	private static final short STANDARD_ROW_POS = 2;
 	private static final char OUT_OF_BOUNDS_COL = 'Z';
 	private static final String BACKGROUND_BUTTON_STYLE = "-fx-background-color: blue";
-	
+	private static final Logger logger = LogManager.getLogger(DragDropController.class);
+
 	/**
 	 * DragDropController constructor.
 	 * 
-	 * @param buttonList An unsorted observable list of nodes containing button's.
-	 * @param armada An Armada object provided by the parent controller.
-	 * @param styles A map of styles based on the type of ship that is being placed.
+	 * @param buttonList - An unsorted observable list of nodes containing button's.
+	 * @param armada - An Armada object provided by the parent controller.
+	 * @param styles - A map of styles based on the type of ship that is being placed.
 	 */
 	DragDropController(ObservableList<Node> buttonList, Armada armada, Map<ArmadaType, String> styles)
 	{
@@ -45,13 +45,13 @@ public class DragDropController
 	}
 	
 	/**
-	 * Public interface function for determining whether a horizontal block of button's are not blocked by existing
+	 * Public interface function for determining whether a horizontal block of buttons is not blocked by existing
 	 * ships that have been placed. This function will return true if the set of blocks in the horizontal range are free
 	 * to be highlighted/dropped by the user and false if an existing ship position is within the horizontal range.
 	 * 
-	 * @param target The current contextual target button, is where the mouse is currently.
-	 * @param size The size of the ship that is being checked.
-	 * @return boolean
+	 * @param target - The current contextual target button, is where the mouse is currently.
+	 * @param size - The size of the ship that is being checked.
+	 * @return boolean - Returns a boolean for if a horizontal stride is available or not.
 	 */
 	public boolean freeStrideHorizontal(Node target, int size)
 	{
@@ -63,13 +63,11 @@ public class DragDropController
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
 			Node button = buttonList.get(i);
-			if (inHorizontalRange(button.getId(), target.getId(), startPos, endPos))
+			if (inHorizontalRange(button.getId(), target.getId(), startPos, endPos) &&
+				inArmada(button.getId().substring(STANDARD_COL_POS)))
 			{
-				if (inArmada(button.getId().substring(STANDARD_COL_POS)))
-				{
-					available = false;
-					break;
-				}
+				available = false;
+				break;
 			}
 		}
 		
@@ -77,13 +75,13 @@ public class DragDropController
 	}
 	
 	/**
-	 * Public interface function for determining whether a vertical block of button's are not blocked by existing
+	 * Public interface function for determining whether a vertical block of buttons is not blocked by existing
 	 * ships that have been placed. This function will return true if the set of blocks in the vertical range are free
 	 * to be highlighted/dropped by the user and false if an existing ship position is within the vertical range.
 	 * 
-	 * @param target The current contextual target button, is where the mouse is currently.
-	 * @param size The size of the ship that is being checked.
-	 * @return boolean
+	 * @param target - The current contextual target button, is where the mouse is currently.
+	 * @param size - The size of the ship that is being checked.
+	 * @return boolean - Returns a boolean for if a vertical stride is available or not.
 	 */
 	public boolean freeStrideVertical(Node target, int size)
 	{
@@ -95,13 +93,11 @@ public class DragDropController
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
 			Node button = buttonList.get(i);
-			if (inVerticalRange(button.getId(), target.getId(), startRow, endRow))
+			if (inVerticalRange(button.getId(), target.getId(), startRow, endRow) &&
+				inArmada(button.getId().substring(STANDARD_COL_POS)))
 			{
-				if (inArmada(button.getId().substring(STANDARD_COL_POS)))
-				{
-					available = false;
-					break;
-				}
+				available = false;
+				break;
 			}
 		}
 		
@@ -111,13 +107,12 @@ public class DragDropController
 	/**
 	 * Public interface function for highlighting the appropriate horizontal buttons when dragging a ship
 	 * across the player board during the placement stage.
-	 * 
-	 * @param type An ArmadaType object representing what type of ship is being moved.
-	 * @param target The current contextual target button, is where the mouse is currently.
-	 * @param style The custom style to be applied to button.
-	 * @param size The size of the ship represented by ArmadaType.
+	 *
+	 * @param target - The current contextual target button, is where the mouse is currently.
+	 * @param style - The custom style to be applied to button.
+	 * @param size - The size of the ship represented by ArmadaType.
 	 */
-	public void highlightHorizontal(ArmadaType type, Button target, String style, int size)
+	public void highlightHorizontal(Button target, String style, int size)
 	{
 		char startPos = target.getId().charAt(STANDARD_COL_POS);
 		char endPos = convertToColumnLetter((startPos - CHARACTER_SHIFT) + (size - 1));
@@ -128,13 +123,11 @@ public class DragDropController
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
 			Node button = buttonList.get(i);
-			if (inHorizontalRange(button.getId(), target.getId(), startPos, endPos))
+			if (inHorizontalRange(button.getId(), target.getId(), startPos, endPos) &&
+				!inArmada(button.getId().substring(STANDARD_COL_POS)))
 			{
-				if (!inArmada(button.getId().substring(STANDARD_COL_POS)))
-				{
-					button.setStyle(style);
-					logger.trace("buttonID: {} is in horizontal range.", button.getId());
-				}
+				button.setStyle(style);
+				logger.trace("buttonID: {} is in horizontal range.", button.getId());
 			}
 		}
 	}
@@ -142,13 +135,12 @@ public class DragDropController
 	/**
 	 * Public interface function for highlighting the appropriate vertical buttons when dragging a ship
 	 * across the player board during the placement stage.
-	 * 
-	 * @param type An ArmadaType object representing what type of ship is being moved.
-	 * @param target The current contextual target button, is where the mouse is currently.
-	 * @param style The custom style to be applied to button.
-	 * @param size The size of the ship represented by ArmadaType.
+	 *
+	 * @param target - The current contextual target button, is where the mouse is currently.
+	 * @param style - The custom style to be applied to button.
+	 * @param size - The size of the ship represented by ArmadaType.
 	 */
-	public void highlightVertical(ArmadaType type, Button target, String style, int size)
+	public void highlightVertical(Button target, String style, int size)
 	{
 		int startRow = Integer.parseInt(target.getId().substring(STANDARD_ROW_POS));
 		int endRow = startRow + (size - 1);
@@ -159,30 +151,26 @@ public class DragDropController
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
 			Node button = buttonList.get(i);
-			if (inVerticalRange(button.getId(), target.getId(), startRow, endRow))
+			if (inVerticalRange(button.getId(), target.getId(), startRow, endRow) &&
+				!inArmada(button.getId().substring(STANDARD_COL_POS)))
 			{
-				if (!inArmada(button.getId().substring(STANDARD_COL_POS)))
-				{
-					button.setStyle(style);
-					logger.trace("buttonID: {} is in vertical range.", button.getId());
-				}
+				button.setStyle(style);
+				logger.trace("buttonID: {} is in vertical range.", button.getId());
 			}
 		}
 	}
 	
 	/**
-	 * Public interface function for unhighlighting the appropriate horizontal buttons when dragging a ship
+	 * Public interface function for un-highlighting the appropriate horizontal buttons when dragging a ship
 	 * across the player board during the placement stage.
 	 * 
-	 * @param target The current contextual target button, is where the mouse is currently.
-	 * @param size The size of the ship being unhighlighted.
+	 * @param target - The current contextual target button, is where the mouse is currently.
 	 */
-	public void unhighlightHorizontal(Button target, int size)
+	public void unhighlightHorizontal(Button target)
 	{
 		char startPos = target.getId().charAt(STANDARD_COL_POS);
-		char endPos = startPos;
 		
-		logger.info("Unhighlighting all button's within the horizontal range.");
+		logger.info("Un-highlighting all button's within the horizontal range.");
 
 		// If the target node is disabled and is in the armada, it has just been
 		// dropped and needs to be recolored to the appropriate ship color.
@@ -192,15 +180,15 @@ public class DragDropController
 		}
 		else
 		{
-			// Sets the target node to be unhighlighted
+			// Sets the target node to be un-highlighted
 			target.setStyle(BACKGROUND_BUTTON_STYLE);
 		}
 		
-		// Iterate through each button and if on horizontal range, set the background to be unhighlighted
+		// Iterate through each button and if on horizontal range, set the background to be un-highlighted
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
 			Node button = buttonList.get(i);
-			if (!inHorizontalRange(button.getId(), target.getId(), startPos, endPos))
+			if (!inHorizontalRange(button.getId(), target.getId(), startPos, startPos))
 			{
 				// If the node is disabled and is in the armada, it has just been
 				// dropped and needs to be recolored to the appropriate ship color.
@@ -210,7 +198,7 @@ public class DragDropController
 				}
 				else
 				{
-					// Sets the target node to be unhighlighted
+					// Sets the target node to be un-highlighted
 					button.setStyle(BACKGROUND_BUTTON_STYLE);
 				}
 				
@@ -220,18 +208,16 @@ public class DragDropController
 	}
 	
 	/**
-	 * Public interface function for unhighlighting the appropriate vertical buttons when dragging a ship
+	 * Public interface function for un-highlighting the appropriate vertical buttons when dragging a ship
 	 * across the player board during the placement stage.
 	 * 
-	 * @param target The current contextual target button, is where the mouse is currently.
-	 * @param size The size of the ship being unhighlighted.
+	 * @param target - The current contextual target button, is where the mouse is currently.
 	 */
-	public void unhighlightVertical(Button target, int size)
+	public void unhighlightVertical(Button target)
 	{
 		int startRow = Integer.parseInt(target.getId().substring(STANDARD_ROW_POS));
-		int endRow = startRow;
 		
-		logger.info("Unhighlighting all button's within the vertical range.");
+		logger.info("Un-highlighting all button's within the vertical range.");
 
 		// If the target node is disabled and is in the armada, it has just been
 		// dropped and needs to be recolored to the appropriate ship color.
@@ -241,15 +227,15 @@ public class DragDropController
 		}
 		else
 		{
-			// Sets the target node to be unhighlighted
+			// Sets the target node to be un-highlighted
 			target.setStyle(BACKGROUND_BUTTON_STYLE);
 		}
 		
-		// Iterate through each button and if on vertical range, set the background to be unhighlighted
+		// Iterate through each button and if on vertical range, set the background to be un-highlighted
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
 			Node button = buttonList.get(i);
-			if (!inVerticalRange(button.getId(), target.getId(), startRow, endRow))
+			if (!inVerticalRange(button.getId(), target.getId(), startRow, startRow))
 			{
 				// If the node is disabled and is in the armada, it has just been
 				// dropped and needs to be recolored to the appropriate ship color.
@@ -272,10 +258,10 @@ public class DragDropController
 	 * Public interface function for placing the appropriate horizontal buttons when dropping a ship
 	 * on the player board during the placement stage.
 	 * 
-	 * @param type An ArmadaType object representing what type of ship is being moved.
-	 * @param target The current contextual target button, is where the mouse is currently.
-	 * @param style The custom style to be applied to button.
-	 * @param size The size of the ship represented by ArmadaType.
+	 * @param type - An ArmadaType object representing what type of ship is being moved.
+	 * @param target - The current contextual target button, is where the mouse is currently.
+	 * @param style - The custom style to be applied to button.
+	 * @param size - The size of the ship represented by ArmadaType.
 	 */
 	public void dropHorizontal(ArmadaType type, Button target, String style, int size)
 	{
@@ -302,10 +288,10 @@ public class DragDropController
 	 * Public interface function for placing the appropriate vertical buttons when dropping a ship
 	 * on the player board during the placement stage.
 	 * 
-	 * @param type An ArmadaType object representing what type of ship is being moved.
-	 * @param target The current contextual target button, is where the mouse is currently.
-	 * @param style The custom style to be applied to button.
-	 * @param size The size of the ship represented by ArmadaType.
+	 * @param type - An ArmadaType object representing what type of ship is being moved.
+	 * @param target - The current contextual target button, is where the mouse is currently.
+	 * @param style - The custom style to be applied to button.
+	 * @param size - The size of the ship represented by ArmadaType.
 	 */
 	public void dropVertical(ArmadaType type, Button target, String style, int size)
 	{
@@ -329,14 +315,14 @@ public class DragDropController
 	}
 	
 	/**
-	 * Iterative range finder that returns a boolean representing whether or not a provided button is in 
+	 * Iterative range finder that returns a boolean representing whether a provided button is in
 	 * the horizontal range or not.
 	 * 
-	 * @param buttonID String representing the current button to be checked.
-	 * @param targetID String representing the current target context button to check based on.
-	 * @param startPos A character representing the starting column to search.
-	 * @param endPos A character representing the last column to search.
-	 * @return boolean
+	 * @param buttonID - String representing the current button to be checked.
+	 * @param targetID - String representing the current target context button to check based on.
+	 * @param startPos - A character representing the starting column to search.
+	 * @param endPos - A character representing the last column to search.
+	 * @return boolean - Returns a boolean for whether a provided button is in the horizontal range.
 	 */
 	protected boolean inHorizontalRange(String buttonID, String targetID, char startPos, char endPos)
 	{
@@ -348,7 +334,7 @@ public class DragDropController
 		// If endPos is 'Z' the buttonID is not in range
 		if (endPos == OUT_OF_BOUNDS_COL)
 		{
-			return inRange;
+			return false;
 		}
 
 		// while not in range and our stride has not passed the ending horizontal column position of the range
@@ -371,14 +357,14 @@ public class DragDropController
 	}
 	
 	/**
-	 * Iterative range finder that returns a boolean representing whether or not a provided button is in 
+	 * Iterative range finder that returns a boolean representing whether a provided button is in
 	 * the vertical range or not.
 	 *  
-	 * @param buttonID String representing the current button to be checked.
-	 * @param targetID String representing the current target context button to check based on.
-	 * @param startRow Integer representing the starting row to search.
-	 * @param endRow Integer representing the last row to search.
-	 * @return boolean
+	 * @param buttonID - String representing the current button to be checked.
+	 * @param targetID - String representing the current target context button to check based on.
+	 * @param startRow - Integer representing the starting row to search.
+	 * @param endRow - Integer representing the last row to search.
+	 * @return boolean - Returns a boolean for whether a provided button is in the vertical range.
 	 */
 	protected boolean inVerticalRange(String buttonID, String targetID, int startRow, int endRow)
 	{
@@ -390,7 +376,7 @@ public class DragDropController
 		// If endRow is greater than 10 the buttonID is not in range
 		if (endRow > UPPER_BOUND)
 		{
-			return inRange;
+			return false;
 		}
 		
 		// while not in range and our stride has not passed the ending vertical column position of the range
@@ -413,10 +399,10 @@ public class DragDropController
 	}
 	
 	/**
-	 * Adds the provided button ID into the appropriate ship inside of the armada.
+	 * Adds the provided button ID into the appropriate ship inside the armada.
 	 * 
-	 * @param type The type of ship in the Armada to add the id to.
-	 * @param buttonID A string representing the button id.
+	 * @param type - The type of ship in the Armada to add the id to.
+	 * @param buttonID - A string representing the button id.
 	 */
 	private void addToArmada(ArmadaType type, String buttonID)
 	{
@@ -445,41 +431,23 @@ public class DragDropController
 	/**
 	 * Will determine if a position exists within the armada.
 	 * 
-	 * @param position A matched position that needs to be found in the armada.
-	 * @return String
+	 * @param position - A matched position that needs to be found in the armada.
+	 * @return String - Returns a boolean for if a position exists within the armada.
 	 */
 	private boolean inArmada(String position)
 	{
-		if (armada.getDestroyer().contains(position))
-		{
-			return true;
-		}
-		else if (armada.getSubmarine().contains(position))
-		{
-			return true;
-		}
-		else if (armada.getCruiser().contains(position))
-		{
-			return true;
-		}
-		else if (armada.getBattleship().contains(position))
-		{
-			return true;
-		}
-		else if (armada.getCarrier().contains(position))
-		{
-			return true;
-		}
-		
-		return false;
+		return armada.getCruiser().contains(position) ||
+				armada.getCarrier().contains(position) ||
+				armada.getDestroyer().contains(position) ||
+				armada.getSubmarine().contains(position) ||
+				armada.getBattleship().contains(position);
 	}
 	
 	/**
 	 * Will determine the type of style that needs to be applied for the given position.
 	 * 
-	 * @param position A matched position that needs to be highlighted.
-	 * @param styles A map of styles based on the type of ship that is being placed.
-	 * @return String
+	 * @param position - A matched position that needs to be highlighted.
+	 * @return String - Returns a String for the style required for a specific ship in the armada.
 	 */
 	private String determineStyle(String position)
 	{
@@ -512,8 +480,8 @@ public class DragDropController
 	/**
 	 * Converts an integer representing some column character on a battleship grid into a character.
 	 * 
-	 * @param col An integer representing some column character on a battleship grid.
-	 * @return char
+	 * @param col - An integer representing some column character on a battleship grid.
+	 * @return char - Returns a character representing some column.
 	 */
 	protected char convertToColumnLetter(int col)
 	{

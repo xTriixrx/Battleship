@@ -498,7 +498,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 					if (isValidStride(target, shipSize))
 					{
 						playerGrid.setCursor(Cursor.DEFAULT);
-						highlightImage(type, (Button) target, dragStyle, shipSize);
+						highlightImage((Button) target, dragStyle, shipSize);
 					}
 
 					event.consume();
@@ -507,7 +507,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 				//
 				target.setOnDragExited((event) ->
 				{
-					unHighlightImage((Button) target, shipSize);
+					unHighlightImage((Button) target);
 					event.consume();
 				});
 			}
@@ -591,39 +591,37 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	}
 	
 	/**
-	 * 
-	 * @param type
+	 *
 	 * @param target
 	 * @param dragStyle
 	 * @param size
 	 */
-	private void highlightImage(ArmadaType type, Button target, String dragStyle, int size)
+	private void highlightImage(Button target, String dragStyle, int size)
 	{
 
 		if (orientation.equalsIgnoreCase(HORIZONTAL))
 		{
-			dragDropController.highlightHorizontal(type, target, dragStyle, size);
+			dragDropController.highlightHorizontal(target, dragStyle, size);
 		}
 		else if (orientation.equalsIgnoreCase(VERTICAL))
 		{
-			dragDropController.highlightVertical(type, target, dragStyle, size);
+			dragDropController.highlightVertical(target, dragStyle, size);
 		}
 	}
 	
 	/**
 	 * 
 	 * @param target
-	 * @param size
 	 */
-	private void unHighlightImage(Button target, int size)
+	private void unHighlightImage(Button target)
 	{
 		if (orientation.equalsIgnoreCase(HORIZONTAL))
 		{
-			dragDropController.unhighlightHorizontal(target, size);
+			dragDropController.unhighlightHorizontal(target);
 		}
 		else if (orientation.equalsIgnoreCase(VERTICAL))
 		{
-			dragDropController.unhighlightVertical(target, size);
+			dragDropController.unhighlightVertical(target);
 		}
 	}
 	
