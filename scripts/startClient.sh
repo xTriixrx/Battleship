@@ -13,7 +13,7 @@ if [ $# -ne 5 ]; then
 	exit 1
 fi
 
-java --module-path $JAVAFX_LIB --add-modules javafx.controls,javafx.fxml \
+java -Dlog4j2.disable.jmx="TRUE" --module-path $JAVAFX_LIB --add-modules javafx.controls,javafx.fxml \
 -cp "$JAVAFX_LIB/*:$GAME_LIB/*" com.qfi.battleship.GUIDriverRunner --type=client --port=$PORT --host=$HOST --automatedOpponent=$OPPONENT &
 
 exit 0
