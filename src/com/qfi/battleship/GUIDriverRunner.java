@@ -13,7 +13,7 @@ public class GUIDriverRunner
 	 * Main method that is called from the command line with keyword command line arguments. Will call GUIDriver's main
 	 * as the command line cannot directly call the GUIDriver due to JavaFX Application lifecycle reasons.
 	 * 
-	 * @param args Keyword arguments from the command line.
+	 * @param args - Keyword arguments from the command line.
 	 */
 	public static void main(String[] args)
 	{

@@ -1,25 +1,22 @@
 package com.qfi.battleship;
 
-import java.util.List;
 import java.util.Map;
-
+import java.util.List;
 import javafx.scene.Node;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.security.SecureRandom;
 import org.apache.logging.log4j.Logger;
-
-import com.qfi.battleship.Armada.ArmadaType;
-
 import javafx.collections.ObservableList;
 import org.apache.logging.log4j.LogManager;
+import com.qfi.battleship.Armada.ArmadaType;
 
 /**
  * ArmadaAutomator is an Armada placement automator which is triggered when a user clicks on the 
  * 'autoShips' fx:id labeled button or by an automated player. This class will go through each ship in
  * the Armada starting for the largest to the smallest, and find a randomized placement on the player's
- * board where the ship will be placed for the game. Once all of the ships have been placed, the automator
+ * board where the ship will be placed for the game. Once all the ships have been placed, the automator
  * will update the background highlighting of each button that is representing a ship's partial position
  * and disable the button.
  * 
@@ -30,7 +27,6 @@ public class ArmadaAutomator
 {
 	private Armada armada = null;
 	private SecureRandom random = null;
-	private static final short VERTICAL = 2;
 	private static final short HORIZONTAL = 1;
 	private static final short UPPER_BOUND = 10;
 	private static final short CHARACTER_SHIFT = 64;
@@ -38,23 +34,23 @@ public class ArmadaAutomator
 	private static final short STANDARD_ROW_POS = 2;
 	private static final short STANDARD_ID_LENGTH = 3;
 	private static final char OUT_OF_BOUNDS_COL = 'Z';
-	private Logger logger = LogManager.getLogger(ArmadaAutomator.class);
 	private static final String BUTTON_SET_STYLE = "-fx-background-color: green";
+	private static final Logger logger = LogManager.getLogger(ArmadaAutomator.class);
 	
 	// An interface to wrap lambda add functions for different ship types
 	protected interface ArmadaAdd { void add(Armada armada, List<String> shipPos); }
 	
 	// Lambda for each type of ship add into the armada
-	private ArmadaAdd carrierAdd = (armada, shipPos) -> armada.addToCarrier(shipPos);
-	private ArmadaAdd cruiserAdd = (armada, shipPos) -> armada.addToCruiser(shipPos);
-	private ArmadaAdd submarineAdd = (armada, shipPos) -> armada.addToSubmarine(shipPos);
-	private ArmadaAdd destroyerAdd = (armada, shipPos) -> armada.addToDestroyer(shipPos);
-	private ArmadaAdd battleshipAdd = (armada, shipPos) -> armada.addToBattleship(shipPos);
+	private static final ArmadaAdd carrierAdd = Armada::addToCarrier;
+	private static final ArmadaAdd cruiserAdd = Armada::addToCruiser;
+	private static final ArmadaAdd submarineAdd = Armada::addToSubmarine;
+	private static final ArmadaAdd destroyerAdd = Armada::addToDestroyer;
+	private static final ArmadaAdd battleshipAdd = Armada::addToBattleship;
 	
 	/**
 	 * ArmadaAutomator constructor.
 	 * 
-	 * @param armada An Armada object provided by the parent controller.
+	 * @param armada - An Armada object provided by the parent controller.
 	 */
 	ArmadaAutomator(Armada armada)
 	{
@@ -70,9 +66,6 @@ public class ArmadaAutomator
 	
 	/**
 	 * Main public method to be called by an automated controller in order to automate the Armada placement.
-	 * 
-	 * @param buttonList An unsorted observable list of nodes containing button's.
-	 * @param styles A map of styles based on the type of ship that is being placed.
 	 */
 	public void automateArmadaPlacement()
 	{
@@ -89,8 +82,8 @@ public class ArmadaAutomator
 	/**
 	 * Main public method to be called by the controller in order to automate the Armada placement.
 	 * 
-	 * @param buttonList An unsorted observable list of nodes containing button's.
-	 * @param styles A map of styles based on the type of ship that is being placed.
+	 * @param buttonList - An unsorted observable list of nodes containing button's.
+	 * @param styles - A map of styles based on the type of ship that is being placed.
 	 */
 	public void automateArmadaPlacement(ObservableList<Node> buttonList, Map<ArmadaType, String> styles)
 	{
@@ -111,9 +104,9 @@ public class ArmadaAutomator
 	 * This function is a generic placement function that will add any sized ship once a valid position
 	 * is found in either the horizontal or vertical mode into the Armada using the ArmadaAdd interface.
 	 * 
-	 * @param adder ArmadaAdd interface object that will add unique ship position into Armada.
-	 * @param used A list of existing used positions that cannot be reused.
-	 * @param size A short representing the size of the ship being added.
+	 * @param adder - ArmadaAdd interface object that will add unique ship position into Armada.
+	 * @param used - A list of existing used positions that cannot be reused.
+	 * @param size - A short representing the size of the ship being added.
 	 */
 	private void placeShip(ArmadaAdd adder, List<String> used, short size)
 	{
@@ -125,7 +118,7 @@ public class ArmadaAutomator
 		{
 			shipPos = placeHorizontal(used, size);
 		}
-		else if (alignment == VERTICAL) // 2
+		else // 2
 		{
 			shipPos = placeVertical(used, size);
 		}
@@ -198,9 +191,9 @@ public class ArmadaAutomator
 	 * used or if the endLetter position is greater than the available column letters, then the placement
 	 * function will continue to attempt new placement options until one is found.
 	 * 
-	 * @param used A list of existing used positions that cannot be reused.
-	 * @param size A short representing the size of the ship being added.
-	 * @return List<String>
+	 * @param used - A list of existing used positions that cannot be reused.
+	 * @param size - A short representing the size of the ship being added.
+	 * @return {@code List<String>} - Returns a list of strings, each being a position where part of a ship can be placed.
 	 */
 	private List<String> placeHorizontal(List<String> used, short size)
 	{
@@ -255,9 +248,9 @@ public class ArmadaAutomator
 	 * each Node in the buttonList looking for the matching node id that needs to be highlighted. Once
 	 * a match is found, the button node will be highlighted and disabled.
 	 * 
-	 * @param buttonList An unordered list of nodes which contains buttons.
-	 * @param shipPos A list of all ship positions that were generated.
-	 * @param styles A map of styles based on the type of ship that is being placed.
+	 * @param buttonList - An unordered list of nodes which contains buttons.
+	 * @param shipPos - A list of all ship positions that were generated.
+	 * @param styles - A map of styles based on the type of ship that is being placed.
 	 */
 	private void highlightPlacement(ObservableList<Node> buttonList, List<String> shipPos, Map<ArmadaType, String> styles)
 	{
@@ -278,9 +271,9 @@ public class ArmadaAutomator
 	/**
 	 * Will determine the type of style that needs to be applied for the given position.
 	 * 
-	 * @param position A matched position that needs to be highlighted.
-	 * @param styles A map of styles based on the type of ship that is being placed.
-	 * @return String
+	 * @param position - A matched position that needs to be highlighted.
+	 * @param styles - A map of styles based on the type of ship that is being placed.
+	 * @return String - Returns a string representing the style to be used for a given ship type.
 	 */
 	private String determineStyle(String position, Map<ArmadaType, String> styles)
 	{
@@ -314,9 +307,9 @@ public class ArmadaAutomator
 	 * Attempts to match a node id and returns the boolean representation of whether a match was
 	 * found or not for this node id and position pair.
 	 * 
-	 * @param node An individual node that is on the players board.
-	 * @param pos A position that represents some button id.
-	 * @return boolean
+	 * @param node - An individual node that is on the players board.
+	 * @param pos - A position that represents some button id.
+	 * @return boolean - A boolean for whether a match was found or not.
 	 */
 	private boolean matchNodeID(Node node, String pos)
 	{
@@ -341,8 +334,8 @@ public class ArmadaAutomator
 	/**
 	 * Converts an integer representing some column character on a battleship grid into a character.
 	 * 
-	 * @param col An integer representing some column character on a battleship grid.
-	 * @return char
+	 * @param col - An integer representing some column character on a battleship grid.
+	 * @return char - Returns a character representing the column.
 	 */
 	private char convertToColumnLetter(int col)
 	{
@@ -365,9 +358,9 @@ public class ArmadaAutomator
 	 * Boolean function that will return true if the provided node id is a match off of the provided
 	 * position.
 	 * 
-	 * @param id A unique JavaFX ID to be compared to the provided position.
-	 * @param pos A position to check off of the provided node's id.
-	 * @return boolean
+	 * @param id - A unique JavaFX ID to be compared to the provided position.
+	 * @param pos - A position to check off of the provided node's id.
+	 * @return boolean - A boolean for whether a match was found or not.
 	 */
 	private boolean nodeMatchLength3(String id, String pos)
 	{
@@ -381,7 +374,7 @@ public class ArmadaAutomator
 	 * 
 	 * @param id A unique JavaFX ID to be compared to the provided position.
 	 * @param pos A position to check off of the provided node's id.
-	 * @return boolean
+	 * @return boolean - A boolean for whether a match was found or not.
 	 */
 	private boolean nodeMatchLength4(String id, String pos)
 	{
@@ -393,7 +386,8 @@ public class ArmadaAutomator
 	/**
 	 * Highlights a button to a color and disables the button.
 	 * 
-	 * @param node A matching node that needs to be highlighted and disabled.
+	 * @param node - A matching node that needs to be highlighted and disabled.
+	 * @param style - The style to highlight the button if the style exists.
 	 */
 	private void highlightNode(Node node, String style)
 	{
