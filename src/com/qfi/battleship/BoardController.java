@@ -2,6 +2,8 @@ package com.qfi.battleship;
 
 import java.net.URL;
 import java.util.Map;
+
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import java.util.HashMap;
 import javafx.scene.Node;
@@ -34,45 +36,83 @@ import com.qfi.battleship.Armada.ArmadaType;
  */
 public class BoardController implements Initializable, Observer, Observable, Controller
 {
+	@SuppressWarnings("unused")
 	@FXML
 	private GridPane opponentGrid;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private GridPane playerGrid;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private ImageView pictureOne;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private ImageView pictureTwo;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private ImageView pictureThree;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private ImageView pictureFour;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private ImageView pictureFive;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private AnchorPane anchorPane;
 
+	@SuppressWarnings("unused")
 	@FXML
 	private Text opponentCarrier;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private Text opponentBattleship;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private Text opponentCruiser;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private Text opponentSubmarine;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private Text opponentDestroyer;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private Text playerCarrier;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private Text playerBattleship;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private Text playerCruiser;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private Text playerSubmarine;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private Text playerDestroyer;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private Button autoShips;
+
+	@SuppressWarnings("unused")
 	@FXML
 	private ChoiceBox<String> OrientationChoice;
 
@@ -83,22 +123,22 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	private int currentTurn = 0;
 	private int opponentTurn = 0;
 	private Armada armada = null;
-	private Object turnMutex = null;
 	private boolean myTurnFlag = true;
 	private boolean isShipsSet = false;
 	private String orientation = HORIZONTAL;
 	private ArmadaAutomator automator = null;
+	private final Object turnMutex = new Object();
 	private ObservableList<Node> buttonList = null;
 	private Map<ArmadaType, String> stylesMap = null;
 	private DragDropController dragDropController = null;
-	private Logger logger = LogManager.getLogger(BoardController.class);
+	private static final Logger logger = LogManager.getLogger(BoardController.class);
 	
-	private static final int clientTurn = 1;
-	private static final int serverTurn = 2;
+	private static final int CLIENT_TURN = 1;
+	private static final int SERVER_TURN = 2;
 	private static final String HIT = "Hit";
 	private static final String MISS = "Miss";
-	private static final char clientSymbol = 'Z';
-	private static final char serverSymbol = 'X';
+	private static final char CLIENT_SYMBOL = 'Z';
+	private static final char SERVER_SYMBOL = 'X';
 	private static final String OVER_MSG = "OVER";
 	private static final Color SUNK_COLOR = Color.RED;
 	private static final String VERTICAL = "Vertical";
@@ -114,27 +154,26 @@ public class BoardController implements Initializable, Observer, Observable, Con
 
 	/**
 	 * 
-	 * @param whoami
+	 * @param type
 	 */
-	BoardController(int whoami)
+	BoardController(int type)
 	{
 		armada = new Armada();
-		turnMutex = new Object();
 		automator = new ArmadaAutomator(armada);
 		
 		populateStyles();
 		
-		if (whoami == 1) // client
+		if (type == 1) // client
 		{
-			myTurn = clientTurn;
-			mySymbol = clientSymbol;
-			opponentTurn = serverTurn;
+			myTurn = CLIENT_TURN;
+			mySymbol = CLIENT_SYMBOL;
+			opponentTurn = SERVER_TURN;
 		}
-		else if (whoami == 2) // server
+		else if (type == 2) // server
 		{
-			myTurn = serverTurn;
-			mySymbol = serverSymbol;
-			opponentTurn = clientTurn;
+			myTurn = SERVER_TURN;
+			mySymbol = SERVER_SYMBOL;
+			opponentTurn = CLIENT_TURN;
 		}
 	}
 	
@@ -182,11 +221,11 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		dragDropController = new DragDropController(buttonList, armada, stylesMap);
 		
 		autoShips.setStyle(AUTO_SHIPS_STYLE);
-		pictureOne.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, PictureOneClickEvent);
-		pictureTwo.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, PictureTwoClickEvent);
-		pictureThree.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, PictureThreeClickEvent);
-		pictureFour.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, PictureFourClickEvent);
-		pictureFive.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, PictureFiveClickEvent);
+		pictureOne.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, pictureOneClickEvent);
+		pictureTwo.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, pictureTwoClickEvent);
+		pictureThree.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, pictureThreeClickEvent);
+		pictureFour.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, pictureFourClickEvent);
+		pictureFive.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, pictureFiveClickEvent);
 		autoShips.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_CLICKED, automateArmada);
 		OrientationChoice.getItems().addAll(HORIZONTAL, VERTICAL);
 		OrientationChoice.getSelectionModel().selectFirst();
@@ -211,16 +250,6 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	public Armada getArmada()
 	{
 		return armada;
-	}
-
-	public void setIsShipsSet(boolean s)
-	{
-		isShipsSet = s;
-	}
-
-	public boolean getIsShipsSet()
-	{
-		return isShipsSet;
 	}
 
 	@Override
@@ -259,27 +288,24 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	/**
 	 * 
 	 * @param pos
-	 * @param HM
+	 * @param hitOrMiss
 	 */
-	public void updateOpponentGrid(String pos, String HM)
+	public void updateOpponentGrid(String pos, String hitOrMiss)
 	{
 		for (Node node : opponentGrid.getChildren())
 		{
-			if (node.getId() != null)
+			if (node.getId() != null && node.getId().equals(pos))
 			{
-				if (node.getId().equals(pos))
+				if (hitOrMiss.equals(HIT))
 				{
-					if (HM.equals(HIT))
-					{
-						node.setStyle(BUTTON_HIT_STYLE);
-					}
-					else if (HM.equals(MISS))
-					{
-						node.setStyle(BUTTON_MISS_STYLE);
-					}
-					
-					break;
+					node.setStyle(BUTTON_HIT_STYLE);
 				}
+				else if (hitOrMiss.equals(MISS))
+				{
+					node.setStyle(BUTTON_MISS_STYLE);
+				}
+
+				break;
 			}
 		}
 		
@@ -296,7 +322,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	{
 		boolean justSunk = false;
 		
-		// If the shipText has not been striked and the ship has sunk, we have an update
+		// If the shipText has not been struck out and the ship has sunk, we have an update
 		if (!shipText.isStrikethrough() && isShipSunk)
 		{
 			justSunk = true;
@@ -321,52 +347,49 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	/**
 	 * 
 	 * @param pos
-	 * @param HM
+	 * @param hitOrMiss
 	 */
-	public void updatePlayerGrid(String pos, String HM)
+	public void updatePlayerGrid(String pos, String hitOrMiss)
 	{
 		for (Node node : playerGrid.getChildren())
 		{
-			if (node.getId() != null)
+			if (node.getId() != null && node.getId().equals(pos))
 			{
-				if (node.getId().equals(pos))
+				if (hitOrMiss.equals(HIT))
 				{
-					if (HM.equals(HIT))
+					boolean updated = false;
+					node.setMouseTransparent(false);
+					node.setStyle(BUTTON_HIT_STYLE);
+
+					updated = update(playerCruiser, armada.isCruiserSunk());
+
+					if (!updated)
 					{
-						boolean updated = false;
-						node.setMouseTransparent(false);
-						node.setStyle(BUTTON_HIT_STYLE);
-						
-						updated = update(playerCruiser, armada.isCruiserSunk());
-					
-						if (!updated)
-						{
-							updated = update(playerCarrier, armada.isCarrierSunk());
-						}
-						
-						if (!updated)
-						{
-							updated = update(playerDestroyer, armada.isDestroyerSunk());
-						}
-					
-						if (!updated)
-						{
-							updated = update(playerSubmarine, armada.isSubmarineSunk());
-						}
-					
-						if (!updated)
-						{
-							updated = update(playerBattleship, armada.isBattleshipSunk());
-						}
+						updated = update(playerCarrier, armada.isCarrierSunk());
 					}
-					else if (HM.equals(MISS))
+
+					if (!updated)
 					{
-						node.setMouseTransparent(false);
-						node.setStyle(BUTTON_MISS_STYLE);
+						updated = update(playerDestroyer, armada.isDestroyerSunk());
 					}
-					
-					break;
+
+					if (!updated)
+					{
+						updated = update(playerSubmarine, armada.isSubmarineSunk());
+					}
+
+					if (!updated)
+					{
+						update(playerBattleship, armada.isBattleshipSunk());
+					}
 				}
+				else if (hitOrMiss.equals(MISS))
+				{
+					node.setMouseTransparent(false);
+					node.setStyle(BUTTON_MISS_STYLE);
+				}
+
+				break;
 			}
 		}
 	}
@@ -429,7 +452,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		else if (getCurrentTurn() == opponentTurn)
 		{
 			StringBuilder temp = new StringBuilder(s);
-			String HorM = "";
+			String hitOrMiss = "";
 
 			temp.setCharAt(0, 'P');
 			String t = "";
@@ -447,35 +470,34 @@ public class BoardController implements Initializable, Observer, Observable, Con
 
 			if (isHit)
 			{
-				HorM = HIT;
+				hitOrMiss = HIT;
 			}
 			else
 			{
-				HorM = MISS;
+				hitOrMiss = MISS;
 			}
 
-			updatePlayerGrid(t, HorM);
+			updatePlayerGrid(t, hitOrMiss);
 
 			setCurrentTurn(myTurn);
 			myTurnFlag = false;
-			observer.update(HorM);
+			observer.update(hitOrMiss);
 		}
 	}
 	
 	/**
-	 * 
-	 * @param type
+	 *
 	 * @param shipSize
 	 * @param dragStyle
 	 */
-	private void setDrag(ArmadaType type, int shipSize, String dragStyle)
+	private void setDrag(int shipSize, String dragStyle)
 	{
 		for (Node target : playerGrid.getChildren())
 		{
 			if (target.getId() != null)
 			{
 				//
-				target.setOnDragOver((event) ->
+				target.setOnDragOver(event ->
 				{
 					/* data is dragged over the target */
 					/*
@@ -492,7 +514,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 				});
 				
 				//
-				target.setOnDragEntered((event) ->
+				target.setOnDragEntered(event ->
 				{
 					//
 					if (isValidStride(target, shipSize))
@@ -505,7 +527,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 				});
 				
 				//
-				target.setOnDragExited((event) ->
+				target.setOnDragExited(event ->
 				{
 					unHighlightImage((Button) target);
 					event.consume();
@@ -519,7 +541,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	 * @param image
 	 */
 	private void configureDragAndDrop(ImageView image) {
-		image.setOnDragDetected((event) ->
+		image.setOnDragDetected(event ->
 		{
 			Dragboard db = image.startDragAndDrop(TransferMode.ANY);
 
@@ -531,10 +553,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		});
 		
 		// Start source drag done
-		image.setOnDragDone((event) ->
-		{
-			event.consume();
-		});
+		image.setOnDragDone(Event::consume);
 		// End Source Drag Done
 	}
 	
@@ -551,7 +570,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		{
 			if (target.getId() != null)
 			{
-				target.setOnDragDropped((event) ->
+				target.setOnDragDropped(event ->
 				{
 					//
 					if (isValidStride(target, size))
@@ -647,14 +666,15 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	/**
 	 * 
 	 */
-	private EventHandler<MouseEvent> mouseClickEvent = (event) ->
+	private final EventHandler<MouseEvent> mouseClickEvent = event ->
 	{
 		logger.info("Controller {}: current turn is: {}", getID(), getCurrentTurn());
 
 		if (getCurrentTurn() == myTurn && isShipsSet)
 		{
 			toSend = ((Node) event.getTarget()).getId();
-			toSend = new StringBuilder(toSend).append(mySymbol).toString();
+			toSend = toSend + mySymbol;
+
 			((Button) event.getTarget()).setDisable(true);
 			((Button) event.getTarget()).setMouseTransparent(false);
 			logger.info("Controller {}: sending {} to opponent.", getID(), toSend);
@@ -672,62 +692,62 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	/**
 	 *
 	 */
-	private EventHandler<MouseEvent> PictureOneClickEvent = (event) ->
+	private final EventHandler<MouseEvent> pictureOneClickEvent = event ->
 	{
 		autoShips.setDisable(true);
 		configureDragAndDrop(pictureOne);
-		setDrag(ArmadaType.DESTROYER, Armada.DESTROYER_SIZE, DESTROYER_SET_STYLE);
+		setDrag(Armada.DESTROYER_SIZE, DESTROYER_SET_STYLE);
 		configureDroppedImage(pictureOne, ArmadaType.DESTROYER, Armada.DESTROYER_SIZE, DESTROYER_SET_STYLE);
 	};
 	
 	/**
 	 *
 	 */
-	private EventHandler<MouseEvent> PictureTwoClickEvent = (event) ->
+	private final EventHandler<MouseEvent> pictureTwoClickEvent = event ->
 	{
 		autoShips.setDisable(true);
 		configureDragAndDrop(pictureTwo);
-		setDrag(ArmadaType.SUBMARINE, Armada.SUBMARINE_SIZE, SUBMARINE_SET_STYLE);
+		setDrag(Armada.SUBMARINE_SIZE, SUBMARINE_SET_STYLE);
 		configureDroppedImage(pictureTwo, ArmadaType.SUBMARINE, Armada.SUBMARINE_SIZE, SUBMARINE_SET_STYLE);
 	};
 	
 	/**
 	 *
 	 */
-	private EventHandler<MouseEvent> PictureThreeClickEvent = (event) ->
+	private final EventHandler<MouseEvent> pictureThreeClickEvent = event ->
 	{
 		autoShips.setDisable(true);
 		configureDragAndDrop(pictureThree);
-		setDrag(ArmadaType.CRUISER, Armada.CRUISER_SIZE, CRUISER_SET_STYLE);
+		setDrag(Armada.CRUISER_SIZE, CRUISER_SET_STYLE);
 		configureDroppedImage(pictureThree, ArmadaType.CRUISER, Armada.CRUISER_SIZE, CRUISER_SET_STYLE);
 	};
 	
 	/**
 	 * 
 	 */
-	private EventHandler<MouseEvent> PictureFourClickEvent = (event) ->
+	private final EventHandler<MouseEvent> pictureFourClickEvent = event ->
 	{
 		autoShips.setDisable(true);
 		configureDragAndDrop(pictureFour);
-		setDrag(ArmadaType.BATTLESHIP, Armada.BATTLESHIP_SIZE, BATTLESHIP_SET_STYLE);
+		setDrag(Armada.BATTLESHIP_SIZE, BATTLESHIP_SET_STYLE);
 		configureDroppedImage(pictureFour, ArmadaType.BATTLESHIP, Armada.BATTLESHIP_SIZE, BATTLESHIP_SET_STYLE);
 	};
 	
 	/**
 	 * 
 	 */
-	private EventHandler<MouseEvent> PictureFiveClickEvent = (event) -> 
+	private final EventHandler<MouseEvent> pictureFiveClickEvent = event ->
 	{
 		autoShips.setDisable(true);
 		configureDragAndDrop(pictureFive);
-		setDrag(ArmadaType.CARRIER, Armada.CARRIER_SIZE, CARRIER_SET_STYLE);
+		setDrag(Armada.CARRIER_SIZE, CARRIER_SET_STYLE);
 		configureDroppedImage(pictureFive, ArmadaType.CARRIER, Armada.CARRIER_SIZE, CARRIER_SET_STYLE);
 	};
 	
 	/**
 	 * 
 	 */
-	private EventHandler<MouseEvent> automateArmada = (event) ->
+	private final EventHandler<MouseEvent> automateArmada = event ->
 	{
 		pictureOne.setDisable(true);
 		pictureTwo.setDisable(true);

@@ -133,9 +133,9 @@ public class ArmadaAutomator
 	 * used or if the endRow position is greater than the available rows, then the placement function
 	 * will continue to attempt new placement options until one is found.
 	 * 
-	 * @param used A list of existing used positions that cannot be reused.
-	 * @param size A short representing the size of the ship being added.
-	 * @return List<String>
+	 * @param used - A list of existing used positions that cannot be reused.
+	 * @param size - A short representing the size of the ship being added.
+	 * @return {@code List<String>} - Returns a list of strings, each being a position where part of a ship can be placed.
 	 */
 	private List<String> placeVertical(List<String> used, short size)
 	{
@@ -160,7 +160,7 @@ public class ArmadaAutomator
 			logger.trace("Attempting placement with starting position: {}{} and with ending position: {}{}.",
 					letter, row, letter, endRow);
 			
-			// Iterate and generate each subposition for the attempted placement
+			// Iterate and generate each sub-position for the attempted placement
 			for (int i = 0; i < size; i++)
 			{
 				sb.append(letter);
@@ -171,7 +171,7 @@ public class ArmadaAutomator
 			
 			logger.debug("Ship Placement Attempt: {}", placement);
 			
-			// If end row is within upper bound and placement is a unique set, its a placeable position
+			// If end row is within upper bound and placement is a unique set, it's a placeable position
 			if (endRow <= UPPER_BOUND && Collections.disjoint(used, placement))
 			{
 				placeable = true;

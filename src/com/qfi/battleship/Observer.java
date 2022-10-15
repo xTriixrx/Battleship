@@ -12,7 +12,7 @@ public interface Observer
 	/**
 	 * An update message for the observer to act on.
 	 * 
-	 * @param update A message from the observable component sending an update to the observer.
+	 * @param update - A message from the observable component sending an update to the observer.
 	 */
 	public void update(String update);
 }
