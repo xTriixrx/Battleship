@@ -577,6 +577,13 @@ public class BoardController implements Initializable, Observer, Observable, Con
 					{
 						dropImage(type, (Button) target, style, size);
 						image.setDisable(true);
+
+						if (armada.isCruiserSet() && armada.isCarrierSet() &&
+							armada.isSubmarineSet() && armada.isDestroyerSet() &&
+							armada.isBattleshipSet())
+						{
+							observer.update("SHIPS");
+						}
 					}
 					
 					//

@@ -20,13 +20,12 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	private int opponentTurn = 0;
 	private Armada armada = null;
 	private String latestGuess = "";
-	private Object turnMutex = null;
 	private Observer observer = null;
 	private boolean shutdown = false;
 	private boolean shipFocus = false;
+	private boolean isShipsSet = false;
 	private boolean myTurnFlag = false;
 	private SecureRandom random = null;
-	private boolean isShipsSet = false;
 	private boolean isCarrierSunk = false;
 	private boolean isCruiserSunk = false;
 	private boolean isSubmarineSunk = false;
@@ -35,34 +34,36 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	private ArmadaAutomator automator = null;
 	private List<String> hitShipPositions = null;
 	private List<String> guessedPositions = null;
-	private Logger logger = LogManager.getLogger(AutomatedController.class);
-	
-	private static final int clientTurn = 1;
-	private static final int serverTurn = 2;
+	private final Object turnMutex = new Object();
+	private final Object turnSignal = new Object();
+	private final Object shipSetSignal = new Object();
+
 	private static final String HIT = "Hit";
+	private static final int CLIENT_TURN = 1;
+	private static final int SERVER_TURN = 2;
 	private static final String MISS = "Miss";
 	private static final int UP_DIRECTION = 2;
-	private static final char clientSymbol = 'Z';
-	private static final char serverSymbol = 'X';
 	private static final int LEFT_DIRECTION = -1;
 	private static final int RIGHT_DIRECTION = 1;
 	private static final int DOWN_DIRECTION = -2;
+	private static final char CLIENT_SYMBOL = 'Z';
+	private static final char SERVER_SYMBOL = 'X';
+	private static final Logger logger = LogManager.getLogger(AutomatedController.class);
 	
 	/**
 	 * 
-	 * @param whoami
+	 * @param type
 	 */
-	AutomatedController(int whoami)
+	AutomatedController(int type)
 	{
 		armada = new Armada();
-		turnMutex = new Object();
 		guessedPositions = new ArrayList<>();
 		hitShipPositions = new ArrayList<>();
-		
+
 		automator = new ArmadaAutomator(armada);
 		automator.automateArmadaPlacement();
 		armada.logArmadaPosition();
-		
+
 		// byte seed for the SecureRandom object
 		byte[] seed = ByteBuffer.allocate(Long.SIZE / Byte.SIZE)
 			.putLong(System.currentTimeMillis()).array();
@@ -70,35 +71,42 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		// Instantiate random object
 		random = new SecureRandom(seed);
 		
-		if (whoami == 1) // client
+		if (type == 1) // client
 		{
-			myTurn = clientTurn;
-			mySymbol = clientSymbol;
-			opponentTurn = serverTurn;
+			myTurn = CLIENT_TURN;
+			mySymbol = CLIENT_SYMBOL;
+			opponentTurn = SERVER_TURN;
 		}
-		else if (whoami == 2) // server
+		else if (type == 2) // server
 		{
-			myTurn = serverTurn;
-			mySymbol = serverSymbol;
-			opponentTurn = clientTurn;
+			myTurn = SERVER_TURN;
+			mySymbol = SERVER_SYMBOL;
+			opponentTurn = CLIENT_TURN;
 		}
 	}
-	
+
 	/**
 	 * 
 	 */
 	public void run()
 	{
-		int sentAmmo = 0;
-		
+		observer.update("SHIPS");
+//		waitForShipSet();
+
 		while (!shutdown)
 		{
+//			waitForTurn();
+//
+//			makeGuess();
+//			setTurnStatus(true);
 			if (getCurrentTurn() == myTurn && isShipsSet && !myTurnStatus())
 			{
-				makeGuess(sentAmmo++);
+				makeGuess();
 				setTurnStatus(true);
 			}
-			
+
+			waitForTurn();
+
 			try
 			{
 				Thread.sleep(500);
@@ -110,7 +118,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		}
 	}
 	
-	public void makeGuess(int ammo)
+	public void makeGuess()
 	{
 		logger.info("AUTOMATEDCONTROLLER: GUESSED POSITIONS: {}", getGuessedPositions());
 		
@@ -142,7 +150,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 					if (isGuessedPosition(position) || position.isEmpty())
 					{
 						availablePositions = getCrossPositions(nextHitPosition);
-						if (availablePositions.size() > 0)
+						if (!availablePositions.isEmpty())
 						{
 							position = availablePositions.get(random.nextInt(availablePositions.size()));
 							
@@ -169,7 +177,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 					// getRandomCrossPositionProtocol()
 					availablePositions = getCrossPositions(nextHitPosition);
 					
-					if (availablePositions.size() > 0)
+					if (!availablePositions.isEmpty())
 					{
 						position = availablePositions.get(random.nextInt(availablePositions.size()));
 					}
@@ -186,7 +194,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 				// getRandomCrossPositionProtocol()
 				availablePositions = getCrossPositions(hitShipPositions.get(0));
 				
-				if (availablePositions.size() > 0)
+				if (!availablePositions.isEmpty())
 				{
 					position = availablePositions.get(random.nextInt(availablePositions.size()));
 					
@@ -212,7 +220,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	{
 		contextPosition = contextPosition.substring(1, contextPosition.length() - 1);
 		
-		int column = (int) (contextPosition.charAt(0) - 64);
+		int column = (contextPosition.charAt(0) - 64);
 		int row = Integer.parseInt(contextPosition.substring(1));
 		
 		if (direction == LEFT_DIRECTION)
@@ -246,8 +254,8 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		end = end.substring(1, end.length() - 1);
 		start = start.substring(1, start.length() - 1);
 		
-		int endColumn = (int) (end.charAt(0) - 64);
-		int startColumn = (int) (start.charAt(0) - 64);
+		int endColumn = (end.charAt(0) - 64);
+		int startColumn = (start.charAt(0) - 64);
 		int endRow = Integer.parseInt(end.substring(1));
 		int startRow = Integer.parseInt(start.substring(1));
 		
@@ -278,7 +286,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		List<String> positions = new ArrayList<>();
 		focusPosition = focusPosition.substring(1, focusPosition.length() - 1);
 
-		int column = (int) (focusPosition.charAt(0) - 64);
+		int column = (focusPosition.charAt(0) - 64);
 		int row = Integer.parseInt(focusPosition.substring(1));
 		
 		logger.debug("AUTOMATEDCONTROLLER: Captured Row: {}.", row);
@@ -321,14 +329,14 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	
 	/**
 	 * 
-	 * @return
+	 * @return String
 	 */
 	private String getRandomPosition()
 	{
 		int row = 0;
 		int column = 0;
+		char columnChar;
 		String position = "";
-		char columnChar = 'a';
 		
 		do
 		{
@@ -346,11 +354,16 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	public void update(String update)
 	{
 		logger.info("AUTOMATEDCONTROLLER {}: Received {}.", getID(), update);
-		
+
 		if (update.equals("SET"))
 		{
 			logger.info("AUTOMATEDCONTROLLER: SET");
-			isShipsSet = true;
+
+			synchronized (shipSetSignal)
+			{
+				isShipsSet = true;
+				shipSetSignal.notifyAll();
+			}
 		}
 		else if (update.equals(Armada.CARRIER_NAME))
 		{
@@ -440,16 +453,21 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			if (isHit)
 			{
 				// Cases: 1) F |= (T & F) ... 2) F |= (T & T) ... 3) T |= (F & T) 
-				isCarrierSunk |= checkShipUpdate((!isCarrierSunk & armada.isCarrierSunk()), Armada.CARRIER_NAME);
-				isCruiserSunk |= checkShipUpdate((!isCruiserSunk & armada.isCruiserSunk()), Armada.CRUISER_NAME);
-				isSubmarineSunk |= checkShipUpdate((!isSubmarineSunk & armada.isSubmarineSunk()), Armada.SUBMARINE_NAME);
-				isDestroyerSunk |= checkShipUpdate((!isDestroyerSunk & armada.isDestroyerSunk()), Armada.DESTROYER_NAME);
-				isBattleshipSunk |= checkShipUpdate((!isBattleshipSunk & armada.isBattleshipSunk()), Armada.BATTLESHIP_NAME);
+				isCarrierSunk |= checkShipUpdate((!isCarrierSunk && armada.isCarrierSunk()), Armada.CARRIER_NAME);
+				isCruiserSunk |= checkShipUpdate((!isCruiserSunk && armada.isCruiserSunk()), Armada.CRUISER_NAME);
+				isSubmarineSunk |= checkShipUpdate((!isSubmarineSunk && armada.isSubmarineSunk()), Armada.SUBMARINE_NAME);
+				isDestroyerSunk |= checkShipUpdate((!isDestroyerSunk && armada.isDestroyerSunk()), Armada.DESTROYER_NAME);
+				isBattleshipSunk |= checkShipUpdate((!isBattleshipSunk && armada.isBattleshipSunk()), Armada.BATTLESHIP_NAME);
 			}
 			
 			observer.update(HorM);
 			setTurnStatus(false);
 			setCurrentTurn(myTurn);
+
+			synchronized (turnSignal)
+			{
+				turnSignal.notifyAll();
+			}
 		}
 		
 	}
@@ -473,6 +491,44 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		}
 		
 		return false;
+	}
+
+	private void waitForShipSet()
+	{
+		synchronized (shipSetSignal)
+		{
+			try
+			{
+				while (!isShipsSet)
+				{
+					shipSetSignal.wait();
+				}
+			}
+			catch (InterruptedException e)
+			{
+				logger.error(e, e);
+				Thread.currentThread().interrupt();
+			}
+		}
+	}
+
+	private void waitForTurn()
+	{
+		synchronized (turnSignal)
+		{
+			try
+			{
+				while (getCurrentTurn() != myTurn)
+				{
+					turnSignal.wait();
+				}
+			}
+			catch (InterruptedException e)
+			{
+				logger.error(e, e);
+				Thread.currentThread().interrupt();
+			}
+		}
 	}
 	
 	private void setShipFocus(boolean focus)

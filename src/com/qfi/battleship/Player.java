@@ -31,13 +31,9 @@ public class Player implements Runnable, Observable, Observer
 	private DataInputStream in = null;
 	private SecureRandom random = null;
 	private ServerSocket server = null;
-	private boolean CarrierSet = false;
-	private boolean CruiserSet = false;
 	private DataOutputStream out = null;
-	private boolean SubmarineSet = false;
-	private boolean DestroyerSet = false;
 	private Controller controller = null;
-	private boolean BattleshipSet = false;
+	private final Object shipSetSignal = new Object();
 	private Logger logger = LogManager.getLogger(Player.class);
 
 	public static final int CLIENT_ID = 1;
@@ -116,7 +112,7 @@ public class Player implements Runnable, Observable, Observer
 					{
 
 					}
-					
+
 					while (!(message = in.readUTF()).equals("READY"))
 					{
 						try
@@ -351,11 +347,10 @@ public class Player implements Runnable, Observable, Observer
 		}
 		else if (str.equals("SHIPS"))
 		{
-			CarrierSet = true;
-			CruiserSet = true;
-			SubmarineSet = true;
-			DestroyerSet = true;
-			BattleshipSet = true;
+			synchronized (shipSetSignal)
+			{
+				shipSetSignal.notifyAll();
+			}
 		}
 		else if (str.equals("OVER"))
 		{
@@ -426,53 +421,23 @@ public class Player implements Runnable, Observable, Observer
 		String setLog = "{} is Set.";
 		while (!isSet)
 		{
-			try
+			synchronized (shipSetSignal)
 			{
-				Thread.sleep(500);
-			}
-			catch (Throwable t)
-			{
-
-			}
-			
-			if (controller.getArmada().isCarrierSet() && !CarrierSet)
-			{
-				CarrierSet = true;
-				logger.info(setLog, capitalize(Armada.CARRIER_NAME.toLowerCase()));
+				try
+				{
+					shipSetSignal.wait();
+				}
+				catch (InterruptedException e)
+				{
+					logger.error(e, e);
+					Thread.currentThread().interrupt();
+				}
 			}
 
-			if (controller.getArmada().isBattleshipSet() && !BattleshipSet)
-			{
-				BattleshipSet = true;
-				logger.info(setLog, capitalize(Armada.BATTLESHIP_NAME.toLowerCase()));
-			}
-
-			if (controller.getArmada().isCruiserSet() && !CruiserSet)
-			{
-				CruiserSet = true;
-				logger.info(setLog, capitalize(Armada.CRUISER_NAME.toLowerCase()));
-			}
-
-			if (controller.getArmada().isSubmarineSet() && !SubmarineSet)
-			{
-				SubmarineSet = true;
-				logger.info(setLog, capitalize(Armada.SUBMARINE_NAME.toLowerCase()));
-			}
-
-			if (controller.getArmada().isDestroyerSet() && !DestroyerSet)
-			{
-				DestroyerSet = true;
-				logger.info(setLog, capitalize(Armada.DESTROYER_NAME.toLowerCase()));
-			}
-
-			if (CarrierSet && BattleshipSet && CruiserSet &&
-					SubmarineSet && DestroyerSet)
-			{
-				logger.info("All ships are set!");
-				isSet = true;
-				controller.getArmada().logArmadaPosition();
-				infoBox("Ships are Set!", "Player " + myID);
-			}
+			logger.info("All ships are set!");
+			isSet = true;
+			controller.getArmada().logArmadaPosition();
+			infoBox("Ships are Set!", "Player " + myID);
 		}
 	}
 
