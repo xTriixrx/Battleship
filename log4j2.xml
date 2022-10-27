@@ -11,8 +11,11 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Root level="ALL" additivity="false">
+        <Logger name="com.qfi.battleship" additivity="false" level="ALL">
             <AppenderRef ref="Battleship" />
+        </Logger>
+        <Root level="ALL" additivity="false">
+            <AppenderRef ref="Console" />
         </Root>
     </Loggers>
 </Configuration>

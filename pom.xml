@@ -9,7 +9,7 @@
   <url>https://mvnrepository.com/repos/central</url>
   <properties>
 	<java.version>17</java.version>
-	<log4j.version>2.17.2</log4j.version>
+	<log4j.version>2.19.0</log4j.version>
 	<javafx.version>17.0.2</javafx.version>
     <kotlin.version>1.6.10</kotlin.version>
 	<buildDirectory>${project.basedir}/target</buildDirectory>
