@@ -44,18 +44,18 @@ public class Player implements Runnable, Observable, Observer
 
 	/**
 	 * 
-	 * @param whoami
+	 * @param playerType
 	 * @param address
 	 * @param port
 	 */
-	public Player(Controller controller, int whoami, String address, int port)
+	public Player(Controller controller, int playerType, String address, int port)
 	{
-		if (whoami == 1) // client
+		if (playerType == 1) // client
 		{
 			myID = CLIENT_ID;
 			myName = capitalize(CLIENT);
 		}
-		else if (whoami == 2) // server
+		else if (playerType == 2) // server
 		{
 			myID = SERVER_ID;
 			myName = capitalize(SERVER);
@@ -65,7 +65,7 @@ public class Player implements Runnable, Observable, Observer
 		this.address = address;
 		this.controller = controller;
 		
-		((Observable) controller).register((Observer) this);
+		((Observable) controller).register(this);
 		register((Observer) controller);
 
 		// byte seed for the SecureRandom object
@@ -91,6 +91,8 @@ public class Player implements Runnable, Observable, Observer
 		initializeConnection();
 		initializeStreams();
 
+		observer.update("CONNECTED");
+
 		// string to read message from input 
 		String message = "";
 
@@ -105,6 +107,7 @@ public class Player implements Runnable, Observable, Observer
 					
 					try
 					{
+						logger.debug("Player " + myID + " is sending READY to opponent.");
 						out.writeUTF("READY");
 						out.flush();
 					}
@@ -113,10 +116,11 @@ public class Player implements Runnable, Observable, Observer
 
 					}
 
-					while (!(message = in.readUTF()).equals("READY"))
+					while (!(in.readUTF()).equals("READY"))
 					{
 						try
 						{
+							logger.debug("Player " + myID + " waiting for incoming READY from opponent.");
 							Thread.sleep(500);
 						}
 						catch (Exception e)
@@ -124,7 +128,7 @@ public class Player implements Runnable, Observable, Observer
 							logger.error(e, e);
 						}
 					}
-					
+
 					observer.update("SET");
 				}
 				else // Process message by opponent

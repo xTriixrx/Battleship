@@ -23,6 +23,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	private Observer observer = null;
 	private boolean shutdown = false;
 	private boolean shipFocus = false;
+	private boolean connected = false;
 	private boolean isShipsSet = false;
 	private boolean myTurnFlag = false;
 	private SecureRandom random = null;
@@ -37,6 +38,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	private final Object turnMutex = new Object();
 	private final Object turnSignal = new Object();
 	private final Object shipSetSignal = new Object();
+	private final Object connectionSignal = new Object();
 
 	private static final String HIT = "Hit";
 	private static final int CLIENT_TURN = 1;
@@ -90,8 +92,10 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	 */
 	public void run()
 	{
+		waitForConnection();
+		logger.debug("AUTOMATEDCONTROLLER: Submitting SHIPS flag to observer to signify automated ship placement has completed.");
 		observer.update("SHIPS");
-//		waitForShipSet();
+		waitForShipSet();
 
 		while (!shutdown)
 		{
@@ -357,12 +361,20 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 
 		if (update.equals("SET"))
 		{
-			logger.info("AUTOMATEDCONTROLLER: SET");
+			logger.debug("AUTOMATEDCONTROLLER: Player ships have been set!");
 
 			synchronized (shipSetSignal)
 			{
 				isShipsSet = true;
 				shipSetSignal.notifyAll();
+			}
+		}
+		else if (update.equals("CONNECTED"))
+		{
+			synchronized (connectionSignal)
+			{
+				connected = true;
+				connectionSignal.notifyAll();
 			}
 		}
 		else if (update.equals(Armada.CARRIER_NAME))
@@ -502,6 +514,25 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 				while (!isShipsSet)
 				{
 					shipSetSignal.wait();
+				}
+			}
+			catch (InterruptedException e)
+			{
+				logger.error(e, e);
+				Thread.currentThread().interrupt();
+			}
+		}
+	}
+
+	private void waitForConnection()
+	{
+		synchronized (connectionSignal)
+		{
+			try
+			{
+				while (!connected)
+				{
+					connectionSignal.wait();
 				}
 			}
 			catch (InterruptedException e)

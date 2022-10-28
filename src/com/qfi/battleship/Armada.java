@@ -184,35 +184,25 @@ public class Armada
 		return false;
 	}
 	
-	public boolean isCarrierSet() {
-		if(getCarrier().size() == 0)
-			return false;
-		else
-			return true;
+	public boolean isCarrierSet()
+	{
+		return getCarrier().size() == CARRIER_SIZE;
 	}
-	public boolean isBattleshipSet() {
-		if(getBattleship().size() == 0)
-			return false;
-		else
-			return true;
+	public boolean isBattleshipSet()
+	{
+		return getBattleship().size() == BATTLESHIP_SIZE;
 	}
-	public boolean isCruiserSet() {
-		if(getCarrier().size() == 0)
-			return false;
-		else
-			return true;
+	public boolean isCruiserSet()
+	{
+		return getCruiser().size() == CRUISER_SIZE;
 	}
-	public boolean isSubmarineSet() {
-		if(getSubmarine().size() == 0)
-			return false;
-		else
-			return true;
+	public boolean isSubmarineSet()
+	{
+		return getSubmarine().size() == SUBMARINE_SIZE;
 	}
-	public boolean isDestroyerSet() {
-		if(getDestroyer().size() == 0)
-			return false;
-		else
-			return true;
+	public boolean isDestroyerSet()
+	{
+		return getDestroyer().size() == DESTROYER_SIZE;
 	}
 	
 	/**

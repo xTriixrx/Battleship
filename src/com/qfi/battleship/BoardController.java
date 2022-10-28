@@ -413,6 +413,10 @@ public class BoardController implements Initializable, Observer, Observable, Con
 				}
 			}
 		}
+		else if (s.equals("CONNECTED"))
+		{
+			// CONNECTED TO OPPONENT
+		}
 		else if(s.equals("CARRIER"))
 		{
 			setSunkShipText(opponentCarrier);
