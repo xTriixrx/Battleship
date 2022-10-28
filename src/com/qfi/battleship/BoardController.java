@@ -1,6 +1,7 @@
 package com.qfi.battleship;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import javafx.fxml.FXML;
 import java.util.HashMap;
@@ -122,6 +123,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	private int currentTurn = 0;
 	private int opponentTurn = 0;
 	private Armada armada = null;
+	private Armada hitArmada = null;
 	private boolean myTurnFlag = true;
 	private boolean isShipsSet = false;
 	private String orientation = HORIZONTAL;
@@ -158,6 +160,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	BoardController(int type)
 	{
 		armada = new Armada();
+		hitArmada = new Armada();
 		automator = new ArmadaAutomator(armada);
 		
 		populateStyles();
@@ -336,7 +339,29 @@ public class BoardController implements Initializable, Observer, Observable, Con
 			}
 			else // notify observer to share sunk ship detail to opponent
 			{
-				observer.update(shipText.getText().toUpperCase());
+				String positions = "";
+				switch (shipText.getText().toUpperCase())
+				{
+					case Armada.CARRIER_NAME:
+						positions = hitArmada.getCarrierPositions();
+						break;
+					case Armada.CRUISER_NAME:
+						positions = hitArmada.getCruiserPositions();
+						break;
+					case Armada.DESTROYER_NAME:
+						positions = hitArmada.getDestroyerPositions();
+						break;
+					case Armada.SUBMARINE_NAME:
+						positions = hitArmada.getSubmarinePositions();
+						break;
+					case Armada.BATTLESHIP_NAME:
+						positions = hitArmada.getBattleshipPositions();
+						break;
+					default:
+						logger.error("Received unknown ship of type: " + shipText.getText().toUpperCase() + ".");
+				}
+
+				observer.update(shipText.getText().toUpperCase() + " " + positions);
 			}
 		}
 		
@@ -417,23 +442,23 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		{
 			// CONNECTED TO OPPONENT
 		}
-		else if(s.equals("CARRIER"))
+		else if(s.contains("CARRIER"))
 		{
 			setSunkShipText(opponentCarrier);
 		}
-		else if(s.equals("BATTLESHIP"))
+		else if(s.contains("BATTLESHIP"))
 		{
 			setSunkShipText(opponentBattleship);
 		}
-		else if(s.equals("CRUISER"))
+		else if(s.contains("CRUISER"))
 		{
 			setSunkShipText(opponentCruiser);
 		}
-		else if(s.equals("SUBMARINE"))
+		else if(s.contains("SUBMARINE"))
 		{
 			setSunkShipText(opponentSubmarine);
 		}
-		else if(s.equals("DESTROYER"))
+		else if(s.contains("DESTROYER"))
 		{
 			setSunkShipText(opponentDestroyer);
 		}
@@ -469,11 +494,12 @@ public class BoardController implements Initializable, Observer, Observable, Con
 			
 			String boardPos = t.substring(1); 
 			boolean isHit = armada.calculateHit(boardPos);
-			armada.updateArmada(boardPos);
 
 			if (isHit)
 			{
 				hitOrMiss = HIT;
+				String ship = armada.updateArmada(boardPos);
+				addHitShipPosition(ship, boardPos);
 			}
 			else
 			{
@@ -487,7 +513,29 @@ public class BoardController implements Initializable, Observer, Observable, Con
 			observer.update(hitOrMiss);
 		}
 	}
-	
+
+	private void addHitShipPosition(String ship, String boardPosition)
+	{
+		switch (ship)
+		{
+			case Armada.CARRIER_NAME:
+				hitArmada.addToCarrier(boardPosition);
+				break;
+			case Armada.CRUISER_NAME:
+				hitArmada.addToCruiser(boardPosition);
+				break;
+			case Armada.DESTROYER_NAME:
+				hitArmada.addToDestroyer(boardPosition);
+				break;
+			case Armada.SUBMARINE_NAME:
+				hitArmada.addToSubmarine(boardPosition);
+				break;
+			case Armada.BATTLESHIP_NAME:
+				hitArmada.addToBattleship(boardPosition);
+				break;
+		}
+	}
+
 	/**
 	 *
 	 * @param shipSize

@@ -1,5 +1,6 @@
 package com.qfi.battleship;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 import java.nio.ByteBuffer;
@@ -262,7 +263,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			direction = DOWN_DIRECTION;
 		}
 		
-		logger.info("AUTOMATEDCONTROLLER: DIRECTION: {}" + direction);
+		logger.info("AUTOMATEDCONTROLLER: DIRECTION: " + direction);
 		
 		return direction;
 	}
@@ -323,7 +324,22 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		
 		return position;
 	}
-	
+
+	private void updateHitPositions(String positionsContext)
+	{
+		// Removes the sunk ship name from the position context string update sent by opponent
+		// Ex: CRUISER I2 I3 I4 -> [I2, I3, I4]
+		String positionsText = positionsContext.substring(positionsContext.indexOf(" ") + 1);
+		List<String> positions = List.of(positionsText.split("\\s+"));
+
+		for (String position : positions)
+		{
+			String pos = makePosition(position.charAt(0), Integer.parseInt(position.substring(1, 2)));
+			hitShipPositions.remove(pos);
+			logger.debug("AUTOMATEDCONTROLLER: Removed: " + pos + " from hit ship positions map.");
+		}
+	}
+
 	@Override
 	public void update(String update)
 	{
@@ -347,30 +363,40 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 				connectionSignal.notifyAll();
 			}
 		}
-		else if (update.equals(Armada.CARRIER_NAME))
+		else if (update.contains(Armada.CARRIER_NAME))
 		{
 			logger.info("AUTOMATEDCONTROLLER: Opponent's " + Armada.CARRIER_NAME + "has sunk!");
-			hitShipPositions.clear();
+			logger.debug("AUTOMATEDCONTROLLER: " + Armada.CARRIER_NAME + ": " + update);
+			updateHitPositions(update);
+			logger.debug("AUTOMATEDCONTROLLER: Current hit ships mapping: " + hitShipPositions);
 		}
-		else if (update.equals(Armada.BATTLESHIP_NAME))
+		else if (update.contains(Armada.BATTLESHIP_NAME))
 		{
 			logger.info("AUTOMATEDCONTROLLER: Opponent's " + Armada.BATTLESHIP_NAME + "has sunk!");
-			hitShipPositions.clear();
+			logger.debug("AUTOMATEDCONTROLLER: " + Armada.BATTLESHIP_NAME + ": " + update);
+			updateHitPositions(update);
+			logger.debug("AUTOMATEDCONTROLLER: Current hit ships mapping: " + hitShipPositions);
 		}
-		else if(update.equals(Armada.CRUISER_NAME))
+		else if (update.contains(Armada.CRUISER_NAME))
 		{
 			logger.info("AUTOMATEDCONTROLLER: Opponent's " + Armada.CRUISER_NAME + "has sunk!");
-			hitShipPositions.clear();
+			logger.debug("AUTOMATEDCONTROLLER: " + Armada.CRUISER_NAME + ": " + update);
+			updateHitPositions(update);
+			logger.debug("AUTOMATEDCONTROLLER: Current hit ships mapping: " + hitShipPositions);
 		}
-		else if(update.equals(Armada.SUBMARINE_NAME))
+		else if(update.contains(Armada.SUBMARINE_NAME))
 		{
 			logger.info("AUTOMATEDCONTROLLER: Opponent's " + Armada.SUBMARINE_NAME + "has sunk!");
-			hitShipPositions.clear();
+			logger.debug("AUTOMATEDCONTROLLER: " + Armada.SUBMARINE_NAME + ": " + update);
+			updateHitPositions(update);
+			logger.debug("AUTOMATEDCONTROLLER: Current hit ships mapping: " + hitShipPositions);
 		}
-		else if(update.equals(Armada.DESTROYER_NAME))
+		else if(update.contains(Armada.DESTROYER_NAME))
 		{
 			logger.info("AUTOMATEDCONTROLLER: Opponent's " + Armada.DESTROYER_NAME + "has sunk!");
-			hitShipPositions.clear();
+			logger.debug("AUTOMATEDCONTROLLER: " + Armada.DESTROYER_NAME + ": " + update);
+			updateHitPositions(update);
+			logger.debug("AUTOMATEDCONTROLLER: Current hit ships mapping: " + hitShipPositions);
 		}
 		else if (getCurrentTurn() == myTurn && myTurnStatus())
 		{

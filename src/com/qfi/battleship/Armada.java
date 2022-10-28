@@ -67,29 +67,37 @@ public class Armada
 	/**
 	 * 
 	 * @param hitTarget
+	 * @return String
 	 */
-	public void updateArmada(String hitTarget)
+	public String updateArmada(String hitTarget)
 	{	
 		if (m_destroyer.contains(hitTarget))
 		{
 			m_destroyer.remove(hitTarget);
+			return DESTROYER_NAME;
 		}
 		else if (m_submarine.contains(hitTarget))
 		{
 			m_submarine.remove(hitTarget);
+			return SUBMARINE_NAME;
 		}
 		else if (m_cruiser.contains(hitTarget))
 		{
 			m_cruiser.remove(hitTarget);
+			return CRUISER_NAME;
 		}
 		else if (m_battleship.contains(hitTarget))
 		{
 			m_battleship.remove(hitTarget);
+			return BATTLESHIP_NAME;
 		}
 		else if (m_carrier.contains(hitTarget))
 		{
 			m_carrier.remove(hitTarget);
+			return CARRIER_NAME;
 		}
+
+		return "";
 	}
 	
 	public boolean isArmadaSunk()
@@ -424,49 +432,86 @@ public class Armada
 		}
 	}
 
+	public String getCarrierPositions()
+	{
+		return getPositions(m_carrier);
+	}
+
+	public String getCruiserPositions()
+	{
+		return getPositions(m_cruiser);
+	}
+
+	public String getDestroyerPositions()
+	{
+		return getPositions(m_destroyer);
+	}
+
+	public String getSubmarinePositions()
+	{
+		return getPositions(m_submarine);
+	}
+
+	public String getBattleshipPositions()
+	{
+		return getPositions(m_battleship);
+	}
+
+	private String getPositions(List<String> ship)
+	{
+		StringBuilder positions = new StringBuilder();
+
+		for (String position : ship)
+		{
+			positions.append(position).append(" ");
+		}
+
+		return positions.toString();
+	}
+
 	/**
 	 * Accessor for getting carrier list.
-	 * 
+	 *
 	 * @return List<String>
 	 */
 	public List<String> getCarrier()
 	{
 		return m_carrier;
 	}
-	
+
 	/**
 	 * Accessor for getting battleship list.
-	 * 
+	 *
 	 * @return List<String>
 	 */
 	public List<String> getBattleship()
 	{
 		return m_battleship;
 	}
-	
+
 	/**
 	 * Accessor for getting cruiser list.
-	 * 
+	 *
 	 * @return List<String>
 	 */
 	public List<String> getCruiser()
 	{
 		return m_cruiser;
 	}
-	
+
 	/**
 	 * Accessor for getting submarine list.
-	 * 
+	 *
 	 * @return List<String>
 	 */
 	public List<String> getSubmarine()
 	{
 		return m_submarine;
 	}
-	
+
 	/**
 	 * Accessor for getting destroyer list.
-	 * 
+	 *
 	 * @return List<String>
 	 */
 	public List<String> getDestroyer()

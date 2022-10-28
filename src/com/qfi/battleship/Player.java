@@ -361,23 +361,23 @@ public class Player implements Runnable, Observable, Observer
 			infoBox("You lost :(", "Player " + myID);
 			over = true;
 		}
-		else if (str.equals(Armada.CARRIER_NAME))
+		else if (str.contains(Armada.CARRIER_NAME))
 		{
 			infoBox("Your Carrier has been sunk!", "Player " + myID);
 		}
-		else if (str.equals(Armada.BATTLESHIP_NAME))
+		else if (str.contains(Armada.BATTLESHIP_NAME))
 		{
 			infoBox("Your Battleship has been sunk!", "Player " + myID);
 		}
-		else if (str.equals(Armada.CRUISER_NAME))
+		else if (str.contains(Armada.CRUISER_NAME))
 		{
 			infoBox("Your Cruiser has been sunk!", "Player " + myID);
 		}
-		else if (str.equals(Armada.SUBMARINE_NAME))
+		else if (str.contains(Armada.SUBMARINE_NAME))
 		{
 			infoBox("Your Submarine has been sunk!", "Player " + myID);
 		}
-		else if (str.equals(Armada.DESTROYER_NAME))
+		else if (str.contains(Armada.DESTROYER_NAME))
 		{
 			infoBox("Your Destroyer has been sunk!", "Player " + myID);
 		}
