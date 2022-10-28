@@ -6,10 +6,10 @@ import javafx.scene.Node;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import org.apache.log4j.Logger;
 import java.security.SecureRandom;
-import org.apache.logging.log4j.Logger;
+import org.apache.log4j.LogManager;
 import javafx.collections.ObservableList;
-import org.apache.logging.log4j.LogManager;
 import com.qfi.battleship.Armada.ArmadaType;
 
 /**
@@ -147,7 +147,7 @@ public class ArmadaAutomator
 		StringBuilder sb = new StringBuilder();
 		List<String> placement = new ArrayList<>();
 		
-		logger.debug("Attempting placement for ship of size: {}", size);
+		logger.debug("Attempting placement for ship of size: " + size + ".");
 		
 		while (!placeable)
 		{
@@ -157,8 +157,8 @@ public class ArmadaAutomator
 			endRow = row + (size - 1);
 			letter = convertToColumnLetter(col);
 			
-			logger.trace("Attempting placement with starting position: {}{} and with ending position: {}{}.",
-					letter, row, letter, endRow);
+			logger.trace("Attempting placement with starting position: " + letter + row +
+							" and with ending position: " + letter + endRow + ".");
 			
 			// Iterate and generate each sub-position for the attempted placement
 			for (int i = 0; i < size; i++)
@@ -169,7 +169,7 @@ public class ArmadaAutomator
 				sb.setLength(0); // Clear out old string
 			}
 			
-			logger.debug("Ship Placement Attempt: {}", placement);
+			logger.debug("Ship Placement Attempt: " + placement + ".");
 			
 			// If end row is within upper bound and placement is a unique set, it's a placeable position
 			if (endRow <= UPPER_BOUND && Collections.disjoint(used, placement))
@@ -205,7 +205,7 @@ public class ArmadaAutomator
 		StringBuilder sb = new StringBuilder();
 		List<String> placement = new ArrayList<>();
 		
-		logger.debug("Attempting placement for ship of size: {}", size);
+		logger.debug("Attempting placement for ship of size: " + size + ".");
 		
 		while (!placeable)
 		{
@@ -215,8 +215,8 @@ public class ArmadaAutomator
 			startLetter = convertToColumnLetter(col);
 			endLetter = convertToColumnLetter(col + (size - 1));
 
-			logger.trace("Attempting placement with starting position: {}{} and with ending position: {}{}.",
-					startLetter, row, endLetter, row);
+			logger.trace("Attempting placement with starting position: " + startLetter + row +
+							" and with ending position: " + endLetter + row + ".");
 
 			// Iterate and generate each subposition for the attempted placement 
 			for (int i = 0; i < size; i++)
@@ -227,9 +227,9 @@ public class ArmadaAutomator
 				sb.setLength(0); // Clear out old string
 			}
 			
-			logger.debug("Ship Placement Attempt: {}", placement);
+			logger.debug("Ship Placement Attempt: " + placement + ".");
 			
-			// If end column letter is not out of bounds and placement is a unique set, its a placeable position
+			// If end column letter is not out of bounds and placement is a unique set, it's a placeable position
 			if (endLetter != OUT_OF_BOUNDS_COL && Collections.disjoint(used, placement))
 			{
 				placeable = true;

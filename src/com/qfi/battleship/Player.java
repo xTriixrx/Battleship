@@ -6,10 +6,10 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import javax.swing.JOptionPane;
 import java.io.DataInputStream;
+import org.apache.log4j.Logger;
 import java.io.DataOutputStream;
 import java.security.SecureRandom;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.apache.log4j.LogManager;
 
 /**
  * 
@@ -130,7 +130,7 @@ public class Player implements Runnable, Observable, Observer
 				else // Process message by opponent
 				{
 					message = in.readUTF();
-					logger.debug("Player received '{}' message from opponent.", message);
+					logger.debug("Player received '" + message + "' message from opponent.");
 					received(message);
 					observer.update(message);
 				}
@@ -171,7 +171,7 @@ public class Player implements Runnable, Observable, Observer
 			out.writeInt(currentTurn);
 			out.flush();
 			line = in.readUTF(); 
-			logger.info("Server received: {} from client.", line);
+			logger.info("Server received: " + line + " from client.");
 			lineCount++;
 			isShipsSet();
 		}
@@ -241,7 +241,7 @@ public class Player implements Runnable, Observable, Observer
 		try
 		{
 			server = new ServerSocket(port);
-			logger.info("Local Address: {}", ServerAddress());
+			logger.info("Local Address: " + serverAddress());
 			logger.info("Waiting for a client to connect.");
 			socket = server.accept(); 
 			logger.info("Client accepted."); 
@@ -271,14 +271,14 @@ public class Player implements Runnable, Observable, Observer
 	@Override
 	public void update(String s)
 	{
-		logger.info("Received {} from observable controller.", s);
+		logger.info("Received " + s + " from observable controller.");
 		StringBuilder t = new StringBuilder(s);
 		updateResponse(s, t);
 	}
 
 	/**
 	 * 
-	 * @param l
+	 * @param opponentMessage
 	 */
 	public void received(String opponentMessage)
 	{
@@ -400,7 +400,7 @@ public class Player implements Runnable, Observable, Observer
 		{
 			if (!str.equals("SHIPS"))
 			{
-				logger.info("Sending {} to opponent.", str);
+				logger.info("Sending '" + str + "' to opponent.");
 				out.writeUTF(str);
 				out.flush();
 			}
@@ -412,13 +412,12 @@ public class Player implements Runnable, Observable, Observer
 	}
 
 	/**
-	 * 
-	 * @param isSet
+	 *
 	 */
 	public void isShipsSet()
 	{
 		boolean isSet = false;
-		String setLog = "{} is Set.";
+
 		while (!isSet)
 		{
 			synchronized (shipSetSignal)
@@ -445,7 +444,7 @@ public class Player implements Runnable, Observable, Observer
 	 * 
 	 * @return String
 	 */
-	public String ServerAddress()
+	public String serverAddress()
 	{
 		String host = "";
 		InetAddress temp = null;

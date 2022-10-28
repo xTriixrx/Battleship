@@ -2,10 +2,10 @@ package com.qfi.battleship;
 
 import java.util.Map;
 import javafx.scene.Node;
+import org.apache.log4j.Logger;
+import org.apache.log4j.LogManager;
 import javafx.scene.control.Button;
-import org.apache.logging.log4j.Logger;
 import javafx.collections.ObservableList;
-import org.apache.logging.log4j.LogManager;
 import com.qfi.battleship.Armada.ArmadaType;
 
 /**
@@ -127,7 +127,7 @@ public class DragDropController
 				!inArmada(button.getId().substring(STANDARD_COL_POS)))
 			{
 				button.setStyle(style);
-				logger.trace("buttonID: {} is in horizontal range.", button.getId());
+				logger.trace("buttonID: " + button.getId() + " is in horizontal range.");
 			}
 		}
 	}
@@ -155,7 +155,7 @@ public class DragDropController
 				!inArmada(button.getId().substring(STANDARD_COL_POS)))
 			{
 				button.setStyle(style);
-				logger.trace("buttonID: {} is in vertical range.", button.getId());
+				logger.trace("buttonID: " + button.getId() + " is in vertical range.");
 			}
 		}
 	}
@@ -202,7 +202,7 @@ public class DragDropController
 					button.setStyle(BACKGROUND_BUTTON_STYLE);
 				}
 				
-				logger.trace("buttonID: {} is not in horizontal range.", button.getId());
+				logger.trace("buttonID: " + button.getId() + " is not in horizontal range.");
 			}
 		}
 	}
@@ -249,7 +249,7 @@ public class DragDropController
 					button.setStyle(BACKGROUND_BUTTON_STYLE);
 				}
 				
-				logger.trace("buttonID: {} is not in vertical range.", button.getId());
+				logger.trace("buttonID: " + button.getId() + " is not in vertical range.");
 			}
 		}
 	}
@@ -279,7 +279,7 @@ public class DragDropController
 				addToArmada(type, button.getId().substring(STANDARD_COL_POS));
 				
 				button.setStyle(style);
-				logger.trace("buttonID: {} is in horizontal range.", button.getId());
+				logger.trace("buttonID: " + button.getId() + " is in horizontal range.");
 			}
 		}
 	}
@@ -309,7 +309,7 @@ public class DragDropController
 				addToArmada(type, button.getId().substring(STANDARD_COL_POS));
 				
 				button.setStyle(style);
-				logger.trace("buttonID: {} is in vertical range.", button.getId());
+				logger.trace("buttonID: " + button.getId() + " is in vertical range.");
 			}
 		}
 	}
@@ -347,7 +347,7 @@ public class DragDropController
 			
 			strideID = sb.toString();
 			
-			logger.trace("Comparing buttonID: {} to strideID: {}.", buttonID, strideID);
+			logger.trace("Comparing buttonID: " + buttonID + " to strideID: " + strideID + ".");
 			inRange = (buttonID.equalsIgnoreCase(strideID));
 			
 			sb.setLength(0); // Clear out old string
@@ -389,7 +389,7 @@ public class DragDropController
 			
 			strideID = sb.toString();
 			
-			logger.trace("Comparing buttonID: {} to strideID: {}.", buttonID, strideID);
+			logger.trace("Comparing buttonID: " + buttonID + " to strideID: " + strideID + ".");
 			inRange = (buttonID.equalsIgnoreCase(strideID));
 			
 			sb.setLength(0); // Clear out old string

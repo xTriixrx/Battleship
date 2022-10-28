@@ -2,17 +2,19 @@ package com.qfi.battleship;
 
 import java.net.URL;
 import java.util.Map;
-
-import javafx.event.Event;
 import javafx.fxml.FXML;
 import java.util.HashMap;
 import javafx.scene.Node;
+import javafx.event.Event;
 import javafx.scene.Cursor;
 import javafx.scene.text.Text;
+import org.apache.log4j.Logger;
 import javafx.scene.paint.Color;
 import java.util.ResourceBundle;
 import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
+import javafx.application.Platform;
+import org.apache.log4j.LogManager;
 import javafx.scene.control.Button;
 import javafx.scene.input.Dragboard;
 import javafx.scene.image.ImageView;
@@ -21,12 +23,9 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.input.TransferMode;
-import org.apache.logging.log4j.Logger;
 import javafx.collections.ObservableList;
-import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.input.ClipboardContent;
-import org.apache.logging.log4j.LogManager;
 import com.qfi.battleship.Armada.ArmadaType;
 
 /**
@@ -328,7 +327,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 			justSunk = true;
 			setSunkShipText(shipText);
 			
-			logger.debug("{} SUNK", shipText.getText());
+			logger.debug(shipText.getText() + " has sunk.");
 			
 			// If armada has sunk, the game is over
 			if (armada.isArmadaSunk())
@@ -401,7 +400,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	@Override
 	public void update(String s)
 	{
-		logger.info("Controller {}: Received {}.", getID(), s);
+		logger.info("Controller " + getID() + ": Received " + s + ".");
 
 		if (s.equals("SET"))
 		{
@@ -582,6 +581,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 							armada.isSubmarineSet() && armada.isDestroyerSet() &&
 							armada.isBattleshipSet())
 						{
+
 							observer.update("SHIPS");
 						}
 					}
@@ -675,7 +675,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	 */
 	private final EventHandler<MouseEvent> mouseClickEvent = event ->
 	{
-		logger.info("Controller {}: current turn is: {}", getID(), getCurrentTurn());
+		logger.info("Controller " + getID() + ": current turn is: " + getCurrentTurn() + ".");
 
 		if (getCurrentTurn() == myTurn && isShipsSet)
 		{
@@ -684,7 +684,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 
 			((Button) event.getTarget()).setDisable(true);
 			((Button) event.getTarget()).setMouseTransparent(false);
-			logger.info("Controller {}: sending {} to opponent.", getID(), toSend);
+			logger.info("Controller " + getID() + ": sending " + toSend + " to opponent.");
 			myTurnFlag = true;
 			observer.update(toSend);
 			pictureOne.setDisable(true);

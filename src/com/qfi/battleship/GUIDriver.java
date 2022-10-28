@@ -6,9 +6,9 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.scene.Parent;
 import javafx.fxml.FXMLLoader;
+import org.apache.log4j.Logger;
+import org.apache.log4j.LogManager;
 import javafx.application.Application;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 
 /**
  * GUIDriver is a generic Application class which will instantiate a Battleship FXML layout in coordination with
@@ -53,10 +53,10 @@ public class GUIDriver extends Application
 		port = Integer.parseInt(kwargList.get(PORT_ARG));
 		automatedOpponent = Boolean.parseBoolean(kwargList.get(AUTOMATED));
 		
-		logger.info("Host: {}.", host);
-		logger.info("Port: {}.", port);
-		logger.info("Instance Type: {}.", type);
-		logger.info("Automated opponent: {}.", automatedOpponent);
+		logger.info("Host: " + host + ".");
+		logger.info("Port: " + port + ".");
+		logger.info("Instance Type: " + type + ".");
+		logger.info("Automated opponent: " + automatedOpponent + ".");
 		
 		if (type.equalsIgnoreCase(Player.SERVER))
 		{
@@ -81,7 +81,7 @@ public class GUIDriver extends Application
 		logic = new Player(controller, instanceNumber, host, port);
 		instanceName = ((Player) logic).getName();
 
-		logger.debug("Controller ID: {}", controller.getID());
+		logger.debug("Controller ID: " + controller.getID() + ".");
 		
 		// If the automated opponent flag is set, an inverse automated player will also be instantiated.
 		if (automatedOpponent)
@@ -183,7 +183,7 @@ public class GUIDriver extends Application
 		Player runnableOpponent = new Player(automatedController, playerID, host, port);
 		runnableOpponent.setAutomated(true);
 		
-		logger.debug("Automated Controller ID: {}", automatedController.getID());
+		logger.debug("Automated Controller ID: " + automatedController.getID() + ".");
 
 		// Instantiate and start automated controller thread
 		Thread automatedLogic = new Thread((Runnable) automatedController);

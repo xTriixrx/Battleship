@@ -3,9 +3,9 @@ package com.qfi.battleship;
 import java.util.List;
 import java.util.ArrayList;
 import java.nio.ByteBuffer;
+import org.apache.log4j.Logger;
 import java.security.SecureRandom;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.apache.log4j.LogManager;
 
 /**
  * 
@@ -120,7 +120,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	
 	public void makeGuess()
 	{
-		logger.info("AUTOMATEDCONTROLLER: GUESSED POSITIONS: {}", getGuessedPositions());
+		logger.info("AUTOMATEDCONTROLLER: GUESSED POSITIONS: " + getGuessedPositions());
 		
 		if (isShipInFocus())
 		{
@@ -207,7 +207,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 
 			latestGuess = position;
 			addGuessedPosition(latestGuess);
-			logger.info("AUTOMATEDCONTROLLER: GUESS: {}", latestGuess);
+			logger.info("AUTOMATEDCONTROLLER: GUESS: " + latestGuess);
 			observer.update(latestGuess);
 			
 			return;
@@ -276,7 +276,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			direction = DOWN_DIRECTION;
 		}
 		
-		logger.info("AUTOMATEDCONTROLLER: DIRECTION: {}", direction);
+		logger.info("AUTOMATEDCONTROLLER: DIRECTION: {}" + direction);
 		
 		return direction;
 	}
@@ -289,8 +289,8 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		int column = (focusPosition.charAt(0) - 64);
 		int row = Integer.parseInt(focusPosition.substring(1));
 		
-		logger.debug("AUTOMATEDCONTROLLER: Captured Row: {}.", row);
-		logger.debug("AUTOMATEDCONTROLLER: Captured column: {}.", column);
+		logger.debug("AUTOMATEDCONTROLLER: Captured Row: " + row + ".");
+		logger.debug("AUTOMATEDCONTROLLER: Captured column: " + column + ".");
 		
 		// If all positions are available will return in order of 
 		positions.add(makePosition((char) (column + 64), row + 1));
@@ -300,7 +300,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		
 		positions.removeAll(getGuessedPositions());
 
-		logger.debug("AUTOMATEDCONTROLLER: Available cross position: {}", positions);
+		logger.debug("AUTOMATEDCONTROLLER: Available cross position: " + positions + ".");
 		
 		return positions;
 	}
@@ -323,7 +323,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	{
 		latestGuess = getRandomPosition();
 		addGuessedPosition(latestGuess);
-		logger.info("AUTOMATEDCONTROLLER: GUESS: {}", latestGuess);
+		logger.info("AUTOMATEDCONTROLLER: GUESS: " + latestGuess + ".");
 		observer.update(latestGuess);
 	}
 	
@@ -344,7 +344,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			column = random.nextInt(10) + 1;
 			columnChar = (char) (column + 64);
 			position = makePosition(columnChar, row);
-			logger.trace("Attempting random position: {}", position);
+			logger.trace("Attempting random position: " + position + ".");
 		} while (isGuessedPosition(position));
 		
 		return position;
@@ -353,7 +353,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	@Override
 	public void update(String update)
 	{
-		logger.info("AUTOMATEDCONTROLLER {}: Received {}.", getID(), update);
+		logger.info("AUTOMATEDCONTROLLER " + getID() + ": Received " + update + ".");
 
 		if (update.equals("SET"))
 		{
@@ -367,27 +367,27 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		}
 		else if (update.equals(Armada.CARRIER_NAME))
 		{
-			logger.info("AUTOMATEDCONTROLLER: {}", Armada.CARRIER_NAME);
+			logger.info("AUTOMATEDCONTROLLER: " + Armada.CARRIER_NAME);
 			hitShipPositions.clear();
 		}
 		else if (update.equals(Armada.BATTLESHIP_NAME))
 		{
-			logger.info("AUTOMATEDCONTROLLER: {}", Armada.BATTLESHIP_NAME);
+			logger.info("AUTOMATEDCONTROLLER: " + Armada.BATTLESHIP_NAME);
 			hitShipPositions.clear();
 		}
 		else if(update.equals(Armada.CRUISER_NAME))
 		{
-			logger.info("AUTOMATEDCONTROLLER: {}", Armada.CRUISER_NAME);
+			logger.info("AUTOMATEDCONTROLLER: " + Armada.CRUISER_NAME);
 			hitShipPositions.clear();
 		}
 		else if(update.equals(Armada.SUBMARINE_NAME))
 		{
-			logger.info("AUTOMATEDCONTROLLER: {}", Armada.SUBMARINE_NAME);
+			logger.info("AUTOMATEDCONTROLLER: " + Armada.SUBMARINE_NAME);
 			hitShipPositions.clear();
 		}
 		else if(update.equals(Armada.DESTROYER_NAME))
 		{
-			logger.info("AUTOMATEDCONTROLLER: {}", Armada.DESTROYER_NAME);
+			logger.info("AUTOMATEDCONTROLLER: " + Armada.DESTROYER_NAME);
 			hitShipPositions.clear();
 		}
 		else if (getCurrentTurn() == myTurn && myTurnStatus())
@@ -483,7 +483,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			}
 			else
 			{
-				logger.info("{} SUNK", shipName);
+				logger.info(shipName + " SUNK");
 				observer.update(shipName);
 			}
 			

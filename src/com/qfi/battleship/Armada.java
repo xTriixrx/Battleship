@@ -2,8 +2,8 @@ package com.qfi.battleship;
 
 import java.util.List;
 import java.util.ArrayList;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.apache.log4j.Logger;
+import org.apache.log4j.LogManager;
 
 /**
  * 
@@ -231,7 +231,7 @@ public class Armada
 	 * Generic logging function that uses a ArmadaType enumeration value and a list of strings representing a ships
 	 * position to log the blocks allocated for that given ship type.
 	 * 
-	 * @param type An ArmadaType enum representing the type of ship that is being loggied.
+	 * @param type An ArmadaType enum representing the type of ship that is being logged.
 	 * @param ship
 	 */
 	private void logPosition(ArmadaType type, List<String> ship)
@@ -243,7 +243,7 @@ public class Armada
 			shipPositions += position + " ";
 		}
 		
-		m_logger.debug("{} Position: {}", type, shipPositions);
+		m_logger.debug(type + " Position: " + shipPositions);
 	}
 	
 	/**
@@ -261,8 +261,8 @@ public class Armada
 		}
 		else if (carrierPos.size() != CARRIER_SIZE)
 		{
-			m_logger.debug("Attempted to add {} positions when only needed {}, received positions: {}.",
-				carrierPos.size(), CARRIER_SIZE, carrierPos);
+			m_logger.debug("Attempted to add " + carrierPos.size() + " positions when only needed " + CARRIER_SIZE +
+							", received positions: " + carrierPos + ".");
 		}
 		else
 		{
@@ -285,8 +285,8 @@ public class Armada
 		}
 		else if (battleshipPos.size() != BATTLESHIP_SIZE)
 		{
-			m_logger.debug("Attempted to add {} positions when only needed {}, received positions: {}.",
-				battleshipPos.size(), BATTLESHIP_SIZE, battleshipPos);
+			m_logger.debug("Attempted to add " + battleshipPos.size() + " positions when only needed " + BATTLESHIP_SIZE
+							+ ", received positions: " + battleshipPos + ".");
 		}
 		else
 		{
@@ -309,8 +309,8 @@ public class Armada
 		}
 		else if (cruiserPos.size() != CRUISER_SIZE)
 		{
-			m_logger.debug("Attempted to add {} positions when only needed {}, received positions: {}.",
-				cruiserPos.size(), CRUISER_SIZE, cruiserPos);
+			m_logger.debug("Attempted to add " + cruiserPos.size() + " positions when only needed " + CRUISER_SIZE +
+							", received positions: " + cruiserPos + ".");
 		}
 		else
 		{
@@ -333,8 +333,8 @@ public class Armada
 		}
 		else if (submarinePos.size() != SUBMARINE_SIZE)
 		{
-			m_logger.debug("Attempted to add {} positions when only needed {}, received positions: {}.",
-				submarinePos.size(), SUBMARINE_SIZE, submarinePos);
+			m_logger.debug("Attempted to add " + submarinePos.size() + " positions when only needed " + SUBMARINE_SIZE
+							+ ", received positions: " + submarinePos + ".");
 		}
 		else
 		{
@@ -357,8 +357,8 @@ public class Armada
 		}
 		else if (destroyerPos.size() != DESTROYER_SIZE)
 		{
-			m_logger.debug("Attempted to add {} positions when only needed {}, received positions: {}.",
-				destroyerPos.size(), DESTROYER_SIZE, destroyerPos);
+			m_logger.debug("Attempted to add " + destroyerPos.size() + " positions when only needed " + DESTROYER_SIZE
+							+ ", received positions: " + destroyerPos + ".");
 		}
 		else
 		{
