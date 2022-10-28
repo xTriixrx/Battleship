@@ -99,26 +99,13 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 
 		while (!shutdown)
 		{
-//			waitForTurn();
-//
-//			makeGuess();
-//			setTurnStatus(true);
-			if (getCurrentTurn() == myTurn && isShipsSet && !myTurnStatus())
+			if (getCurrentTurn() == myTurn && !myTurnStatus())
 			{
 				makeGuess();
 				setTurnStatus(true);
 			}
 
 			waitForTurn();
-
-			try
-			{
-				Thread.sleep(500);
-			}
-			catch (Exception e)
-			{
-				logger.error(e, e);
-			}
 		}
 	}
 	
@@ -581,7 +568,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		
 		return focus;
 	}
-	
+
 	private void setTurnStatus(boolean t)
 	{
 		synchronized (turnMutex)
@@ -613,24 +600,24 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	private boolean isGuessedPosition(String pos)
 	{
 		boolean guessed = false;
-		
+
 		synchronized (turnMutex)
 		{
 			guessed = guessedPositions.contains(pos);
 		}
-		
+
 		return guessed;
 	}
-	
+
 	private boolean myTurnStatus()
 	{
 		boolean t = false;
-		
+
 		synchronized (turnMutex)
 		{
 			t = myTurnFlag;
 		}
-		
+
 		return t;
 	}
 	

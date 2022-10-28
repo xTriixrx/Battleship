@@ -22,19 +22,19 @@ public class Armada
 	public static final String SUBMARINE_NAME = "SUBMARINE";
 	public static final String DESTROYER_NAME = "DESTROYER";
 	public static final String BATTLESHIP_NAME = "BATTLESHIP";
-	
-	private boolean carrierSunk;
-	private boolean battleshipSunk;
-	private boolean cruiserSunk;
-	private boolean submarineSunk;
-	private boolean destroyerSunk;
-	private int health;
-	private List<String> m_carrier = new ArrayList<String>();
-	private List<String> m_cruiser = new ArrayList<String>();
-	private List<String> m_submarine = new ArrayList<String>();
-	private List<String> m_destroyer = new ArrayList<String>();
-	private List<String> m_battleship = new ArrayList<String>();
-	private Logger m_logger = LogManager.getLogger(Armada.class);
+
+	private int health = 5;
+	private boolean carrierSunk = false;
+	private boolean cruiserSunk = false;
+	private boolean submarineSunk = false;
+	private boolean destroyerSunk = false;
+	private boolean battleshipSunk = false;
+	private final List<String> m_carrier = new ArrayList<>();
+	private final List<String> m_cruiser = new ArrayList<>();
+	private final List<String> m_submarine = new ArrayList<>();
+	private final List<String> m_destroyer = new ArrayList<>();
+	private final List<String> m_battleship = new ArrayList<>();
+	private static final Logger m_logger = LogManager.getLogger(Armada.class);
 	
 	/**
 	 * 
@@ -51,48 +51,17 @@ public class Armada
 	}
 	
 	/**
-	 * Armada constructor.
-	 */
-	public Armada()
-	{
-		health = 5;
-		carrierSunk = false;
-		cruiserSunk = false;
-		submarineSunk = false;
-		destroyerSunk = false;
-		battleshipSunk = false;
-	}
-	
-	/**
 	 * 
 	 * @param hitTarget
 	 * @return
 	 */
 	public boolean calculateHit(String hitTarget)
 	{
-		if (m_destroyer.contains(hitTarget))
-		{
-			return true;
-		}
-		else if (m_submarine.contains(hitTarget))
-		{
-			return true;
-		}
-		else if (m_cruiser.contains(hitTarget))
-		{
-			return true;
-		}
-		else if (m_battleship.contains(hitTarget))
-		{
-			return true;
-		}
-		else if (m_carrier.contains(hitTarget))
-		{
-			return true;
-		}
-		
-		return false;
-		
+		return m_cruiser.contains(hitTarget) ||
+				m_carrier.contains(hitTarget) ||
+				m_destroyer.contains(hitTarget) ||
+				m_submarine.contains(hitTarget) ||
+				m_battleship.contains(hitTarget);
 	}
 	
 	/**
@@ -121,66 +90,71 @@ public class Armada
 		{
 			m_carrier.remove(hitTarget);
 		}
-		
 	}
 	
-	public boolean isGameOver() {
-		if(isArmadaSunk())
-			return true;
-		return false;	
+	public boolean isArmadaSunk()
+	{
+		return health == 0 && carrierSunk && battleshipSunk &&
+				cruiserSunk && submarineSunk && destroyerSunk;
 	}
 	
-	public boolean isArmadaSunk() {
-		if(health == 0 && carrierSunk && battleshipSunk &&
-				cruiserSunk && submarineSunk && destroyerSunk) {
-			return true;
-		}
-		else
-			return false;
-	}
-	
-	public boolean isCarrierSunk() {
-		if(getCarrier().size() == 0 && !carrierSunk) {
+	public boolean isCarrierSunk()
+	{
+		if (getCarrier().isEmpty() && !carrierSunk)
+		{
 			health--;
 			carrierSunk = true;
 			return true;
 		}
+
 		return false;
 	}
 	
-	public boolean isBattleshipSunk() {
-		if(getBattleship().size() == 0 && !battleshipSunk) {
+	public boolean isBattleshipSunk()
+	{
+		if (getBattleship().isEmpty() && !battleshipSunk)
+		{
 			health--;
 			battleshipSunk = true;
 			return true;
 		}
+
 		return false;
 	}
 	
-	public boolean isCruiserSunk() {
-		if(getCruiser().size() == 0 && !cruiserSunk) {
+	public boolean isCruiserSunk()
+	{
+		if (getCruiser().isEmpty() && !cruiserSunk)
+		{
 			health--;
 			cruiserSunk = true;
 			return true;
 		}
+
 		return false;
 	}
 	
-	public boolean isSubmarineSunk() {
-		if(getSubmarine().size() == 0 && !submarineSunk) {
+	public boolean isSubmarineSunk()
+	{
+		if (getSubmarine().isEmpty() && !submarineSunk)
+		{
 			health--;
 			submarineSunk = true;
 			return true;
 		}
+
 		return false;
 	}
 	
-	public boolean isDestroyerSunk() {
-		if(getDestroyer().size() == 0 && !destroyerSunk) {
+	public boolean isDestroyerSunk()
+	{
+		if (getDestroyer().isEmpty() && !destroyerSunk)
+		{
 			health--;
 			destroyerSunk = true;
 			return true;
 		}
+
 		return false;
 	}
 	
@@ -188,18 +162,22 @@ public class Armada
 	{
 		return getCarrier().size() == CARRIER_SIZE;
 	}
+
 	public boolean isBattleshipSet()
 	{
 		return getBattleship().size() == BATTLESHIP_SIZE;
 	}
+
 	public boolean isCruiserSet()
 	{
 		return getCruiser().size() == CRUISER_SIZE;
 	}
+
 	public boolean isSubmarineSet()
 	{
 		return getSubmarine().size() == SUBMARINE_SIZE;
 	}
+
 	public boolean isDestroyerSet()
 	{
 		return getDestroyer().size() == DESTROYER_SIZE;
