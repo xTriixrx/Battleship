@@ -129,28 +129,14 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 				
 				position = getNextPosition(lastPosition,
 					calculateDirection(lastPosition, prevHitPosition));
-				
+
+				// If next position in direction is already guessed, we've run off the hit ship
 				if (isGuessedPosition(position) || position.isEmpty())
 				{
 					String firstHitPosition = hitShipPositions.get(0);
-					String nextHitPosition = hitShipPositions.get(hitShipPositions.indexOf(firstHitPosition) + 1);
-					
-					position = getNextPosition(firstHitPosition,
-						calculateDirection(firstHitPosition, nextHitPosition));
-					
-					if (isGuessedPosition(position) || position.isEmpty())
-					{
-						availablePositions = getCrossPositions(nextHitPosition);
-						if (!availablePositions.isEmpty())
-						{
-							position = availablePositions.get(random.nextInt(availablePositions.size()));
-							
-							if (position.isEmpty())
-							{
-								performRandomPositionProtocol();
-							}
-						}
-					}
+					String secondHitPosition = hitShipPositions.get(1);
+
+					position = performDirectionPositionProtocol(firstHitPosition, secondHitPosition, firstHitPosition);
 				}
 			}
 			else if (!hitShipPositions.contains(lastPosition) && hitShipPositions.size() > 1) // ran off
@@ -158,53 +144,62 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 				logger.info("AUTOMATEDCONTROLLER: LAST POSITION MISSED & MULTIPLE HITS");
 
 				String firstHitPosition = hitShipPositions.get(0);
-				String nextHitPosition = hitShipPositions.get(hitShipPositions.indexOf(firstHitPosition) + 1);
-				
-				position = getNextPosition(firstHitPosition,
-					calculateDirection(firstHitPosition, nextHitPosition));
-				
-				if (isGuessedPosition(position) || position.isEmpty())
-				{
-					// getRandomCrossPositionProtocol()
-					availablePositions = getCrossPositions(nextHitPosition);
-					
-					if (!availablePositions.isEmpty())
-					{
-						position = availablePositions.get(random.nextInt(availablePositions.size()));
-					}
-					
-					if (position.isEmpty())
-					{
-						performRandomPositionProtocol();
-					}
-				}
+				String secondHitPosition = hitShipPositions.get(1);
+
+				position = performDirectionPositionProtocol(firstHitPosition, firstHitPosition, secondHitPosition);
 			}
 			else
 			{
 				logger.info("AUTOMATEDCONTROLLER: CROSS POSITION");
-				// getRandomCrossPositionProtocol()
-				availablePositions = getCrossPositions(hitShipPositions.get(0));
-				
-				if (!availablePositions.isEmpty())
-				{
-					position = availablePositions.get(random.nextInt(availablePositions.size()));
-					
-					if (position.isEmpty())
-					{
-						performRandomPositionProtocol();
-					}
-				}
+				position = performCrossPositionProtocol(hitShipPositions.get(0));
 			}
 
 			latestGuess = position;
-			addGuessedPosition(latestGuess);
-			logger.info("AUTOMATEDCONTROLLER: GUESS: " + latestGuess);
-			observer.update(latestGuess);
+			submitAndAddGuess(latestGuess);
 			
 			return;
 		}
 		
-		performRandomPositionProtocol();
+		latestGuess = getRandomPosition();
+		submitAndAddGuess(latestGuess);
+	}
+
+	private String performDirectionPositionProtocol(String posContext, String startPos, String endPos)
+	{
+		String position = getNextPosition(posContext,
+				calculateDirection(startPos, endPos));
+
+		if (isGuessedPosition(position) || position.isEmpty())
+		{
+			position = performCrossPositionProtocol(endPos);
+		}
+
+		return position;
+	}
+
+	private void submitAndAddGuess(String guess)
+	{
+		logger.info("AUTOMATEDCONTROLLER: GUESS: " + guess);
+
+		// Add guess and submit to opponent
+		addGuessedPosition(guess);
+		observer.update(guess);
+	}
+
+
+	private String performCrossPositionProtocol(String lastPosition)
+	{
+		String position;
+		List<String> availablePositions = getCrossPositions(lastPosition);
+
+		position = availablePositions.get(random.nextInt(availablePositions.size()));
+
+		if (position.isEmpty())
+		{
+			return getRandomPosition();
+		}
+
+		return position;
 	}
 	
 	private String getNextPosition(String contextPosition, int direction)
@@ -296,28 +291,16 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		return positions;
 	}
 	
-	private String makePosition(char column, int row)
-	{
+	private String makePosition(char column, int row) {
 		String position = "O";
-		
+
 		position += column;
 		position += row;
 		position += mySymbol;
-		
+
 		return position;
 	}
-	
-	/**
-	 * 
-	 */
-	private void performRandomPositionProtocol()
-	{
-		latestGuess = getRandomPosition();
-		addGuessedPosition(latestGuess);
-		logger.info("AUTOMATEDCONTROLLER: GUESS: " + latestGuess + ".");
-		observer.update(latestGuess);
-	}
-	
+
 	/**
 	 * 
 	 * @return String
@@ -366,27 +349,27 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		}
 		else if (update.equals(Armada.CARRIER_NAME))
 		{
-			logger.info("AUTOMATEDCONTROLLER: " + Armada.CARRIER_NAME);
+			logger.info("AUTOMATEDCONTROLLER: Opponent's " + Armada.CARRIER_NAME + "has sunk!");
 			hitShipPositions.clear();
 		}
 		else if (update.equals(Armada.BATTLESHIP_NAME))
 		{
-			logger.info("AUTOMATEDCONTROLLER: " + Armada.BATTLESHIP_NAME);
+			logger.info("AUTOMATEDCONTROLLER: Opponent's " + Armada.BATTLESHIP_NAME + "has sunk!");
 			hitShipPositions.clear();
 		}
 		else if(update.equals(Armada.CRUISER_NAME))
 		{
-			logger.info("AUTOMATEDCONTROLLER: " + Armada.CRUISER_NAME);
+			logger.info("AUTOMATEDCONTROLLER: Opponent's " + Armada.CRUISER_NAME + "has sunk!");
 			hitShipPositions.clear();
 		}
 		else if(update.equals(Armada.SUBMARINE_NAME))
 		{
-			logger.info("AUTOMATEDCONTROLLER: " + Armada.SUBMARINE_NAME);
+			logger.info("AUTOMATEDCONTROLLER: Opponent's " + Armada.SUBMARINE_NAME + "has sunk!");
 			hitShipPositions.clear();
 		}
 		else if(update.equals(Armada.DESTROYER_NAME))
 		{
-			logger.info("AUTOMATEDCONTROLLER: " + Armada.DESTROYER_NAME);
+			logger.info("AUTOMATEDCONTROLLER: Opponent's " + Armada.DESTROYER_NAME + "has sunk!");
 			hitShipPositions.clear();
 		}
 		else if (getCurrentTurn() == myTurn && myTurnStatus())
