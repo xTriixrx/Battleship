@@ -117,7 +117,7 @@ public class DragDropController
 		char startPos = target.getId().charAt(STANDARD_COL_POS);
 		char endPos = convertToColumnLetter((startPos - CHARACTER_SHIFT) + (size - 1));
 		
-		logger.info("Highlighting all button's within the horizontal range.");
+		logger.trace("Highlighting all button's within the horizontal range.");
 		
 		// Iterate through each button and if on horizontal range, set the background to be highlighted
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
@@ -145,7 +145,7 @@ public class DragDropController
 		int startRow = Integer.parseInt(target.getId().substring(STANDARD_ROW_POS));
 		int endRow = startRow + (size - 1);
 		
-		logger.info("Highlighting all button's within the vertical range.");
+		logger.trace("Highlighting all button's within the vertical range.");
 		
 		// Iterate through each button and if on vertical range, set the background to be highlighted
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
@@ -170,7 +170,7 @@ public class DragDropController
 	{
 		char startPos = target.getId().charAt(STANDARD_COL_POS);
 		
-		logger.info("Un-highlighting all button's within the horizontal range.");
+		logger.trace("Un-highlighting all button's within the horizontal range.");
 
 		// If the target node is disabled and is in the armada, it has just been
 		// dropped and needs to be recolored to the appropriate ship color.
@@ -217,7 +217,7 @@ public class DragDropController
 	{
 		int startRow = Integer.parseInt(target.getId().substring(STANDARD_ROW_POS));
 		
-		logger.info("Un-highlighting all button's within the vertical range.");
+		logger.trace("Un-highlighting all button's within the vertical range.");
 
 		// If the target node is disabled and is in the armada, it has just been
 		// dropped and needs to be recolored to the appropriate ship color.
@@ -268,7 +268,7 @@ public class DragDropController
 		char startPos = target.getId().charAt(STANDARD_COL_POS);
 		char endPos = convertToColumnLetter((startPos - CHARACTER_SHIFT) + (size - 1));
 		
-		logger.info("Adding all button's within the horizontal range to the armada.");
+		logger.trace("Adding all button's within the horizontal range to the armada.");
 		
 		// Iterate through each button and if on horizontal range, add the button to the armada for ArmadaType
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
@@ -298,7 +298,7 @@ public class DragDropController
 		int startRow = Integer.parseInt(target.getId().substring(STANDARD_ROW_POS));
 		int endRow = startRow + (size - 1);
 		
-		logger.info("Dropping all button's to within the vertical range to the armada.");
+		logger.trace("Dropping all button's to within the vertical range to the armada.");
 		
 		// Iterate through each button and if on vertical range, add the button to the armada for ArmadaType
 		for (int i = 0; i < TOTAL_BUTTONS; i++)

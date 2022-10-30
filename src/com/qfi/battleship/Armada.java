@@ -219,7 +219,7 @@ public class Armada
 			shipPositions += position + " ";
 		}
 		
-		m_logger.debug(type + " Position: " + shipPositions);
+		m_logger.trace(type + " Position: " + shipPositions);
 	}
 	
 	/**
