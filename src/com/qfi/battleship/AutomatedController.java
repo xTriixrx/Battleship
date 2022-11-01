@@ -20,6 +20,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	private int currentTurn = 0;
 	private int opponentTurn = 0;
 	private Armada armada = null;
+	private boolean shipSunk = false;
 	private String latestGuess = "";
 	private Observer observer = null;
 	private boolean shutdown = false;
@@ -118,9 +119,11 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	public void makeGuess()
 	{
 		logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": GUESSED POSITIONS: " + getGuessedPositions());
-		
+
 		if (isShipInFocus())
 		{
+			shipSunk = false;
+
 			String position = "";
 			List<String> availablePositions = null;
 			
@@ -435,6 +438,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		}
 		else if (update.contains(Armada.CARRIER_NAME))
 		{
+			shipSunk = true;
 			logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": Opponent's " + Armada.CARRIER_NAME + " has sunk!");
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": " + Armada.CARRIER_NAME + ": " + update);
 			updateHitPositions(update);
@@ -442,6 +446,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		}
 		else if (update.contains(Armada.BATTLESHIP_NAME))
 		{
+			shipSunk = true;
 			logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": Opponent's " + Armada.BATTLESHIP_NAME + " has sunk!");
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": " + Armada.BATTLESHIP_NAME + ": " + update);
 			updateHitPositions(update);
@@ -449,6 +454,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		}
 		else if (update.contains(Armada.CRUISER_NAME))
 		{
+			shipSunk = true;
 			logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": Opponent's " + Armada.CRUISER_NAME + " has sunk!");
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": " + Armada.CRUISER_NAME + ": " + update);
 			updateHitPositions(update);
@@ -456,6 +462,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		}
 		else if(update.contains(Armada.SUBMARINE_NAME))
 		{
+			shipSunk = true;
 			logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": Opponent's " + Armada.SUBMARINE_NAME + " has sunk!");
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": " + Armada.SUBMARINE_NAME + ": " + update);
 			updateHitPositions(update);
@@ -463,6 +470,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		}
 		else if (update.contains(Armada.DESTROYER_NAME))
 		{
+			shipSunk = true;
 			logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": Opponent's " + Armada.DESTROYER_NAME + " has sunk!");
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": " + Armada.DESTROYER_NAME + ": " + update);
 			updateHitPositions(update);
@@ -479,10 +487,12 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			else if (isShipInFocus() && hitShipPositions.isEmpty())
 			{
 				setShipFocus(false);
+				shipSunk = false;
 			}
-			
-			if (update.equalsIgnoreCase(HIT) && isShipInFocus())
+
+			if (update.equalsIgnoreCase(HIT) && isShipInFocus() && !shipSunk)
 			{
+				logger.debug("Adding position " + latestGuess + " to hit positions.");
 				hitShipPositions.add(latestGuess);
 			}
 
@@ -514,7 +524,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			{
 				hitOrMissMessage = HIT;
 
-				// Cases: 1) F |= (T & F) ... 2) F |= (T & T) ... 3) T |= (F & T) 
+				// Cases: 1) F |= (T & F) ... 2) F |= (T & T) ... 3) T |= (F & T)
 				isCarrierSunk |= checkShipUpdate((!isCarrierSunk && armada.isCarrierSunk()), Armada.CARRIER_NAME);
 				isCruiserSunk |= checkShipUpdate((!isCruiserSunk && armada.isCruiserSunk()), Armada.CRUISER_NAME);
 				isSubmarineSunk |= checkShipUpdate((!isSubmarineSunk && armada.isSubmarineSunk()), Armada.SUBMARINE_NAME);
@@ -536,7 +546,6 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 				turnSignal.notifyAll();
 			}
 		}
-		
 	}
 	
 	private boolean checkShipUpdate(boolean shipSunk, String shipName)
