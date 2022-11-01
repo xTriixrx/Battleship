@@ -25,8 +25,8 @@ import com.qfi.battleship.Armada.ArmadaType;
  */
 public class ArmadaAutomator 
 {
-	private Armada armada = null;
-	private SecureRandom random = null;
+	private Armada m_armada = null;
+	private SecureRandom m_random = null;
 	private static final short HORIZONTAL = 1;
 	private static final short UPPER_BOUND = 10;
 	private static final short CHARACTER_SHIFT = 64;
@@ -35,7 +35,7 @@ public class ArmadaAutomator
 	private static final short STANDARD_ID_LENGTH = 3;
 	private static final char OUT_OF_BOUNDS_COL = 'Z';
 	private static final String BUTTON_SET_STYLE = "-fx-background-color: green";
-	private static final Logger logger = LogManager.getLogger(ArmadaAutomator.class);
+	private static final Logger m_logger = LogManager.getLogger(ArmadaAutomator.class);
 	
 	// An interface to wrap lambda add functions for different ship types
 	protected interface ArmadaAdd { void add(Armada armada, List<String> shipPos); }
@@ -59,9 +59,9 @@ public class ArmadaAutomator
 			.putLong(System.currentTimeMillis()).array();
 		
 		// Instantiate random object
-		random = new SecureRandom(seed);
-		
-		this.armada = armada;
+		m_random = new SecureRandom(seed);
+
+		m_armada = armada;
 	}
 	
 	/**
@@ -112,7 +112,7 @@ public class ArmadaAutomator
 	{
 		List<String> shipPos = null;
 		
-		int alignment = random.nextInt(2) + 1;
+		int alignment = m_random.nextInt(2) + 1;
 
 		if (alignment == HORIZONTAL) // 1
 		{
@@ -123,7 +123,7 @@ public class ArmadaAutomator
 			shipPos = placeVertical(used, size);
 		}
 		
-		adder.add(armada, shipPos);
+		adder.add(m_armada, shipPos);
 		used.addAll(shipPos);
 	}
 	
@@ -146,18 +146,18 @@ public class ArmadaAutomator
 		boolean placeable = false;
 		StringBuilder sb = new StringBuilder();
 		List<String> placement = new ArrayList<>();
-		
-		logger.debug("Attempting placement for ship of size: " + size + ".");
+
+		m_logger.debug("Attempting placement for ship of size: " + size + ".");
 		
 		while (!placeable)
 		{
-			row = random.nextInt(UPPER_BOUND) + 1;
-			col = random.nextInt(UPPER_BOUND) + 1;
+			row = m_random.nextInt(UPPER_BOUND) + 1;
+			col = m_random.nextInt(UPPER_BOUND) + 1;
 			
 			endRow = row + (size - 1);
 			letter = convertToColumnLetter(col);
-			
-			logger.trace("Attempting placement with starting position: " + letter + row +
+
+			m_logger.trace("Attempting placement with starting position: " + letter + row +
 							" and with ending position: " + letter + endRow + ".");
 			
 			// Iterate and generate each sub-position for the attempted placement
@@ -168,8 +168,8 @@ public class ArmadaAutomator
 				placement.add(sb.toString());
 				sb.setLength(0); // Clear out old string
 			}
-			
-			logger.debug("Ship Placement Attempt: " + placement + ".");
+
+			m_logger.debug("Ship Placement Attempt: " + placement + ".");
 			
 			// If end row is within upper bound and placement is a unique set, it's a placeable position
 			if (endRow <= UPPER_BOUND && Collections.disjoint(used, placement))
@@ -204,18 +204,18 @@ public class ArmadaAutomator
 		boolean placeable = false;
 		StringBuilder sb = new StringBuilder();
 		List<String> placement = new ArrayList<>();
-		
-		logger.debug("Attempting placement for ship of size: " + size + ".");
+
+		m_logger.debug("Attempting placement for ship of size: " + size + ".");
 		
 		while (!placeable)
 		{
-			row = random.nextInt(UPPER_BOUND) + 1;
-			col = random.nextInt(UPPER_BOUND) + 1;
+			row = m_random.nextInt(UPPER_BOUND) + 1;
+			col = m_random.nextInt(UPPER_BOUND) + 1;
 			
 			startLetter = convertToColumnLetter(col);
 			endLetter = convertToColumnLetter(col + (size - 1));
 
-			logger.trace("Attempting placement with starting position: " + startLetter + row +
+			m_logger.trace("Attempting placement with starting position: " + startLetter + row +
 							" and with ending position: " + endLetter + row + ".");
 
 			// Iterate and generate each subposition for the attempted placement 
@@ -226,8 +226,8 @@ public class ArmadaAutomator
 				placement.add(sb.toString());
 				sb.setLength(0); // Clear out old string
 			}
-			
-			logger.debug("Ship Placement Attempt: " + placement + ".");
+
+			m_logger.debug("Ship Placement Attempt: " + placement + ".");
 			
 			// If end column letter is not out of bounds and placement is a unique set, it's a placeable position
 			if (endLetter != OUT_OF_BOUNDS_COL && Collections.disjoint(used, placement))
@@ -279,23 +279,23 @@ public class ArmadaAutomator
 	{
 		String style = "";
 		
-		if (armada.getDestroyer().contains(position))
+		if (m_armada.getDestroyer().contains(position))
 		{
 			style = styles.get(ArmadaType.DESTROYER);
 		}
-		else if (armada.getSubmarine().contains(position))
+		else if (m_armada.getSubmarine().contains(position))
 		{
 			style = styles.get(ArmadaType.SUBMARINE);
 		}
-		else if (armada.getCruiser().contains(position))
+		else if (m_armada.getCruiser().contains(position))
 		{
 			style = styles.get(ArmadaType.CRUISER);
 		}
-		else if (armada.getBattleship().contains(position))
+		else if (m_armada.getBattleship().contains(position))
 		{
 			style = styles.get(ArmadaType.BATTLESHIP);
 		}
-		else if (armada.getCarrier().contains(position))
+		else if (m_armada.getCarrier().contains(position))
 		{
 			style = styles.get(ArmadaType.CARRIER);
 		}

@@ -21,12 +21,12 @@ import javafx.application.Application;
  */
 public class GUIDriver extends Application
 {
-	private int port = 0;
-	private String host = "";
-	private Runnable logic = null;
-	private int instanceNumber = 0;
-	private String instanceName = "";
-	private Controller controller = null;
+	private int m_port = 0;
+	private String m_host = "";
+	private Runnable m_logic = null;
+	private int m_instanceNumber = 0;
+	private String m_instanceName = "";
+	private Controller m_controller = null;
 	
 	private static final String TYPE = "type";
 	private static final String ERROR = "error";
@@ -49,39 +49,39 @@ public class GUIDriver extends Application
 		Map<String, String> kwargList = params.getNamed();
 
 		type = kwargList.get(TYPE);
-		host = kwargList.get(HOST_ARG);
-		port = Integer.parseInt(kwargList.get(PORT_ARG));
+		m_host = kwargList.get(HOST_ARG);
+		m_port = Integer.parseInt(kwargList.get(PORT_ARG));
 		automatedOpponent = Boolean.parseBoolean(kwargList.get(AUTOMATED));
 		
-		logger.info("Host: " + host + ".");
-		logger.info("Port: " + port + ".");
+		logger.info("Host: " + m_host + ".");
+		logger.info("Port: " + m_port + ".");
 		logger.info("Instance Type: " + type + ".");
 		logger.info("Automated opponent: " + automatedOpponent + ".");
 		
 		if (type.equalsIgnoreCase(Player.SERVER))
 		{
-			instanceNumber = Player.SERVER_ID;
+			m_instanceNumber = Player.SERVER_ID;
 		}
 		else if (type.equalsIgnoreCase(Player.CLIENT))
 		{
-			instanceNumber = Player.CLIENT_ID;
+			m_instanceNumber = Player.CLIENT_ID;
 		}
 		else
 		{
 			// Invalid player type
 			String invalid = "Invalid player type " + type + ". Shutting down driver.";
-			logic = new Player(controller, instanceNumber, host, port);
-			((Player) logic).infoBox(invalid, ERROR);
+			m_logic = new Player(m_controller, m_instanceNumber, m_host, m_port);
+			((Player) m_logic).infoBox(invalid, ERROR);
 			logger.error(invalid);
 			System.exit(1);
 		}
 		
 		// Instantiate player logic, instanceName, and board controller
-		controller = new BoardController(instanceNumber);
-		logic = new Player(controller, instanceNumber, host, port);
-		instanceName = ((Player) logic).getName();
+		m_controller = new BoardController(m_instanceNumber);
+		m_logic = new Player(m_controller, m_instanceNumber, m_host, m_port);
+		m_instanceName = ((Player) m_logic).getName();
 
-		logger.debug("Controller ID: " + controller.getID() + ".");
+		logger.debug("Controller ID: " + m_controller.getID() + ".");
 		
 		// If the automated opponent flag is set, an inverse automated player will also be instantiated.
 		if (automatedOpponent)
@@ -117,10 +117,10 @@ public class GUIDriver extends Application
 
 		// Instantiate and load controller
 		FXMLLoader loader = new FXMLLoader();
-		loader.setController(controller);
+		loader.setController(m_controller);
 
 		// Set the stage title and set the location of the layout to be loaded
-		primaryStage.setTitle("Network Battleship " + instanceName);
+		primaryStage.setTitle("Network Battleship " + m_instanceName);
 		loader.setLocation(getClass().getResource("layout/BattleshipLayout.fxml"));
 
 		try
@@ -143,13 +143,13 @@ public class GUIDriver extends Application
 			primaryStage.setScene(scene);
 
 			// Depending on whose turn it is, create a pop-up signifying whose turn it is first.
-			if (controller.getCurrentTurn() == instanceNumber)
+			if (m_controller.getCurrentTurn() == m_instanceNumber)
 			{
-				((Player) logic).infoBox("It is your turn first!", "Player " + instanceNumber);
+				((Player) m_logic).infoBox("It is your turn first!", "Player " + m_instanceNumber);
 			}
 			else
 			{
-				((Player) logic).infoBox("It is the opponents turn first...", "Player " + instanceNumber);
+				((Player) m_logic).infoBox("It is the opponents turn first...", "Player " + m_instanceNumber);
 			}
 
 			// Disables maximizing the primary stage
@@ -162,7 +162,7 @@ public class GUIDriver extends Application
 			});
 
 			// On close of stage, trigger the controller's shutdown function.
-			primaryStage.setOnCloseRequest(event -> controller.shutdown());
+			primaryStage.setOnCloseRequest(event -> m_controller.shutdown());
 
 			// Show the scene
 			primaryStage.show();
@@ -180,7 +180,7 @@ public class GUIDriver extends Application
 	{
 		// Instantiate automated controller and runnable player instance of either server or client playerID
 		Controller automatedController = new AutomatedController(playerID);
-		Player runnableOpponent = new Player(automatedController, playerID, host, port);
+		Player runnableOpponent = new Player(automatedController, playerID, m_host, m_port);
 		runnableOpponent.setAutomated(true);
 		
 		logger.debug("Automated Controller ID: " + automatedController.getID() + ".");
@@ -205,7 +205,7 @@ public class GUIDriver extends Application
 	private void startLogic(String threadName)
 	{
 		// Start the logic thread
-		Thread logicThread = new Thread(logic);
+		Thread logicThread = new Thread(m_logic);
 		logicThread.setName(threadName);
 		logicThread.start();
 	}

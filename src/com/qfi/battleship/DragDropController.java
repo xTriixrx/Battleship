@@ -17,9 +17,9 @@ import com.qfi.battleship.Armada.ArmadaType;
  */
 public class DragDropController
 {
-	private Armada armada = null;
-	private Map<ArmadaType, String> styles = null;
-	private ObservableList<Node> buttonList = null;
+	private Armada m_armada = null;
+	private Map<ArmadaType, String> m_styles = null;
+	private ObservableList<Node> m_buttonList = null;
 	
 	private static final short UPPER_BOUND = 10;
 	private static final int TOTAL_BUTTONS = 100;
@@ -27,6 +27,7 @@ public class DragDropController
 	private static final short STANDARD_COL_POS = 1;
 	private static final short STANDARD_ROW_POS = 2;
 	private static final char OUT_OF_BOUNDS_COL = 'Z';
+	private static final String BUTTON_ID = "buttonID: ";
 	private static final String BACKGROUND_BUTTON_STYLE = "-fx-background-color: blue";
 	private static final Logger logger = LogManager.getLogger(DragDropController.class);
 
@@ -39,9 +40,9 @@ public class DragDropController
 	 */
 	DragDropController(ObservableList<Node> buttonList, Armada armada, Map<ArmadaType, String> styles)
 	{
-		this.styles = styles;
-		this.armada = armada;
-		this.buttonList = buttonList;
+		m_styles = styles;
+		m_armada = armada;
+		m_buttonList = buttonList;
 	}
 	
 	/**
@@ -62,7 +63,7 @@ public class DragDropController
 		// Iterate through each button and if on horizontal range, check to see if the button is in the armada
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
-			Node button = buttonList.get(i);
+			Node button = m_buttonList.get(i);
 			if (inHorizontalRange(button.getId(), target.getId(), startPos, endPos) &&
 				inArmada(button.getId().substring(STANDARD_COL_POS)))
 			{
@@ -92,7 +93,7 @@ public class DragDropController
 		// Iterate through each button and if on vertical range, check to see if the button is in the armada
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
-			Node button = buttonList.get(i);
+			Node button = m_buttonList.get(i);
 			if (inVerticalRange(button.getId(), target.getId(), startRow, endRow) &&
 				inArmada(button.getId().substring(STANDARD_COL_POS)))
 			{
@@ -122,12 +123,12 @@ public class DragDropController
 		// Iterate through each button and if on horizontal range, set the background to be highlighted
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
-			Node button = buttonList.get(i);
+			Node button = m_buttonList.get(i);
 			if (inHorizontalRange(button.getId(), target.getId(), startPos, endPos) &&
 				!inArmada(button.getId().substring(STANDARD_COL_POS)))
 			{
 				button.setStyle(style);
-				logger.trace("buttonID: " + button.getId() + " is in horizontal range.");
+				logger.trace(BUTTON_ID + button.getId() + " is in horizontal range.");
 			}
 		}
 	}
@@ -150,12 +151,12 @@ public class DragDropController
 		// Iterate through each button and if on vertical range, set the background to be highlighted
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
-			Node button = buttonList.get(i);
+			Node button = m_buttonList.get(i);
 			if (inVerticalRange(button.getId(), target.getId(), startRow, endRow) &&
 				!inArmada(button.getId().substring(STANDARD_COL_POS)))
 			{
 				button.setStyle(style);
-				logger.trace("buttonID: " + button.getId() + " is in vertical range.");
+				logger.trace(BUTTON_ID + button.getId() + " is in vertical range.");
 			}
 		}
 	}
@@ -187,7 +188,7 @@ public class DragDropController
 		// Iterate through each button and if on horizontal range, set the background to be un-highlighted
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
-			Node button = buttonList.get(i);
+			Node button = m_buttonList.get(i);
 			if (!inHorizontalRange(button.getId(), target.getId(), startPos, startPos))
 			{
 				// If the node is disabled and is in the armada, it has just been
@@ -202,7 +203,7 @@ public class DragDropController
 					button.setStyle(BACKGROUND_BUTTON_STYLE);
 				}
 				
-				logger.trace("buttonID: " + button.getId() + " is not in horizontal range.");
+				logger.trace(BUTTON_ID + button.getId() + " is not in horizontal range.");
 			}
 		}
 	}
@@ -234,7 +235,7 @@ public class DragDropController
 		// Iterate through each button and if on vertical range, set the background to be un-highlighted
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
-			Node button = buttonList.get(i);
+			Node button = m_buttonList.get(i);
 			if (!inVerticalRange(button.getId(), target.getId(), startRow, startRow))
 			{
 				// If the node is disabled and is in the armada, it has just been
@@ -249,7 +250,7 @@ public class DragDropController
 					button.setStyle(BACKGROUND_BUTTON_STYLE);
 				}
 				
-				logger.trace("buttonID: " + button.getId() + " is not in vertical range.");
+				logger.trace(BUTTON_ID + button.getId() + " is not in vertical range.");
 			}
 		}
 	}
@@ -273,13 +274,13 @@ public class DragDropController
 		// Iterate through each button and if on horizontal range, add the button to the armada for ArmadaType
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
-			Node button = buttonList.get(i);
+			Node button = m_buttonList.get(i);
 			if (inHorizontalRange(button.getId(), target.getId(), startPos, endPos))
 			{
 				addToArmada(type, button.getId().substring(STANDARD_COL_POS));
 				
 				button.setStyle(style);
-				logger.trace("buttonID: " + button.getId() + " is in horizontal range.");
+				logger.trace(BUTTON_ID + button.getId() + " is in horizontal range.");
 			}
 		}
 	}
@@ -303,13 +304,13 @@ public class DragDropController
 		// Iterate through each button and if on vertical range, add the button to the armada for ArmadaType
 		for (int i = 0; i < TOTAL_BUTTONS; i++)
 		{
-			Node button = buttonList.get(i);
+			Node button = m_buttonList.get(i);
 			if (inVerticalRange(button.getId(), target.getId(), startRow, endRow))
 			{
 				addToArmada(type, button.getId().substring(STANDARD_COL_POS));
 				
 				button.setStyle(style);
-				logger.trace("buttonID: " + button.getId() + " is in vertical range.");
+				logger.trace(BUTTON_ID + button.getId() + " is in vertical range.");
 			}
 		}
 	}
@@ -408,23 +409,23 @@ public class DragDropController
 	{
 		if (type.equals(ArmadaType.DESTROYER))
 		{
-			armada.addToDestroyer(buttonID);
+			m_armada.addToDestroyer(buttonID);
 		}
 		else if (type.equals(ArmadaType.SUBMARINE))
 		{
-			armada.addToSubmarine(buttonID);
+			m_armada.addToSubmarine(buttonID);
 		}
 		else if (type.equals(ArmadaType.CRUISER))
 		{
-			armada.addToCruiser(buttonID);
+			m_armada.addToCruiser(buttonID);
 		}
 		else if (type.equals(ArmadaType.BATTLESHIP))
 		{
-			armada.addToBattleship(buttonID);
+			m_armada.addToBattleship(buttonID);
 		}
 		else if (type.equals(ArmadaType.CARRIER))
 		{
-			armada.addToCarrier(buttonID);
+			m_armada.addToCarrier(buttonID);
 		}
 	}
 	
@@ -436,11 +437,11 @@ public class DragDropController
 	 */
 	private boolean inArmada(String position)
 	{
-		return armada.getCruiser().contains(position) ||
-				armada.getCarrier().contains(position) ||
-				armada.getDestroyer().contains(position) ||
-				armada.getSubmarine().contains(position) ||
-				armada.getBattleship().contains(position);
+		return m_armada.getCruiser().contains(position) ||
+				m_armada.getCarrier().contains(position) ||
+				m_armada.getDestroyer().contains(position) ||
+				m_armada.getSubmarine().contains(position) ||
+				m_armada.getBattleship().contains(position);
 	}
 	
 	/**
@@ -453,25 +454,25 @@ public class DragDropController
 	{
 		String style = "";
 		
-		if (armada.getDestroyer().contains(position))
+		if (m_armada.getDestroyer().contains(position))
 		{
-			style = styles.get(ArmadaType.DESTROYER);
+			style = m_styles.get(ArmadaType.DESTROYER);
 		}
-		else if (armada.getSubmarine().contains(position))
+		else if (m_armada.getSubmarine().contains(position))
 		{
-			style = styles.get(ArmadaType.SUBMARINE);
+			style = m_styles.get(ArmadaType.SUBMARINE);
 		}
-		else if (armada.getCruiser().contains(position))
+		else if (m_armada.getCruiser().contains(position))
 		{
-			style = styles.get(ArmadaType.CRUISER);
+			style = m_styles.get(ArmadaType.CRUISER);
 		}
-		else if (armada.getBattleship().contains(position))
+		else if (m_armada.getBattleship().contains(position))
 		{
-			style = styles.get(ArmadaType.BATTLESHIP);
+			style = m_styles.get(ArmadaType.BATTLESHIP);
 		}
-		else if (armada.getCarrier().contains(position))
+		else if (m_armada.getCarrier().contains(position))
 		{
-			style = styles.get(ArmadaType.CARRIER);
+			style = m_styles.get(ArmadaType.CARRIER);
 		}
 		
 		return style;
