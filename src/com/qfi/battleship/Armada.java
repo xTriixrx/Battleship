@@ -42,7 +42,7 @@ public class Armada
 	public static final String BATTLESHIP_NAME = "BATTLESHIP";
 
 	private static final String ATTEMPTED_TO_ADD = "Attempted to add ";
-	private static final String RECIEVED_POSITIONS = ", received positions: ";
+	private static final String RECEIVED_POSITIONS = ", received positions: ";
 	private static final String POSITIONS_WHEN_ONLY_NEEDED = " positions when only needed ";
 
 	/**
@@ -130,7 +130,7 @@ public class Armada
 		else if (carrierPos.size() != CARRIER_SIZE)
 		{
 			m_logger.debug(ATTEMPTED_TO_ADD + carrierPos.size() + POSITIONS_WHEN_ONLY_NEEDED + CARRIER_SIZE +
-					RECIEVED_POSITIONS + carrierPos + ".");
+					RECEIVED_POSITIONS + carrierPos + ".");
 		}
 		else
 		{
@@ -154,7 +154,7 @@ public class Armada
 		else if (battleshipPos.size() != BATTLESHIP_SIZE)
 		{
 			m_logger.debug(ATTEMPTED_TO_ADD + battleshipPos.size() + POSITIONS_WHEN_ONLY_NEEDED + BATTLESHIP_SIZE
-					+ RECIEVED_POSITIONS + battleshipPos + ".");
+					+ RECEIVED_POSITIONS + battleshipPos + ".");
 		}
 		else
 		{
@@ -178,7 +178,7 @@ public class Armada
 		else if (cruiserPos.size() != CRUISER_SIZE)
 		{
 			m_logger.debug(ATTEMPTED_TO_ADD + cruiserPos.size() + POSITIONS_WHEN_ONLY_NEEDED + CRUISER_SIZE +
-					RECIEVED_POSITIONS + cruiserPos + ".");
+					RECEIVED_POSITIONS + cruiserPos + ".");
 		}
 		else
 		{
@@ -202,7 +202,7 @@ public class Armada
 		else if (submarinePos.size() != SUBMARINE_SIZE)
 		{
 			m_logger.debug(ATTEMPTED_TO_ADD + submarinePos.size() + POSITIONS_WHEN_ONLY_NEEDED + SUBMARINE_SIZE
-							+ RECIEVED_POSITIONS + submarinePos + ".");
+							+ RECEIVED_POSITIONS + submarinePos + ".");
 		}
 		else
 		{
@@ -226,7 +226,7 @@ public class Armada
 		else if (destroyerPos.size() != DESTROYER_SIZE)
 		{
 			m_logger.debug(ATTEMPTED_TO_ADD + destroyerPos.size() + POSITIONS_WHEN_ONLY_NEEDED + DESTROYER_SIZE
-							+ RECIEVED_POSITIONS + destroyerPos + ".");
+							+ RECEIVED_POSITIONS + destroyerPos + ".");
 		}
 		else
 		{
