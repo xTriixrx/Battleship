@@ -1,7 +1,6 @@
 package com.qfi.battleship;
 
 import java.net.URL;
-import java.util.List;
 import java.util.Map;
 import javafx.fxml.FXML;
 import java.util.HashMap;
