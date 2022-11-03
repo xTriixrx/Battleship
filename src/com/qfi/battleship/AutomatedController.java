@@ -43,10 +43,8 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 
 	private static final int MIN_ROW = 1;
 	private static final int MAX_ROW = 10;
-	private static final String HIT = "Hit";
 	private static final int CLIENT_TURN = 1;
 	private static final int SERVER_TURN = 2;
-	private static final String MISS = "Miss";
 	private static final int UP_DIRECTION = 2;
 	private static final char MAX_COLUMN = 'J';
 	private static final char MIN_COLUMN = 'A';
@@ -100,7 +98,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	{
 		waitForConnection();
 		logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Submitting SHIPS flag to observer to signify automated ship placement has completed.");
-		observer.update("SHIPS");
+		observer.update(Message.SHIPS.getMsg());
 		waitForShipSet();
 
 		while (!shutdown)
@@ -417,7 +415,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	{
 		logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + " " + getID() + ": Received " + update + ".");
 
-		if (update.equals("SET"))
+		if (update.equals(Message.SET.getMsg()))
 		{
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Player ships have been set!");
 
@@ -427,7 +425,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 				shipSetSignal.notifyAll();
 			}
 		}
-		else if (update.equals("CONNECTED"))
+		else if (update.equals(Message.CONNECTED.getMsg()))
 		{
 			synchronized (connectionSignal)
 			{
@@ -435,7 +433,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 				connectionSignal.notifyAll();
 			}
 		}
-		else if (update.contains(Armada.CARRIER_NAME))
+		else if (update.contains(Message.CARRIER.getMsg()))
 		{
 			shipSunk = true;
 			logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": Opponent's " + Armada.CARRIER_NAME + " has sunk!");
@@ -443,7 +441,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			updateHitPositions(update);
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Current hit ships mapping: " + hitShipPositions);
 		}
-		else if (update.contains(Armada.BATTLESHIP_NAME))
+		else if (update.contains(Message.BATTLESHIP.getMsg()))
 		{
 			shipSunk = true;
 			logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": Opponent's " + Armada.BATTLESHIP_NAME + " has sunk!");
@@ -451,7 +449,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			updateHitPositions(update);
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Current hit ships mapping: " + hitShipPositions);
 		}
-		else if (update.contains(Armada.CRUISER_NAME))
+		else if (update.contains(Message.CRUISER.getMsg()))
 		{
 			shipSunk = true;
 			logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": Opponent's " + Armada.CRUISER_NAME + " has sunk!");
@@ -459,7 +457,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			updateHitPositions(update);
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Current hit ships mapping: " + hitShipPositions);
 		}
-		else if(update.contains(Armada.SUBMARINE_NAME))
+		else if(update.contains(Message.SUBMARINE.getMsg()))
 		{
 			shipSunk = true;
 			logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": Opponent's " + Armada.SUBMARINE_NAME + " has sunk!");
@@ -467,7 +465,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			updateHitPositions(update);
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Current hit ships mapping: " + hitShipPositions);
 		}
-		else if (update.contains(Armada.DESTROYER_NAME))
+		else if (update.contains(Message.DESTROYER.getMsg()))
 		{
 			shipSunk = true;
 			logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": Opponent's " + Armada.DESTROYER_NAME + " has sunk!");
@@ -479,7 +477,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		{
 			waitForTurn();
 
-			if (update.equalsIgnoreCase(HIT) && !isShipInFocus())
+			if (update.equalsIgnoreCase(Message.HIT.getMsg()) && !isShipInFocus())
 			{
 				setShipFocus(true);
 			}
@@ -489,7 +487,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 				shipSunk = false;
 			}
 
-			if (update.equalsIgnoreCase(HIT) && isShipInFocus() && !shipSunk)
+			if (update.equalsIgnoreCase(Message.HIT.getMsg()) && isShipInFocus() && !shipSunk)
 			{
 				logger.debug("Adding position " + latestGuess + " to hit positions.");
 				hitShipPositions.add(latestGuess);
@@ -521,7 +519,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 
 			if (isHit)
 			{
-				hitOrMissMessage = HIT;
+				hitOrMissMessage = Message.HIT.getMsg();
 
 				// Cases: 1) F |= (T & F) ... 2) F |= (T & T) ... 3) T |= (F & T)
 				isCarrierSunk |= checkShipUpdate((!isCarrierSunk && armada.isCarrierSunk()), Armada.CARRIER_NAME);
@@ -532,7 +530,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			}
 			else
 			{
-				hitOrMissMessage = MISS;
+				hitOrMissMessage = Message.MISS.getMsg();
 			}
 
 			//
@@ -554,7 +552,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			// If armada has sunk, the game is over
 			if (armada.isArmadaSunk())
 			{
-				observer.update("OVER");
+				observer.update(Message.OVER.getMsg());
 			}
 			else
 			{

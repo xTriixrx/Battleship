@@ -135,11 +135,8 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	
 	private static final int CLIENT_TURN = 1;
 	private static final int SERVER_TURN = 2;
-	private static final String HIT = "Hit";
-	private static final String MISS = "Miss";
 	private static final char CLIENT_SYMBOL = 'Z';
 	private static final char SERVER_SYMBOL = 'X';
-	private static final String OVER_MSG = "OVER";
 	private static final Color SUNK_COLOR = Color.RED;
 	private static final String VERTICAL = "Vertical";
 	private static final String HORIZONTAL = "Horizontal";
@@ -197,7 +194,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	public void shutdown()
 	{
 		Platform.exit();
-		observer.update("SHUTDOWN");
+		observer.update(Message.SHUTDOWN.getMsg());
 	}
 
 	/**
@@ -297,11 +294,11 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		{
 			if (node.getId() != null && node.getId().equals(pos))
 			{
-				if (hitOrMiss.equals(HIT))
+				if (hitOrMiss.equals(Message.HIT.getMsg()))
 				{
 					node.setStyle(BUTTON_HIT_STYLE);
 				}
-				else if (hitOrMiss.equals(MISS))
+				else if (hitOrMiss.equals(Message.MISS.getMsg()))
 				{
 					node.setStyle(BUTTON_MISS_STYLE);
 				}
@@ -334,7 +331,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 			// If armada has sunk, the game is over
 			if (armada.isArmadaSunk())
 			{
-				observer.update(OVER_MSG);
+				observer.update(Message.OVER.getMsg());
 			}
 			else // notify observer to share sunk ship detail to opponent
 			{
@@ -378,7 +375,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		{
 			if (node.getId() != null && node.getId().equals(pos))
 			{
-				if (hitOrMiss.equals(HIT))
+				if (hitOrMiss.equals(Message.HIT.getMsg()))
 				{
 					boolean updated = false;
 					node.setMouseTransparent(false);
@@ -406,7 +403,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 						update(playerBattleship, armada.isBattleshipSunk());
 					}
 				}
-				else if (hitOrMiss.equals(MISS))
+				else if (hitOrMiss.equals(Message.MISS.getMsg()))
 				{
 					node.setMouseTransparent(false);
 					node.setStyle(BUTTON_MISS_STYLE);
@@ -426,7 +423,12 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	{
 		logger.info("Controller " + getID() + ": Received " + s + ".");
 
-		if (s.equals("SET"))
+		if (s.equals(Message.CONNECTED.getMsg()))
+		{
+			return;
+		}
+
+		if (s.equals(Message.SET.getMsg()))
 		{
 			isShipsSet = true;
 			for (Node node : opponentGrid.getChildren())
@@ -437,27 +439,23 @@ public class BoardController implements Initializable, Observer, Observable, Con
 				}
 			}
 		}
-		else if (s.equals("CONNECTED"))
-		{
-			// CONNECTED TO OPPONENT
-		}
-		else if(s.contains("CARRIER"))
+		else if(s.contains(Message.CARRIER.getMsg()))
 		{
 			setSunkShipText(opponentCarrier);
 		}
-		else if(s.contains("BATTLESHIP"))
+		else if(s.contains(Message.BATTLESHIP.getMsg()))
 		{
 			setSunkShipText(opponentBattleship);
 		}
-		else if(s.contains("CRUISER"))
+		else if(s.contains(Message.CRUISER.getMsg()))
 		{
 			setSunkShipText(opponentCruiser);
 		}
-		else if(s.contains("SUBMARINE"))
+		else if(s.contains(Message.SUBMARINE.getMsg()))
 		{
 			setSunkShipText(opponentSubmarine);
 		}
-		else if(s.contains("DESTROYER"))
+		else if(s.contains(Message.DESTROYER.getMsg()))
 		{
 			setSunkShipText(opponentDestroyer);
 		}
@@ -496,13 +494,13 @@ public class BoardController implements Initializable, Observer, Observable, Con
 
 			if (isHit)
 			{
-				hitOrMiss = HIT;
+				hitOrMiss = Message.HIT.getMsg();
 				String ship = armada.updateArmada(boardPos);
 				addHitShipPosition(ship, boardPos);
 			}
 			else
 			{
-				hitOrMiss = MISS;
+				hitOrMiss = Message.MISS.getMsg();
 			}
 
 			updatePlayerGrid(t, hitOrMiss);
@@ -633,7 +631,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 							armada.isBattleshipSet())
 						{
 
-							observer.update("SHIPS");
+							observer.update(Message.SHIPS.getMsg());
 						}
 					}
 					
@@ -815,6 +813,6 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		automator.automateArmadaPlacement(buttonList, stylesMap);
 		armada.logArmadaPosition();
 		autoShips.setDisable(true);
-		observer.update("SHIPS");
+		observer.update(Message.SHIPS.getMsg());
 	};
 }

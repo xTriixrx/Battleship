@@ -49,6 +49,17 @@ public class Player implements Runnable, Observable, Observer
 	 */
 	public Player(Controller controller, int playerType, String address, int port)
 	{
+		m_port = port;
+		m_address = address;
+		m_controller = controller;
+
+		// byte seed for the SecureRandom object
+		byte[] seed = ByteBuffer.allocate(Long.SIZE / Byte.SIZE)
+			.putLong(System.currentTimeMillis()).array();
+
+		// Instantiate random object
+		SecureRandom random = new SecureRandom(seed);
+
 		if (playerType == 1) // client
 		{
 			m_myID = CLIENT_ID;
@@ -58,27 +69,12 @@ public class Player implements Runnable, Observable, Observer
 		{
 			m_myID = SERVER_ID;
 			m_myName = capitalize(SERVER);
+			m_controller.setCurrentTurn(random.nextInt(MAX_PLAYERS) + 1);
 		}
-
-		m_port = port;
-		m_address = address;
-		m_controller = controller;
 
 		// Establish bidirectional observer message pattern
-		((Observable) controller).register(this);
-		register((Observer) controller);
-
-		// byte seed for the SecureRandom object
-		byte[] seed = ByteBuffer.allocate(Long.SIZE / Byte.SIZE)
-			.putLong(System.currentTimeMillis()).array();
-		
-		// Instantiate random object
-		SecureRandom random = new SecureRandom(seed);
-		
-		if (m_myID == SERVER_ID)
-		{
-			controller.setCurrentTurn(random.nextInt(MAX_PLAYERS) + 1);
-		}
+		((Observable) m_controller).register(this);
+		register((Observer) m_controller);
 	}
 
 	/**
@@ -87,73 +83,59 @@ public class Player implements Runnable, Observable, Observer
 	@Override
 	public void run()
 	{
-		int lineCount = 0;
-		initializeConnection();
-		initializeStreams();
+		String message;
 
-		m_observer.update("CONNECTED");
+		//
+		performStartupProtocol();
 
-		// string to read message from input 
-		String message = "";
-
+		//
 		while (!m_over)
 		{
-			try
-			{
-				// If no lines have been read, the initial handshake needs to take place
-				if (lineCount == 0)
-				{
-					//
-					performHandshake();
-
-					//
-					isShipsSet();
-
-					try
-					{
-						m_logger.debug("Player " + m_myID + " is sending READY to opponent.");
-						m_out.writeUTF("READY");
-						m_out.flush();
-					}
-					catch (Exception e)
-					{
-
-					}
-
-					while (!(m_in.readUTF()).equals("READY"))
-					{
-						try
-						{
-							m_logger.debug("Player " + m_myID + " waiting for incoming READY from opponent.");
-							Thread.sleep(500);
-						}
-						catch (Exception e)
-						{
-							m_logger.error(e, e);
-						}
-					}
-
-					m_observer.update("SET");
-				}
-				else // Process message by opponent
-				{
-					message = m_in.readUTF();
-					m_logger.debug("Player received '" + message + "' message from opponent.");
-					received(message);
-					m_observer.update(message);
-				}
-
-				lineCount++;
-			}
-			catch (Exception e)
-			{
-				m_logger.error(e, e);
-			}
+			message = readOpponentMessage();
+			m_logger.debug("Player received '" + message + "' message from opponent.");
+			handleOpponentMessage(message);
+			m_observer.update(message);
 		}
 
 		destroy();
 	}
-	
+
+	/**
+	 *
+	 */
+	private void performStartupProtocol()
+	{
+		// Initializes the socket connection as either a client or server, based on players' configuration
+		initializeConnection();
+
+		// Instantiates the input and output data streams to communicate with opponent over socket
+		initializeStreams();
+
+		// Notify controller that the connection to the opponent has been established
+		m_observer.update("CONNECTED");
+
+		// The server component will submit the randomized turn value to the client, will wait for clients confirmation
+		performHandshake();
+
+		// A blocking method to wait for all players' ships to be set, upon all ships being set, the controller
+		// will message "SHIPS" to the player instance signaling to this method to stop blocking
+		isShipsSet();
+
+		// Submit a READY message to the opponent to signify the SHIPS have been set are ready to play
+		m_logger.debug("Player " + m_myID + " is sending READY to opponent.");
+		messageOpponent("READY");
+
+		// Block until the opponent has responded back with READY themselves
+		while (!readOpponentMessage().equals("READY"))
+		{
+			m_logger.debug("Player " + m_myID + " waiting for incoming READY from opponent.");
+			sleep(500);
+		}
+
+		// Notify the controller that the opponents' ships have been SET.
+		m_observer.update("SET");
+	}
+
 	/**
 	 * 
 	 */
@@ -174,19 +156,10 @@ public class Player implements Runnable, Observable, Observer
 	 */
 	private void performServerHandshakeProtocol()
 	{
-		String line = "";
-		
-		try
-		{
-			m_out.writeInt(m_controller.getCurrentTurn());
-			m_out.flush();
-			line = m_in.readUTF();
-			m_logger.info("Server received: " + line + " from client.");
-		}
-		catch (Exception e)
-		{
-			m_logger.error(e, e);
-		}
+		messageOpponent(Integer.toString(m_controller.getCurrentTurn()));
+		String line = readOpponentMessage();
+
+		m_logger.info("Server received: " + line + " from client.");
 	}
 	
 	/**
@@ -194,47 +167,24 @@ public class Player implements Runnable, Observable, Observer
 	 */
 	private void performClientHandshakeProtocol()
 	{
-		try
-		{
-			int currentTurn = m_in.readInt();
-			m_out.writeUTF("Client received " + currentTurn + " from Server...");
-			m_out.flush();
-			m_controller.setCurrentTurn(currentTurn);
-		}
-		catch (Exception e)
-		{
-			m_logger.error(e, e);
-		}
-	}
-	
-	/**
-	 * 
-	 */
-	private void connectToServer()
-	{
-		try
-		{
-			m_socket = new Socket(m_address, m_port);
-			m_logger.info("Connected to server at " + m_address + ":" + m_port + "!");
-		}
-		catch (Exception e)
-		{
-			m_logger.error(e, e);
-		}
+		int currentTurn = Integer.parseInt(readOpponentMessage());
+		m_controller.setCurrentTurn(currentTurn);
+
+		messageOpponent("Client received " + currentTurn + " from Server...");
 	}
 
 	@Override
 	public void update(String controllerMessage)
 	{
 		m_logger.info("Received " + controllerMessage + " from observable controller.");
-		updateResponse(controllerMessage);
+		handleControllerMessage(controllerMessage);
 	}
 
 	/**
 	 * 
 	 * @param opponentMessage
 	 */
-	public void received(String opponentMessage)
+	public void handleOpponentMessage(String opponentMessage)
 	{
 		if (opponentMessage.equalsIgnoreCase("SHUTDOWN"))
 		{
@@ -282,20 +232,11 @@ public class Player implements Runnable, Observable, Observer
 	 *
 	 * @param controllerMessage
 	 */
-	public void updateResponse(String controllerMessage)
+	public void handleControllerMessage(String controllerMessage)
 	{
 		if (controllerMessage.equalsIgnoreCase("SHUTDOWN"))
 		{
-			try
-			{
-				m_out.writeUTF(controllerMessage);
-				m_out.flush();
-			}
-			catch (Exception e)
-			{
-
-			}
-
+			messageOpponent(controllerMessage);
 			System.exit(0);
 		}
 		else if (controllerMessage.equals("SHIPS"))
@@ -340,18 +281,11 @@ public class Player implements Runnable, Observable, Observer
 			}
 		}
 
-		try
+		// If the controller sent a message other than the internal "SHIPS" message, pass message to opponent
+		if (!controllerMessage.equals("SHIPS"))
 		{
-			if (!controllerMessage.equals("SHIPS"))
-			{
-				m_logger.info("Sending '" + controllerMessage + "' to opponent.");
-				m_out.writeUTF(controllerMessage);
-				m_out.flush();
-			}
-		}
-		catch (Exception e)
-		{
-			m_logger.error(e, e);
+			m_logger.info("Sending '" + controllerMessage + "' to opponent.");
+			messageOpponent(controllerMessage);
 		}
 	}
 
@@ -385,34 +319,74 @@ public class Player implements Runnable, Observable, Observer
 	}
 
 	/**
-	 * 
-	 * @return String
+	 * Returns a string representing the host and port within the local network the server socket has binded to.
+	 *
+	 * @return String - Returns a partial hostname string representing the local address and port the server binded to.
 	 */
 	public String serverAddress()
 	{
 		String host = "";
-		InetAddress temp = null;
+		InetAddress fullHostname = null;
 
 		try
 		{
-			temp = InetAddress.getByName(InetAddress.getLocalHost().getHostName());
+			fullHostname = InetAddress.getByName(InetAddress.getLocalHost().getHostName());
 		}
 		catch (Exception e)
 		{
 			m_logger.error(e, e);
 		}
 
-		if (temp != null)
+		if (fullHostname != null)
 		{
-			String[] hostPieces = temp.toString().split("/");
+			String[] hostPieces = fullHostname.toString().split("/");
 			host = hostPieces[1];
 		}
 
 		return host;
 	}
+
+	/**
+	 * Reads a message from the opponent via the socket interface.
+	 *
+	 * @return String - Returns a string representing a message from the opponent.
+	 */
+	private String readOpponentMessage()
+	{
+		String message = "";
+
+		try
+		{
+			message = m_in.readUTF();
+		}
+		catch (Exception e)
+		{
+			m_logger.error(e, e);
+		}
+
+		return message;
+	}
+
+	/**
+	 * Submits a message to the opponent via the socket interface.
+	 *
+	 * @param message - A string representing a message to send to the opponent.
+	 */
+	private void messageOpponent(String message)
+	{
+		try
+		{
+			m_out.writeUTF(message);
+			m_out.flush();
+		}
+		catch (Exception e)
+		{
+			m_logger.error(e, e);
+		}
+	}
 	
 	/**
-	 * 
+	 * Destroys and shuts down the controller, input and output data streams, the socket related objects.
 	 */
 	private void destroy()
 	{
@@ -437,7 +411,10 @@ public class Player implements Runnable, Observable, Observer
 	}
 
 	/**
-	 *
+	 * Depending on whether the player instance is set as a server or client, this method will either create
+	 * a server socket for a client to establish a connection or will establish a connection as a client
+	 * to an already binded server socket. It is assumed the player acting as the server has already started
+	 * running prior to the client.
 	 */
 	private void initializeConnection()
 	{
@@ -449,6 +426,23 @@ public class Player implements Runnable, Observable, Observer
 		{
 			connectToServer();
 		}
+	}
+
+	/**
+	 * Establishes a client connection to some host address and port configuration.
+	 */
+	private void connectToServer()
+	{
+		try
+		{
+			m_socket = new Socket(m_address, m_port);
+		}
+		catch (Exception e)
+		{
+			m_logger.error(e, e);
+		}
+
+		m_logger.info("Connected to server at " + m_address + ":" + m_port + "!");
 	}
 
 	/**
@@ -488,6 +482,24 @@ public class Player implements Runnable, Observable, Observer
 		catch (Exception e)
 		{
 			m_logger.error(e, e);
+		}
+	}
+
+	/**
+	 * A wrapper for calling the Thread class's sleep method within a try catch block.
+	 *
+	 * @param milliseconds - Amount of seconds to sleep the calling thread.
+	 */
+	private void sleep(int milliseconds)
+	{
+		try
+		{
+			Thread.sleep(milliseconds);
+		}
+		catch (Exception e)
+		{
+			m_logger.error(e, e);
+			Thread.currentThread().interrupt();
 		}
 	}
 
