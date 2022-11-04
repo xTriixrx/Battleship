@@ -12,16 +12,19 @@ import java.security.SecureRandom;
 import org.apache.log4j.LogManager;
 
 /**
- * 
+ * The Player class is some Battleship player that will operate as either a server or client. Regardless of which
+ * part of the socket interface the player is serving as, the game mechanisms for either player type are basically
+ * the same. The player will pass messages between its internal controller and to the opponent.
+ *
  * @author Vincent.Nigro
  * @version 1.0.0
  */
 public class Player implements Runnable, Observable, Observer
 {
-	private int m_port = 0;
 	private int m_myID = 0;
+	private final int m_port;
 	private String m_myName = "";
-	private String m_address = "";
+	private final String m_address;
 	private boolean m_over = false;
 	private Socket m_socket = null;
 	private Observer m_observer = null;
@@ -29,15 +32,18 @@ public class Player implements Runnable, Observable, Observer
 	private DataInputStream m_in = null;
 	private ServerSocket m_server = null;
 	private DataOutputStream m_out = null;
-	private Controller m_controller = null;
+	private final Controller m_controller;
 	private final Object m_shipSetSignal = new Object();
 	private static final Logger m_logger = LogManager.getLogger(Player.class);
 
 	public static final int CLIENT_ID = 1;
 	public static final int SERVER_ID = 2;
 	public static final int MAX_PLAYERS = 2;
+	private static final int HALF_SEC = 500;
+	private static final int ONE_SEC = 1000;
 	public static final String SERVER = "server";
 	public static final String CLIENT = "client";
+	private static final String PLAYER_HEADER = "Player ";
 
 	/**
 	 * Player constructor.
@@ -78,17 +84,17 @@ public class Player implements Runnable, Observable, Observer
 	}
 
 	/**
-	 * 
+	 * The main run method which will maintain the game loop.
 	 */
 	@Override
 	public void run()
 	{
 		String message;
 
-		//
+		// Synchronously block until handshake and players are ready
 		performStartupProtocol();
 
-		//
+		// Until the game is over, continue to wait for opponent messages to process
 		while (!m_over)
 		{
 			message = readOpponentMessage();
@@ -97,11 +103,26 @@ public class Player implements Runnable, Observable, Observer
 			m_observer.update(message);
 		}
 
+		// Destroy the socket interface
 		destroy();
 	}
 
 	/**
+	 * An interface method for the controller to notify the player about game status & submit guesses.
 	 *
+	 * @param controllerMessage - A message from the observable component sending an update to the observer.
+	 */
+	@Override
+	public void update(String controllerMessage)
+	{
+		m_logger.info("Received " + controllerMessage + " from observable controller.");
+		handleControllerMessage(controllerMessage);
+	}
+
+	/**
+	 * Startup protocol which will create the socket based interface, manage the synchronous handshake protocol
+	 * and synchronously wait for both player and opponent to set their respective ships. Once this has been
+	 * achieved, the player instance will notify the controller that the game has begun.
 	 */
 	private void performStartupProtocol()
 	{
@@ -122,14 +143,14 @@ public class Player implements Runnable, Observable, Observer
 		isShipsSet();
 
 		// Submit a READY message to the opponent to signify the SHIPS have been set are ready to play
-		m_logger.debug("Player " + m_myID + " is sending READY to opponent.");
+		m_logger.debug(PLAYER_HEADER + m_myID + " is sending READY to opponent.");
 		messageOpponent(Message.READY.getMsg());
 
 		// Block until the opponent has responded back with READY themselves
 		while (!readOpponentMessage().equals(Message.READY.getMsg()))
 		{
-			m_logger.debug("Player " + m_myID + " waiting for incoming READY from opponent.");
-			sleep(500);
+			m_logger.debug(PLAYER_HEADER + m_myID + " waiting for incoming READY from opponent.");
+			sleep(HALF_SEC);
 		}
 
 		// Notify the controller that the opponents' ships have been SET.
@@ -137,142 +158,54 @@ public class Player implements Runnable, Observable, Observer
 	}
 
 	/**
-	 * 
-	 */
-	private void performHandshake()
-	{
-		if (m_myID == SERVER_ID) // server
-		{
-			performServerHandshakeProtocol();
-		}
-		else if (m_myID == CLIENT_ID) // client
-		{
-			performClientHandshakeProtocol();
-		}
-	}
-	
-	/**
-	 * 
-	 */
-	private void performServerHandshakeProtocol()
-	{
-		messageOpponent(Integer.toString(m_controller.getCurrentTurn()));
-		String line = readOpponentMessage();
-
-		m_logger.info("Server received: " + line + " from client.");
-	}
-	
-	/**
-	 * 
-	 */
-	private void performClientHandshakeProtocol()
-	{
-		int currentTurn = Integer.parseInt(readOpponentMessage());
-		m_controller.setCurrentTurn(currentTurn);
-
-		messageOpponent("Client received " + currentTurn + " from Server...");
-	}
-
-	@Override
-	public void update(String controllerMessage)
-	{
-		m_logger.info("Received " + controllerMessage + " from observable controller.");
-		handleControllerMessage(controllerMessage);
-	}
-
-	/**
-	 * 
-	 * @param opponentMessage
-	 */
-	public void handleOpponentMessage(String opponentMessage)
-	{
-		if (opponentMessage.equalsIgnoreCase(Message.SHUTDOWN.getMsg()))
-		{
-			System.exit(0);
-		}
-		else if(opponentMessage.equals(Message.OVER.getMsg()))
-		{
-			infoBox("You Won! (:", "Player " + m_myID);
-			
-			try
-			{
-				Thread.sleep(1000);
-				System.exit(0);
-			}
-			catch (Exception e)
-			{
-				m_logger.error(e, e);
-			}
-
-			m_over = true;
-		}
-		else if(opponentMessage.contains(Message.CARRIER.getMsg()))
-		{
-			infoBox("You sunk your opponents Carrier!", "Player " + m_myID);
-		}
-		else if(opponentMessage.contains(Message.BATTLESHIP.getMsg()))
-		{
-			infoBox("You sunk your opponents Battleship!", "Player " + m_myID);
-		}
-		else if(opponentMessage.contains(Message.CRUISER.getMsg()))
-		{
-			infoBox("You sunk your opponents Cruiser!", "Player " + m_myID);
-		}
-		else if(opponentMessage.contains(Message.SUBMARINE.getMsg()))
-		{
-			infoBox("You sunk your opponents Submarine!", "Player " + m_myID);
-		}
-		else if(opponentMessage.contains(Message.DESTROYER.getMsg()))
-		{
-			infoBox("You sunk your opponents Destroyer!", "Player " + m_myID);
-		}
-	}
-
-	/**
+	 * A handler for managing a message received by the player's controller regarding the current
+	 * game status.
 	 *
-	 * @param controllerMessage
+	 * @param controllerMessage - A string based message sent by the controller regarding current game status.
 	 */
 	public void handleControllerMessage(String controllerMessage)
 	{
-		if (controllerMessage.equalsIgnoreCase(Message.SHUTDOWN.getMsg()))
+		if (controllerMessage.equalsIgnoreCase(Message.SHUTDOWN.getMsg())) // You closed the window
 		{
 			messageOpponent(controllerMessage);
 			System.exit(0);
 		}
-		else if (controllerMessage.equals(Message.SHIPS.getMsg()))
+		else if (controllerMessage.equals(Message.SHIPS.getMsg())) // Your entire armada has been placed
 		{
+			// Notifies the waiting main thread to proceed with startup protocol
 			synchronized (m_shipSetSignal)
 			{
 				m_shipSetSignal.notifyAll();
 			}
 		}
-		else if (controllerMessage.equals(Message.OVER.getMsg()))
+		else if (controllerMessage.equals(Message.OVER.getMsg())) // Opponent destroyed your armada
 		{
-			infoBox("You lost :(", "Player " + m_myID);
+			infoBox("You lost :(", PLAYER_HEADER + m_myID);
 			m_over = true;
 		}
 		else if (controllerMessage.contains(Message.CARRIER.getMsg()))
 		{
-			infoBox("Your Carrier has been sunk!", "Player " + m_myID);
+			infoBox("Your Carrier has been sunk!", PLAYER_HEADER + m_myID);
 		}
 		else if (controllerMessage.contains(Message.BATTLESHIP.getMsg()))
 		{
-			infoBox("Your Battleship has been sunk!", "Player " + m_myID);
+			infoBox("Your Battleship has been sunk!", PLAYER_HEADER + m_myID);
 		}
 		else if (controllerMessage.contains(Message.CRUISER.getMsg()))
 		{
-			infoBox("Your Cruiser has been sunk!", "Player " + m_myID);
+			infoBox("Your Cruiser has been sunk!", PLAYER_HEADER + m_myID);
 		}
 		else if (controllerMessage.contains(Message.SUBMARINE.getMsg()))
 		{
-			infoBox("Your Submarine has been sunk!", "Player " + m_myID);
+			infoBox("Your Submarine has been sunk!", PLAYER_HEADER + m_myID);
 		}
 		else if (controllerMessage.contains(Message.DESTROYER.getMsg()))
 		{
-			infoBox("Your Destroyer has been sunk!", "Player " + m_myID);
+			infoBox("Your Destroyer has been sunk!", PLAYER_HEADER + m_myID);
 		}
 		else
 		{
+			// Remove ID tag prior to submitting target guess to opponent
 			if (controllerMessage.charAt(controllerMessage.length() - 1) == m_myID)
 			{
 				StringBuilder sb = new StringBuilder(controllerMessage);
@@ -290,7 +223,49 @@ public class Player implements Runnable, Observable, Observer
 	}
 
 	/**
+	 * A handler for managing a message received by the opponent regarding the current game status.
 	 *
+	 * @param opponentMessage - A string based message sent by the opponent regarding current game status.
+	 */
+	public void handleOpponentMessage(String opponentMessage)
+	{
+		if (opponentMessage.equalsIgnoreCase(Message.SHUTDOWN.getMsg())) // Opponent closed window
+		{
+			System.exit(0);
+		}
+		else if(opponentMessage.equals(Message.OVER.getMsg())) // You destroyed opponents' armada
+		{
+			infoBox("You Won! (:", PLAYER_HEADER + m_myID);
+
+			sleep(ONE_SEC);
+			m_over = true;
+			System.exit(0);
+		}
+		else if (opponentMessage.contains(Message.CARRIER.getMsg()))
+		{
+			infoBox("You sunk your opponents Carrier!", PLAYER_HEADER + m_myID);
+		}
+		else if (opponentMessage.contains(Message.BATTLESHIP.getMsg()))
+		{
+			infoBox("You sunk your opponents Battleship!", PLAYER_HEADER + m_myID);
+		}
+		else if (opponentMessage.contains(Message.CRUISER.getMsg()))
+		{
+			infoBox("You sunk your opponents Cruiser!", PLAYER_HEADER + m_myID);
+		}
+		else if (opponentMessage.contains(Message.SUBMARINE.getMsg()))
+		{
+			infoBox("You sunk your opponents Submarine!", PLAYER_HEADER + m_myID);
+		}
+		else if (opponentMessage.contains(Message.DESTROYER.getMsg()))
+		{
+			infoBox("You sunk your opponents Destroyer!", PLAYER_HEADER + m_myID);
+		}
+	}
+
+	/**
+	 * A blocking method that will wait until the controller has notified the player instance with a "SHIPS"
+	 * update message.
 	 */
 	public void isShipsSet()
 	{
@@ -298,6 +273,7 @@ public class Player implements Runnable, Observable, Observer
 
 		while (!isSet)
 		{
+			// Waits until signal is received from controller via the communication protocol
 			synchronized (m_shipSetSignal)
 			{
 				try
@@ -314,7 +290,7 @@ public class Player implements Runnable, Observable, Observer
 			m_logger.info("All ships are set!");
 			isSet = true;
 			m_controller.getArmada().logArmadaPosition();
-			infoBox("Ships are Set!", "Player " + m_myID);
+			infoBox("Ships are Set!", PLAYER_HEADER + m_myID);
 		}
 	}
 
@@ -411,6 +387,48 @@ public class Player implements Runnable, Observable, Observer
 	}
 
 	/**
+	 * Depending on whether the instantiated player is a server or client will determine which handshake protocol
+	 * to perform.
+	 */
+	private void performHandshake()
+	{
+		if (m_myID == SERVER_ID) // server
+		{
+			performServerHandshakeProtocol();
+		}
+		else if (m_myID == CLIENT_ID) // client
+		{
+			performClientHandshakeProtocol();
+		}
+	}
+
+	/**
+	 * If the instantiated player is supposed to be the server, then the player will use this protocol to pass
+	 * the randomly generated turn selection to the opponent acting as the client. The server will read and log
+	 * that the client has received the turn value.
+	 */
+	private void performServerHandshakeProtocol()
+	{
+		messageOpponent(Integer.toString(m_controller.getCurrentTurn()));
+		String line = readOpponentMessage();
+
+		m_logger.info("Server received: " + line + " from client.");
+	}
+
+	/**
+	 * If the instantiated player is supposed to be the client, then the player will use this protocol to read
+	 * whose turn it will be first which will be randomly determined by the server. The client will message back
+	 * the server ensuring the value was received.
+	 */
+	private void performClientHandshakeProtocol()
+	{
+		int currentTurn = Integer.parseInt(readOpponentMessage());
+		m_controller.setCurrentTurn(currentTurn);
+
+		messageOpponent("Client received " + currentTurn + " from Server...");
+	}
+
+	/**
 	 * Depending on whether the player instance is set as a server or client, this method will either create
 	 * a server socket for a client to establish a connection or will establish a connection as a client
 	 * to an already binded server socket. It is assumed the player acting as the server has already started
@@ -468,8 +486,7 @@ public class Player implements Runnable, Observable, Observer
 	}
 
 	/**
-	 * Instantiates and initializes the data input and output streams to communicate through
-	 * the socket interface.
+	 * Instantiates and initializes the data input and output streams to communicate through the socket interface.
 	 */
 	private void initializeStreams()
 	{
@@ -520,7 +537,7 @@ public class Player implements Runnable, Observable, Observer
 	/**
 	 * Capitalizes a provided string by making the first character in the string uppercase.
 	 *
-	 * @param string The string to capitalize.
+	 * @param string - The string to capitalize.
 	 * @return String - A capitalized string.
 	 */
 	public String capitalize(String string)
