@@ -45,23 +45,23 @@ public class BoardController implements Initializable, Observer, Observable, Con
 
 	@SuppressWarnings("unused")
 	@FXML
-	private ImageView pictureOne;
+	private ImageView destroyerImage;
 
 	@SuppressWarnings("unused")
 	@FXML
-	private ImageView pictureTwo;
+	private ImageView submarineImage;
 
 	@SuppressWarnings("unused")
 	@FXML
-	private ImageView pictureThree;
+	private ImageView cruiserImage;
 
 	@SuppressWarnings("unused")
 	@FXML
-	private ImageView pictureFour;
+	private ImageView battleshipImage;
 
 	@SuppressWarnings("unused")
 	@FXML
-	private ImageView pictureFive;
+	private ImageView carrierImage;
 
 	@SuppressWarnings("unused")
 	@FXML
@@ -137,7 +137,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	private Map<ArmadaType, String> stylesMap = null;
 	private final Object m_connectedMutex = new Object();
 	private DragDropController dragDropController = null;
-	private static final Logger logger = LogManager.getLogger(BoardController.class);
+	private static final Logger m_logger = LogManager.getLogger(BoardController.class);
 	
 	private static final int CLIENT_TURN = 1;
 	private static final int SERVER_TURN = 2;
@@ -232,11 +232,11 @@ public class BoardController implements Initializable, Observer, Observable, Con
 				connectedText.setText(DISCONNECTED);
 				connectedText.setFill(SUNK_COLOR);
 
-				pictureOne.setDisable(true);
-				pictureTwo.setDisable(true);
-				pictureThree.setDisable(true);
-				pictureFour.setDisable(true);
-				pictureFive.setDisable(true);
+				destroyerImage.setDisable(true);
+				submarineImage.setDisable(true);
+				cruiserImage.setDisable(true);
+				battleshipImage.setDisable(true);
+				carrierImage.setDisable(true);
 				autoShips.setDisable(true);
 			}
 			else
@@ -249,11 +249,11 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		dragDropController = new DragDropController(buttonList, armada, stylesMap);
 		
 		autoShips.setStyle(AUTO_SHIPS_STYLE);
-		pictureOne.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, pictureOneClickEvent);
-		pictureTwo.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, pictureTwoClickEvent);
-		pictureThree.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, pictureThreeClickEvent);
-		pictureFour.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, pictureFourClickEvent);
-		pictureFive.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, pictureFiveClickEvent);
+		destroyerImage.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, destroyerClickEvent);
+		submarineImage.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, submarineClickEvent);
+		cruiserImage.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, cruiserClickEvent);
+		battleshipImage.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, battleshipClickEvent);
+		carrierImage.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, carrierClickEvent);
 		autoShips.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_CLICKED, automateArmada);
 		OrientationChoice.getItems().addAll(HORIZONTAL, VERTICAL);
 		OrientationChoice.getSelectionModel().selectFirst();
@@ -356,7 +356,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 			justSunk = true;
 			setSunkShipText(shipText);
 			
-			logger.debug(shipText.getText() + " has sunk.");
+			m_logger.debug(shipText.getText() + " has sunk.");
 			
 			// If armada has sunk, the game is over
 			if (armada.isArmadaSunk())
@@ -384,7 +384,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 						positions = hitArmada.getBattleshipPositions();
 						break;
 					default:
-						logger.error("Received unknown ship of type: " + shipText.getText().toUpperCase() + ".");
+						m_logger.error("Received unknown ship of type: " + shipText.getText().toUpperCase() + ".");
 				}
 
 				observer.update(shipText.getText().toUpperCase() + " " + positions);
@@ -451,7 +451,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	@Override
 	public void update(String s)
 	{
-		logger.info("Controller " + getID() + ": Received " + s + ".");
+		m_logger.info("Controller " + getID() + ": Received " + s + ".");
 
 		if (s.equals(Message.CONNECTED.getMsg()))
 		{
@@ -459,16 +459,16 @@ public class BoardController implements Initializable, Observer, Observable, Con
 			{
 				m_connected = true;
 
-				if (pictureOne != null)
+				if (destroyerImage != null)
 				{
 					connectedText.setText(CONNECTED);
 					connectedText.setFill(CONNECTED_COLOR);
 
-					pictureOne.setDisable(false);
-					pictureTwo.setDisable(false);
-					pictureThree.setDisable(false);
-					pictureFour.setDisable(false);
-					pictureFive.setDisable(false);
+					destroyerImage.setDisable(false);
+					submarineImage.setDisable(false);
+					cruiserImage.setDisable(false);
+					battleshipImage.setDisable(false);
+					carrierImage.setDisable(false);
 					autoShips.setDisable(false);
 				}
 			}
@@ -770,7 +770,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	 */
 	private final EventHandler<MouseEvent> mouseClickEvent = event ->
 	{
-		logger.info("Controller " + getID() + ": current turn is: " + getCurrentTurn() + ".");
+		m_logger.info("Controller " + getID() + ": current turn is: " + getCurrentTurn() + ".");
 
 		if (getCurrentTurn() == myTurn && isShipsSet)
 		{
@@ -779,14 +779,14 @@ public class BoardController implements Initializable, Observer, Observable, Con
 
 			((Button) event.getTarget()).setDisable(true);
 			((Button) event.getTarget()).setMouseTransparent(false);
-			logger.info("Controller " + getID() + ": sending " + toSend + " to opponent.");
+			m_logger.info("Controller " + getID() + ": sending " + toSend + " to opponent.");
 			myTurnFlag = true;
 			observer.update(toSend);
-			pictureOne.setDisable(true);
-			pictureTwo.setDisable(true);
-			pictureThree.setDisable(true);
-			pictureFour.setDisable(true);
-			pictureFive.setDisable(true);
+			destroyerImage.setDisable(true);
+			submarineImage.setDisable(true);
+			cruiserImage.setDisable(true);
+			battleshipImage.setDisable(true);
+			carrierImage.setDisable(true);
 			autoShips.setDisable(true);
 		}
 	};
@@ -794,56 +794,56 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	/**
 	 *
 	 */
-	private final EventHandler<MouseEvent> pictureOneClickEvent = event ->
+	private final EventHandler<MouseEvent> destroyerClickEvent = event ->
 	{
 		autoShips.setDisable(true);
-		configureDragAndDrop(pictureOne);
+		configureDragAndDrop(destroyerImage);
 		setDrag(Armada.DESTROYER_SIZE, DESTROYER_SET_STYLE);
-		configureDroppedImage(pictureOne, ArmadaType.DESTROYER, Armada.DESTROYER_SIZE, DESTROYER_SET_STYLE);
+		configureDroppedImage(destroyerImage, ArmadaType.DESTROYER, Armada.DESTROYER_SIZE, DESTROYER_SET_STYLE);
 	};
 	
 	/**
 	 *
 	 */
-	private final EventHandler<MouseEvent> pictureTwoClickEvent = event ->
+	private final EventHandler<MouseEvent> submarineClickEvent = event ->
 	{
 		autoShips.setDisable(true);
-		configureDragAndDrop(pictureTwo);
+		configureDragAndDrop(submarineImage);
 		setDrag(Armada.SUBMARINE_SIZE, SUBMARINE_SET_STYLE);
-		configureDroppedImage(pictureTwo, ArmadaType.SUBMARINE, Armada.SUBMARINE_SIZE, SUBMARINE_SET_STYLE);
+		configureDroppedImage(submarineImage, ArmadaType.SUBMARINE, Armada.SUBMARINE_SIZE, SUBMARINE_SET_STYLE);
 	};
 	
 	/**
 	 *
 	 */
-	private final EventHandler<MouseEvent> pictureThreeClickEvent = event ->
+	private final EventHandler<MouseEvent> cruiserClickEvent = event ->
 	{
 		autoShips.setDisable(true);
-		configureDragAndDrop(pictureThree);
+		configureDragAndDrop(cruiserImage);
 		setDrag(Armada.CRUISER_SIZE, CRUISER_SET_STYLE);
-		configureDroppedImage(pictureThree, ArmadaType.CRUISER, Armada.CRUISER_SIZE, CRUISER_SET_STYLE);
+		configureDroppedImage(cruiserImage, ArmadaType.CRUISER, Armada.CRUISER_SIZE, CRUISER_SET_STYLE);
 	};
 	
 	/**
 	 * 
 	 */
-	private final EventHandler<MouseEvent> pictureFourClickEvent = event ->
+	private final EventHandler<MouseEvent> battleshipClickEvent = event ->
 	{
 		autoShips.setDisable(true);
-		configureDragAndDrop(pictureFour);
+		configureDragAndDrop(battleshipImage);
 		setDrag(Armada.BATTLESHIP_SIZE, BATTLESHIP_SET_STYLE);
-		configureDroppedImage(pictureFour, ArmadaType.BATTLESHIP, Armada.BATTLESHIP_SIZE, BATTLESHIP_SET_STYLE);
+		configureDroppedImage(battleshipImage, ArmadaType.BATTLESHIP, Armada.BATTLESHIP_SIZE, BATTLESHIP_SET_STYLE);
 	};
 	
 	/**
 	 * 
 	 */
-	private final EventHandler<MouseEvent> pictureFiveClickEvent = event ->
+	private final EventHandler<MouseEvent> carrierClickEvent = event ->
 	{
 		autoShips.setDisable(true);
-		configureDragAndDrop(pictureFive);
+		configureDragAndDrop(carrierImage);
 		setDrag(Armada.CARRIER_SIZE, CARRIER_SET_STYLE);
-		configureDroppedImage(pictureFive, ArmadaType.CARRIER, Armada.CARRIER_SIZE, CARRIER_SET_STYLE);
+		configureDroppedImage(carrierImage, ArmadaType.CARRIER, Armada.CARRIER_SIZE, CARRIER_SET_STYLE);
 	};
 	
 	/**
@@ -851,11 +851,11 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	 */
 	private final EventHandler<MouseEvent> automateArmada = event ->
 	{
-		pictureOne.setDisable(true);
-		pictureTwo.setDisable(true);
-		pictureThree.setDisable(true);
-		pictureFour.setDisable(true);
-		pictureFive.setDisable(true);
+		destroyerImage.setDisable(true);
+		submarineImage.setDisable(true);
+		cruiserImage.setDisable(true);
+		battleshipImage.setDisable(true);
+		carrierImage.setDisable(true);
 		automator.automateArmadaPlacement(buttonList, stylesMap);
 		armada.logArmadaPosition();
 		autoShips.setDisable(true);

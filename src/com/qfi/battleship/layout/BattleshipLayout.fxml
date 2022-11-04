@@ -339,28 +339,28 @@
                       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="252.0" prefWidth="221.0">
                            <children>
                               <Label layoutX="12.0" layoutY="12.0" prefHeight="17.0" prefWidth="50.0" text="Player" />
-                              <ImageView fx:id="pictureOne" fitHeight="25.0" fitWidth="50.0" layoutX="10.0" layoutY="54.0" pickOnBounds="true" preserveRatio="true">
+                              <ImageView fx:id="destroyerImage" fitHeight="25.0" fitWidth="50.0" layoutX="10.0" layoutY="54.0" pickOnBounds="true" preserveRatio="true">
                                  <image>
                                     <Image url="@../images/Destroyer.PNG" />
                                  </image>
                               </ImageView>
                               <Label layoutX="123.0" layoutY="12.0" text="Ship Orientation" />
-                              <ImageView fx:id="pictureTwo" fitHeight="25.0" fitWidth="70.0" layoutX="10.0" layoutY="82.0" pickOnBounds="true" preserveRatio="true">
+                              <ImageView fx:id="submarineImage" fitHeight="25.0" fitWidth="70.0" layoutX="10.0" layoutY="82.0" pickOnBounds="true" preserveRatio="true">
                                  <image>
                                     <Image url="@../images/Submarine.PNG" />
                                  </image>
                               </ImageView>
-                              <ImageView fx:id="pictureThree" fitHeight="28.0" fitWidth="70.0" layoutX="10.0" layoutY="112.0" pickOnBounds="true" preserveRatio="true">
+                              <ImageView fx:id="cruiserImage" fitHeight="28.0" fitWidth="70.0" layoutX="10.0" layoutY="112.0" pickOnBounds="true" preserveRatio="true">
                                  <image>
                                     <Image url="@../images/Cruiser.PNG" />
                                  </image>
                               </ImageView>
-                              <ImageView fx:id="pictureFour" fitHeight="17.0" fitWidth="86.0" layoutX="10.0" layoutY="138.0" pickOnBounds="true" preserveRatio="true">
+                              <ImageView fx:id="battleshipImage" fitHeight="17.0" fitWidth="86.0" layoutX="10.0" layoutY="138.0" pickOnBounds="true" preserveRatio="true">
                                  <image>
                                     <Image url="@../images/Battleship.PNG" />
                                  </image>
                               </ImageView>
-                              <ImageView fx:id="pictureFive" fitHeight="28.0" fitWidth="104.0" layoutX="10.0" layoutY="160.0" pickOnBounds="true" preserveRatio="true">
+                              <ImageView fx:id="carrierImage" fitHeight="28.0" fitWidth="104.0" layoutX="10.0" layoutY="160.0" pickOnBounds="true" preserveRatio="true">
                                  <image>
                                     <Image url="@../images/Carrier.PNG" />
                                  </image>
