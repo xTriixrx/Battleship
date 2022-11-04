@@ -183,28 +183,6 @@ public class BoardController implements Initializable, Observer, Observable, Con
 			opponentTurn = CLIENT_TURN;
 		}
 	}
-	
-	/**
-	 * Populates the styles map.
-	 */
-	private void populateStyles()
-	{
-		stylesMap = new HashMap<>();
-		stylesMap.put(ArmadaType.DESTROYER, DESTROYER_SET_STYLE);
-		stylesMap.put(ArmadaType.SUBMARINE, SUBMARINE_SET_STYLE);
-		stylesMap.put(ArmadaType.CRUISER, CRUISER_SET_STYLE);
-		stylesMap.put(ArmadaType.BATTLESHIP, BATTLESHIP_SET_STYLE);
-		stylesMap.put(ArmadaType.CARRIER, CARRIER_SET_STYLE);
-	}
-	
-	/**
-	 * Called by stage when one player closes their respective window.
-	 */
-	public void shutdown()
-	{
-		Platform.exit();
-		observer.update(Message.SHUTDOWN.getMsg());
-	}
 
 	/**
 	 * 
@@ -249,68 +227,22 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		dragDropController = new DragDropController(buttonList, armada, stylesMap);
 		
 		autoShips.setStyle(AUTO_SHIPS_STYLE);
+
+		// Add event hander's for each drag and drop image & auto ships button
 		destroyerImage.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, destroyerClickEvent);
 		submarineImage.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, submarineClickEvent);
 		cruiserImage.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, cruiserClickEvent);
 		battleshipImage.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, battleshipClickEvent);
 		carrierImage.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, carrierClickEvent);
 		autoShips.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_CLICKED, automateArmada);
+
+		// Add drop down menu items & have HORIZONTAL set as first
 		OrientationChoice.getItems().addAll(HORIZONTAL, VERTICAL);
 		OrientationChoice.getSelectionModel().selectFirst();
 
+		// Set the orientation value based on what is selected
 		OrientationChoice.getSelectionModel().selectedItemProperty()
-				.addListener((ObservableValue<? extends String> observable, String oldValue,
-						String newValue) -> orientation = newValue);
-	}
-	
-	private void setSunkShipText(Text ship)
-	{
-		ship.setFill(SUNK_COLOR);
-		ship.setStrikethrough(true);
-	}
-
-	public void initMouseEvent(Button b)
-	{
-		b.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_CLICKED, mouseClickEvent);
-	}
-
-	@Override
-	public Armada getArmada()
-	{
-		return armada;
-	}
-
-	@Override
-	public void setCurrentTurn(int t)
-	{
-		synchronized (turnMutex)
-		{
-			currentTurn = t;
-		}
-	}
-	
-	public int getCurrentTurn()
-	{
-		int turn = 0;
-		
-		synchronized (turnMutex)
-		{
-			turn = currentTurn;
-		}
-		
-		return turn;
-	}
-
-	public int getID()
-	{
-		return System.identityHashCode(this);
-	}
-	
-
-	@Override
-	public void register(Observer observer)
-	{
-		this.observer = observer;
+				.addListener((observable, oldValue, newValue) -> orientation = newValue);
 	}
 
 	/**
@@ -336,8 +268,6 @@ public class BoardController implements Initializable, Observer, Observable, Con
 				break;
 			}
 		}
-		
-		setCurrentTurn(opponentTurn);
 	}
 	
 	/**
@@ -401,9 +331,11 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	 */
 	public void updatePlayerGrid(String pos, String hitOrMiss)
 	{
+		String playerPosition = "P" + pos;
+
 		for (Node node : playerGrid.getChildren())
 		{
-			if (node.getId() != null && node.getId().equals(pos))
+			if (node.getId() != null && node.getId().equals(playerPosition))
 			{
 				if (hitOrMiss.equals(Message.HIT.getMsg()))
 				{
@@ -446,14 +378,14 @@ public class BoardController implements Initializable, Observer, Observable, Con
 
 	/**
 	 * 
-	 * @param s
+	 * @param observableMessage - A string based message that contains a message from either the player instance or opponent.
 	 */
 	@Override
-	public void update(String s)
+	public void update(String observableMessage)
 	{
-		m_logger.info("Controller " + getID() + ": Received " + s + ".");
+		m_logger.info("Controller " + getID() + ": Received " + observableMessage + ".");
 
-		if (s.equals(Message.CONNECTED.getMsg()))
+		if (observableMessage.equals(Message.CONNECTED.getMsg()))
 		{
 			synchronized (m_connectedMutex)
 			{
@@ -474,7 +406,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 			}
 
 		}
-		else if (s.equals(Message.SET.getMsg()))
+		else if (observableMessage.equals(Message.SET.getMsg()))
 		{
 			isShipsSet = true;
 			for (Node node : opponentGrid.getChildren())
@@ -485,71 +417,73 @@ public class BoardController implements Initializable, Observer, Observable, Con
 				}
 			}
 		}
-		else if(s.contains(Message.CARRIER.getMsg()))
+		else if(observableMessage.contains(Message.CARRIER.getMsg()))
 		{
 			setSunkShipText(opponentCarrier);
 		}
-		else if(s.contains(Message.BATTLESHIP.getMsg()))
+		else if(observableMessage.contains(Message.BATTLESHIP.getMsg()))
 		{
 			setSunkShipText(opponentBattleship);
 		}
-		else if(s.contains(Message.CRUISER.getMsg()))
+		else if(observableMessage.contains(Message.CRUISER.getMsg()))
 		{
 			setSunkShipText(opponentCruiser);
 		}
-		else if(s.contains(Message.SUBMARINE.getMsg()))
+		else if(observableMessage.contains(Message.SUBMARINE.getMsg()))
 		{
 			setSunkShipText(opponentSubmarine);
 		}
-		else if(s.contains(Message.DESTROYER.getMsg()))
+		else if(observableMessage.contains(Message.DESTROYER.getMsg()))
 		{
 			setSunkShipText(opponentDestroyer);
 		}
 		else if (getCurrentTurn() == myTurn && myTurnFlag)
 		{
-			StringBuilder temp = new StringBuilder(toSend);
+			StringBuilder boardPosition = new StringBuilder(toSend);
 
-			String t = "";
-			if (temp.length() == 4) {
-				temp.deleteCharAt(3);
-				t = temp.toString();
-			} else if (temp.length() == 5) {
-				temp.deleteCharAt(4);
-				t = temp.toString();
+			if (boardPosition.length() == 4)
+			{
+				boardPosition.deleteCharAt(3);
+			}
+			else if (boardPosition.length() == 5)
+			{
+				boardPosition.deleteCharAt(4);
 			}
 
-			updateOpponentGrid(t, s);
+			updateOpponentGrid(boardPosition.toString(), observableMessage);
+			setCurrentTurn(opponentTurn);
 		}
 		else if (getCurrentTurn() == opponentTurn)
 		{
-			StringBuilder temp = new StringBuilder(s);
-			String hitOrMiss = "";
+			String hitOrMiss;
+			String opponentGuess;
+			StringBuilder opponentBoardGuess = new StringBuilder(observableMessage);
 
-			temp.setCharAt(0, 'P');
-			String t = "";
-			if (temp.length() == 4) {
-				temp.deleteCharAt(3);
-				t = temp.toString();
-			} else if (temp.length() == 5) {
-				temp.deleteCharAt(4);
-				t = temp.toString();
+			opponentBoardGuess.deleteCharAt(0);
+			if (opponentBoardGuess.length() == 3)
+			{
+				opponentBoardGuess.deleteCharAt(2);
 			}
-			
-			String boardPos = t.substring(1); 
-			boolean isHit = armada.calculateHit(boardPos);
+			else if (opponentBoardGuess.length() == 4)
+			{
+				opponentBoardGuess.deleteCharAt(3);
+			}
+
+			opponentGuess = opponentBoardGuess.toString();
+			boolean isHit = armada.calculateHit(opponentGuess);
 
 			if (isHit)
 			{
 				hitOrMiss = Message.HIT.getMsg();
-				String ship = armada.updateArmada(boardPos);
-				addHitShipPosition(ship, boardPos);
+				String ship = armada.updateArmada(opponentGuess);
+				addHitShipPosition(ship, opponentGuess);
 			}
 			else
 			{
 				hitOrMiss = Message.MISS.getMsg();
 			}
 
-			updatePlayerGrid(t, hitOrMiss);
+			updatePlayerGrid(opponentGuess, hitOrMiss);
 
 			setCurrentTurn(myTurn);
 			myTurnFlag = false;
@@ -861,4 +795,80 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		autoShips.setDisable(true);
 		observer.update(Message.SHIPS.getMsg());
 	};
+
+	/**
+	 * Populates the styles map.
+	 */
+	private void populateStyles()
+	{
+		stylesMap = new HashMap<>();
+		stylesMap.put(ArmadaType.DESTROYER, DESTROYER_SET_STYLE);
+		stylesMap.put(ArmadaType.SUBMARINE, SUBMARINE_SET_STYLE);
+		stylesMap.put(ArmadaType.CRUISER, CRUISER_SET_STYLE);
+		stylesMap.put(ArmadaType.BATTLESHIP, BATTLESHIP_SET_STYLE);
+		stylesMap.put(ArmadaType.CARRIER, CARRIER_SET_STYLE);
+	}
+
+	@Override
+	public void setCurrentTurn(int t)
+	{
+		synchronized (turnMutex)
+		{
+			currentTurn = t;
+		}
+	}
+
+	public int getCurrentTurn()
+	{
+		int turn = 0;
+
+		synchronized (turnMutex)
+		{
+			turn = currentTurn;
+		}
+
+		return turn;
+	}
+
+	private void initMouseEvent(Button b)
+	{
+		b.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_CLICKED, mouseClickEvent);
+	}
+
+	/**
+	 * Called by stage when one player closes their respective window.
+	 */
+	public void shutdown()
+	{
+		Platform.exit();
+		observer.update(Message.SHUTDOWN.getMsg());
+	}
+
+	private void setSunkShipText(Text ship)
+	{
+		ship.setFill(SUNK_COLOR);
+		ship.setStrikethrough(true);
+	}
+
+	@Override
+	public Armada getArmada()
+	{
+		return armada;
+	}
+
+	@Override
+	public void register(Observer observer)
+	{
+		this.observer = observer;
+	}
+
+	/**
+	 * Returns some hash id representing this controller instance.
+	 *
+	 * @return int - A unique hash code integer representing this controller.
+	 */
+	public int getID()
+	{
+		return System.identityHashCode(this);
+	}
 }
