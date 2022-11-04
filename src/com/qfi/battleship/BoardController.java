@@ -113,6 +113,10 @@ public class BoardController implements Initializable, Observer, Observable, Con
 
 	@SuppressWarnings("unused")
 	@FXML
+	private Text connectedText;
+
+	@SuppressWarnings("unused")
+	@FXML
 	private ChoiceBox<String> OrientationChoice;
 
 	private String toSend;
@@ -125,11 +129,13 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	private Armada hitArmada = null;
 	private boolean myTurnFlag = true;
 	private boolean isShipsSet = false;
+	private boolean m_connected = false;
 	private String orientation = HORIZONTAL;
 	private ArmadaAutomator automator = null;
 	private final Object turnMutex = new Object();
 	private ObservableList<Node> buttonList = null;
 	private Map<ArmadaType, String> stylesMap = null;
+	private final Object m_connectedMutex = new Object();
 	private DragDropController dragDropController = null;
 	private static final Logger logger = LogManager.getLogger(BoardController.class);
 	
@@ -139,7 +145,10 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	private static final char SERVER_SYMBOL = 'X';
 	private static final Color SUNK_COLOR = Color.RED;
 	private static final String VERTICAL = "Vertical";
+	private static final String CONNECTED = "Connected";
 	private static final String HORIZONTAL = "Horizontal";
+	private static final Color CONNECTED_COLOR = Color.BLACK;
+	private static final String DISCONNECTED = "Disconnected";
 	private static final String BUTTON_HIT_STYLE = "-fx-background-color: red";
 	private static final String AUTO_SHIPS_STYLE = "-fx-background-color: white";
 	private static final String CRUISER_SET_STYLE = "-fx-background-color: aqua";
@@ -213,6 +222,27 @@ public class BoardController implements Initializable, Observer, Observable, Con
 			{
 				initMouseEvent((Button) node);
 				node.setDisable(true);
+			}
+		}
+
+		synchronized (m_connectedMutex)
+		{
+			if (!m_connected)
+			{
+				connectedText.setText(DISCONNECTED);
+				connectedText.setFill(SUNK_COLOR);
+
+				pictureOne.setDisable(true);
+				pictureTwo.setDisable(true);
+				pictureThree.setDisable(true);
+				pictureFour.setDisable(true);
+				pictureFive.setDisable(true);
+				autoShips.setDisable(true);
+			}
+			else
+			{
+				connectedText.setText(CONNECTED);
+				connectedText.setFill(CONNECTED_COLOR);
 			}
 		}
 		
@@ -425,10 +455,26 @@ public class BoardController implements Initializable, Observer, Observable, Con
 
 		if (s.equals(Message.CONNECTED.getMsg()))
 		{
-			return;
-		}
+			synchronized (m_connectedMutex)
+			{
+				m_connected = true;
 
-		if (s.equals(Message.SET.getMsg()))
+				if (pictureOne != null)
+				{
+					connectedText.setText(CONNECTED);
+					connectedText.setFill(CONNECTED_COLOR);
+
+					pictureOne.setDisable(false);
+					pictureTwo.setDisable(false);
+					pictureThree.setDisable(false);
+					pictureFour.setDisable(false);
+					pictureFive.setDisable(false);
+					autoShips.setDisable(false);
+				}
+			}
+
+		}
+		else if (s.equals(Message.SET.getMsg()))
 		{
 			isShipsSet = true;
 			for (Node node : opponentGrid.getChildren())

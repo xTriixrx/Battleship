@@ -112,7 +112,7 @@ public class Player implements Runnable, Observable, Observer
 		initializeStreams();
 
 		// Notify controller that the connection to the opponent has been established
-		m_observer.update("CONNECTED");
+		m_observer.update(Message.CONNECTED.getMsg());
 
 		// The server component will submit the randomized turn value to the client, will wait for clients confirmation
 		performHandshake();
@@ -123,17 +123,17 @@ public class Player implements Runnable, Observable, Observer
 
 		// Submit a READY message to the opponent to signify the SHIPS have been set are ready to play
 		m_logger.debug("Player " + m_myID + " is sending READY to opponent.");
-		messageOpponent("READY");
+		messageOpponent(Message.READY.getMsg());
 
 		// Block until the opponent has responded back with READY themselves
-		while (!readOpponentMessage().equals("READY"))
+		while (!readOpponentMessage().equals(Message.READY.getMsg()))
 		{
 			m_logger.debug("Player " + m_myID + " waiting for incoming READY from opponent.");
 			sleep(500);
 		}
 
 		// Notify the controller that the opponents' ships have been SET.
-		m_observer.update("SET");
+		m_observer.update(Message.SET.getMsg());
 	}
 
 	/**
@@ -186,11 +186,11 @@ public class Player implements Runnable, Observable, Observer
 	 */
 	public void handleOpponentMessage(String opponentMessage)
 	{
-		if (opponentMessage.equalsIgnoreCase("SHUTDOWN"))
+		if (opponentMessage.equalsIgnoreCase(Message.SHUTDOWN.getMsg()))
 		{
 			System.exit(0);
 		}
-		else if(opponentMessage.equals("OVER"))
+		else if(opponentMessage.equals(Message.OVER.getMsg()))
 		{
 			infoBox("You Won! (:", "Player " + m_myID);
 			
@@ -206,23 +206,23 @@ public class Player implements Runnable, Observable, Observer
 
 			m_over = true;
 		}
-		else if(opponentMessage.equals(Armada.CARRIER_NAME))
+		else if(opponentMessage.contains(Message.CARRIER.getMsg()))
 		{
 			infoBox("You sunk your opponents Carrier!", "Player " + m_myID);
 		}
-		else if(opponentMessage.equals(Armada.BATTLESHIP_NAME))
+		else if(opponentMessage.contains(Message.BATTLESHIP.getMsg()))
 		{
 			infoBox("You sunk your opponents Battleship!", "Player " + m_myID);
 		}
-		else if(opponentMessage.equals(Armada.CRUISER_NAME))
+		else if(opponentMessage.contains(Message.CRUISER.getMsg()))
 		{
 			infoBox("You sunk your opponents Cruiser!", "Player " + m_myID);
 		}
-		else if(opponentMessage.equals(Armada.SUBMARINE_NAME))
+		else if(opponentMessage.contains(Message.SUBMARINE.getMsg()))
 		{
 			infoBox("You sunk your opponents Submarine!", "Player " + m_myID);
 		}
-		else if(opponentMessage.equals(Armada.DESTROYER_NAME))
+		else if(opponentMessage.contains(Message.DESTROYER.getMsg()))
 		{
 			infoBox("You sunk your opponents Destroyer!", "Player " + m_myID);
 		}
@@ -234,40 +234,40 @@ public class Player implements Runnable, Observable, Observer
 	 */
 	public void handleControllerMessage(String controllerMessage)
 	{
-		if (controllerMessage.equalsIgnoreCase("SHUTDOWN"))
+		if (controllerMessage.equalsIgnoreCase(Message.SHUTDOWN.getMsg()))
 		{
 			messageOpponent(controllerMessage);
 			System.exit(0);
 		}
-		else if (controllerMessage.equals("SHIPS"))
+		else if (controllerMessage.equals(Message.SHIPS.getMsg()))
 		{
 			synchronized (m_shipSetSignal)
 			{
 				m_shipSetSignal.notifyAll();
 			}
 		}
-		else if (controllerMessage.equals("OVER"))
+		else if (controllerMessage.equals(Message.OVER.getMsg()))
 		{
 			infoBox("You lost :(", "Player " + m_myID);
 			m_over = true;
 		}
-		else if (controllerMessage.contains(Armada.CARRIER_NAME))
+		else if (controllerMessage.contains(Message.CARRIER.getMsg()))
 		{
 			infoBox("Your Carrier has been sunk!", "Player " + m_myID);
 		}
-		else if (controllerMessage.contains(Armada.BATTLESHIP_NAME))
+		else if (controllerMessage.contains(Message.BATTLESHIP.getMsg()))
 		{
 			infoBox("Your Battleship has been sunk!", "Player " + m_myID);
 		}
-		else if (controllerMessage.contains(Armada.CRUISER_NAME))
+		else if (controllerMessage.contains(Message.CRUISER.getMsg()))
 		{
 			infoBox("Your Cruiser has been sunk!", "Player " + m_myID);
 		}
-		else if (controllerMessage.contains(Armada.SUBMARINE_NAME))
+		else if (controllerMessage.contains(Message.SUBMARINE.getMsg()))
 		{
 			infoBox("Your Submarine has been sunk!", "Player " + m_myID);
 		}
-		else if (controllerMessage.contains(Armada.DESTROYER_NAME))
+		else if (controllerMessage.contains(Message.DESTROYER.getMsg()))
 		{
 			infoBox("Your Destroyer has been sunk!", "Player " + m_myID);
 		}
@@ -282,7 +282,7 @@ public class Player implements Runnable, Observable, Observer
 		}
 
 		// If the controller sent a message other than the internal "SHIPS" message, pass message to opponent
-		if (!controllerMessage.equals("SHIPS"))
+		if (!controllerMessage.equals(Message.SHIPS.getMsg()))
 		{
 			m_logger.info("Sending '" + controllerMessage + "' to opponent.");
 			messageOpponent(controllerMessage);
