@@ -708,12 +708,6 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	@Override
-	public Armada getArmada()
-	{
-		return armada;
-	}
-
-	@Override
 	public int getCurrentTurn()
 	{
 		synchronized (turnMutex)

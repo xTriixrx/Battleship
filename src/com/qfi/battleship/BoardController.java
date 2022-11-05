@@ -24,7 +24,6 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.input.TransferMode;
 import javafx.collections.ObservableList;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.input.ClipboardContent;
 import com.qfi.battleship.Armada.ArmadaType;
 
@@ -119,24 +118,24 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	@FXML
 	private ChoiceBox<String> OrientationChoice;
 
-	private String toSend;
-	private int myTurn = 0;
-	private Observer observer;
-	private char mySymbol = 'A';
-	private int currentTurn = 0;
-	private int opponentTurn = 0;
-	private Armada armada = null;
-	private Armada hitArmada = null;
-	private boolean myTurnFlag = true;
-	private boolean isShipsSet = false;
+	private Armada m_armada;
+	private String m_toSend;
+	private int m_myTurn = 0;
+	private Observer m_observer;
+	private char m_mySymbol = 'A';
+	private int m_currentTurn = 0;
+	private int m_opponentTurn = 0;
+	private final Armada m_hitArmada;
+	private ArmadaAutomator m_automator;
 	private boolean m_connected = false;
-	private String orientation = HORIZONTAL;
-	private ArmadaAutomator automator = null;
-	private final Object turnMutex = new Object();
-	private ObservableList<Node> buttonList = null;
-	private Map<ArmadaType, String> stylesMap = null;
+	private boolean m_myTurnFlag = true;
+	private boolean m_isShipsSet = false;
+	private String m_orientation = HORIZONTAL;
+	private final Object m_turnMutex = new Object();
+	private ObservableList<Node> m_buttonList = null;
+	private Map<ArmadaType, String> m_stylesMap = null;
 	private final Object m_connectedMutex = new Object();
-	private DragDropController dragDropController = null;
+	private DragDropController m_dragDropController = null;
 	private static final Logger m_logger = LogManager.getLogger(BoardController.class);
 	
 	private static final int CLIENT_TURN = 1;
@@ -164,23 +163,23 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	 */
 	BoardController(int type)
 	{
-		armada = new Armada();
-		hitArmada = new Armada();
-		automator = new ArmadaAutomator(armada);
+		m_armada = new Armada();
+		m_hitArmada = new Armada();
+		m_automator = new ArmadaAutomator(m_armada);
 		
 		populateStyles();
 		
 		if (type == 1) // client
 		{
-			myTurn = CLIENT_TURN;
-			mySymbol = CLIENT_SYMBOL;
-			opponentTurn = SERVER_TURN;
+			m_myTurn = CLIENT_TURN;
+			m_mySymbol = CLIENT_SYMBOL;
+			m_opponentTurn = SERVER_TURN;
 		}
 		else if (type == 2) // server
 		{
-			myTurn = SERVER_TURN;
-			mySymbol = SERVER_SYMBOL;
-			opponentTurn = CLIENT_TURN;
+			m_myTurn = SERVER_TURN;
+			m_mySymbol = SERVER_SYMBOL;
+			m_opponentTurn = CLIENT_TURN;
 		}
 	}
 
@@ -192,8 +191,11 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	@Override
 	public void initialize(URL location, ResourceBundle resources)
 	{
-		buttonList = playerGrid.getChildren();
-		
+		m_buttonList = playerGrid.getChildren();
+		m_dragDropController = new DragDropController(m_buttonList, m_armada, m_stylesMap);
+		autoShips.setStyle(AUTO_SHIPS_STYLE);
+
+		// Initialize each opponent button to be clickable & disable until game starts
 		for (Node node : opponentGrid.getChildren())
 		{
 			if (node.getId() != null)
@@ -203,6 +205,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 			}
 		}
 
+		// If not connected to opponent, set text to disconnected
 		synchronized (m_connectedMutex)
 		{
 			if (!m_connected)
@@ -223,10 +226,6 @@ public class BoardController implements Initializable, Observer, Observable, Con
 				connectedText.setFill(CONNECTED_COLOR);
 			}
 		}
-		
-		dragDropController = new DragDropController(buttonList, armada, stylesMap);
-		
-		autoShips.setStyle(AUTO_SHIPS_STYLE);
 
 		// Add event hander's for each drag and drop image & auto ships button
 		destroyerImage.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, destroyerClickEvent);
@@ -240,140 +239,9 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		OrientationChoice.getItems().addAll(HORIZONTAL, VERTICAL);
 		OrientationChoice.getSelectionModel().selectFirst();
 
-		// Set the orientation value based on what is selected
+		// Set the m_orientation value based on what is selected
 		OrientationChoice.getSelectionModel().selectedItemProperty()
-				.addListener((observable, oldValue, newValue) -> orientation = newValue);
-	}
-
-	/**
-	 * 
-	 * @param pos
-	 * @param hitOrMiss
-	 */
-	public void updateOpponentGrid(String pos, String hitOrMiss)
-	{
-		for (Node node : opponentGrid.getChildren())
-		{
-			if (node.getId() != null && node.getId().equals(pos))
-			{
-				if (hitOrMiss.equals(Message.HIT.getMsg()))
-				{
-					node.setStyle(BUTTON_HIT_STYLE);
-				}
-				else if (hitOrMiss.equals(Message.MISS.getMsg()))
-				{
-					node.setStyle(BUTTON_MISS_STYLE);
-				}
-
-				break;
-			}
-		}
-	}
-	
-	/**
-	 * 
-	 * @param shipText
-	 * @param isShipSunk
-	 * @return boolean
-	 */
-	public boolean update(Text shipText, boolean isShipSunk)
-	{
-		boolean justSunk = false;
-		
-		// If the shipText has not been struck out and the ship has sunk, we have an update
-		if (!shipText.isStrikethrough() && isShipSunk)
-		{
-			justSunk = true;
-			setSunkShipText(shipText);
-			
-			m_logger.debug(shipText.getText() + " has sunk.");
-			
-			// If armada has sunk, the game is over
-			if (armada.isArmadaSunk())
-			{
-				observer.update(Message.OVER.getMsg());
-			}
-			else // notify observer to share sunk ship detail to opponent
-			{
-				String positions = "";
-				switch (shipText.getText().toUpperCase())
-				{
-					case Armada.CARRIER_NAME:
-						positions = hitArmada.getCarrierPositions();
-						break;
-					case Armada.CRUISER_NAME:
-						positions = hitArmada.getCruiserPositions();
-						break;
-					case Armada.DESTROYER_NAME:
-						positions = hitArmada.getDestroyerPositions();
-						break;
-					case Armada.SUBMARINE_NAME:
-						positions = hitArmada.getSubmarinePositions();
-						break;
-					case Armada.BATTLESHIP_NAME:
-						positions = hitArmada.getBattleshipPositions();
-						break;
-					default:
-						m_logger.error("Received unknown ship of type: " + shipText.getText().toUpperCase() + ".");
-				}
-
-				observer.update(shipText.getText().toUpperCase() + " " + positions);
-			}
-		}
-		
-		return justSunk;
-	}
-
-	/**
-	 * 
-	 * @param pos
-	 * @param hitOrMiss
-	 */
-	public void updatePlayerGrid(String pos, String hitOrMiss)
-	{
-		String playerPosition = "P" + pos;
-
-		for (Node node : playerGrid.getChildren())
-		{
-			if (node.getId() != null && node.getId().equals(playerPosition))
-			{
-				if (hitOrMiss.equals(Message.HIT.getMsg()))
-				{
-					boolean updated = false;
-					node.setMouseTransparent(false);
-					node.setStyle(BUTTON_HIT_STYLE);
-
-					updated = update(playerCruiser, armada.isCruiserSunk());
-
-					if (!updated)
-					{
-						updated = update(playerCarrier, armada.isCarrierSunk());
-					}
-
-					if (!updated)
-					{
-						updated = update(playerDestroyer, armada.isDestroyerSunk());
-					}
-
-					if (!updated)
-					{
-						updated = update(playerSubmarine, armada.isSubmarineSunk());
-					}
-
-					if (!updated)
-					{
-						update(playerBattleship, armada.isBattleshipSunk());
-					}
-				}
-				else if (hitOrMiss.equals(Message.MISS.getMsg()))
-				{
-					node.setMouseTransparent(false);
-					node.setStyle(BUTTON_MISS_STYLE);
-				}
-
-				break;
-			}
-		}
+				.addListener((observable, oldValue, newValue) -> m_orientation = newValue);
 	}
 
 	/**
@@ -408,7 +276,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		}
 		else if (observableMessage.equals(Message.SET.getMsg()))
 		{
-			isShipsSet = true;
+			m_isShipsSet = true;
 			for (Node node : opponentGrid.getChildren())
 			{
 				if (node.getId() != null)
@@ -437,9 +305,9 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		{
 			setSunkShipText(opponentDestroyer);
 		}
-		else if (getCurrentTurn() == myTurn && myTurnFlag)
+		else if (getCurrentTurn() == m_myTurn && m_myTurnFlag)
 		{
-			StringBuilder boardPosition = new StringBuilder(toSend);
+			StringBuilder boardPosition = new StringBuilder(m_toSend);
 
 			if (boardPosition.length() == 4)
 			{
@@ -451,65 +319,183 @@ public class BoardController implements Initializable, Observer, Observable, Con
 			}
 
 			updateOpponentGrid(boardPosition.toString(), observableMessage);
-			setCurrentTurn(opponentTurn);
+			setCurrentTurn(m_opponentTurn);
 		}
-		else if (getCurrentTurn() == opponentTurn)
+		else if (getCurrentTurn() == m_opponentTurn)
 		{
-			String hitOrMiss;
-			String opponentGuess;
-			StringBuilder opponentBoardGuess = new StringBuilder(observableMessage);
-
-			opponentBoardGuess.deleteCharAt(0);
-			if (opponentBoardGuess.length() == 3)
-			{
-				opponentBoardGuess.deleteCharAt(2);
-			}
-			else if (opponentBoardGuess.length() == 4)
-			{
-				opponentBoardGuess.deleteCharAt(3);
-			}
-
-			opponentGuess = opponentBoardGuess.toString();
-			boolean isHit = armada.calculateHit(opponentGuess);
-
-			if (isHit)
-			{
-				hitOrMiss = Message.HIT.getMsg();
-				String ship = armada.updateArmada(opponentGuess);
-				addHitShipPosition(ship, opponentGuess);
-			}
-			else
-			{
-				hitOrMiss = Message.MISS.getMsg();
-			}
-
-			updatePlayerGrid(opponentGuess, hitOrMiss);
-
-			setCurrentTurn(myTurn);
-			myTurnFlag = false;
-			observer.update(hitOrMiss);
+			opponentGuessProtocol(observableMessage);
 		}
 	}
 
-	private void addHitShipPosition(String ship, String boardPosition)
+	/**
+	 *
+	 * @param opponentMessage
+	 */
+	private void opponentGuessProtocol(String opponentMessage)
+	{
+		String ship = "";
+		String opponentGuess;
+		String hitOrMissMessage;
+		StringBuilder opponentBoardGuess = new StringBuilder(opponentMessage);
+
+		// Remove prepended & appended characters: OA1X -> A1
+		opponentBoardGuess.deleteCharAt(0);
+		if (opponentBoardGuess.length() == 3)
+		{
+			opponentBoardGuess.deleteCharAt(2);
+		}
+		else if (opponentBoardGuess.length() == 4)
+		{
+			opponentBoardGuess.deleteCharAt(3);
+		}
+
+		// Determine if opponent guess was a hit or miss
+		opponentGuess = opponentBoardGuess.toString();
+		boolean isHit = m_armada.calculateHit(opponentGuess);
+
+		if (isHit)
+		{
+			hitOrMissMessage = Message.HIT.getMsg();
+			ship = m_armada.updateArmada(opponentGuess);
+			addHitShipPosition(ship, opponentGuess);
+		}
+		else
+		{
+			hitOrMissMessage = Message.MISS.getMsg();
+		}
+
+		updatePlayerGrid(opponentGuess, hitOrMissMessage);
+		handleSunkShip(ship);
+
+		setCurrentTurn(m_myTurn);
+		m_myTurnFlag = false;
+		m_observer.update(hitOrMissMessage);
+	}
+
+	/**
+	 *
+	 * @param pos
+	 * @param hitOrMiss
+	 */
+	private void updatePlayerGrid(String pos, String hitOrMiss)
+	{
+		String playerPosition = "P" + pos;
+
+		for (Node node : playerGrid.getChildren())
+		{
+			if (node.getId() != null && node.getId().equals(playerPosition))
+			{
+				if (hitOrMiss.equals(Message.HIT.getMsg()))
+				{
+					node.setMouseTransparent(false);
+					node.setStyle(BUTTON_HIT_STYLE);
+				}
+				else if (hitOrMiss.equals(Message.MISS.getMsg()))
+				{
+					node.setMouseTransparent(false);
+					node.setStyle(BUTTON_MISS_STYLE);
+				}
+
+				break;
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param pos
+	 * @param hitOrMiss
+	 */
+	private void updateOpponentGrid(String pos, String hitOrMiss)
+	{
+		for (Node node : opponentGrid.getChildren())
+		{
+			if (node.getId() != null && node.getId().equals(pos))
+			{
+				if (hitOrMiss.equals(Message.HIT.getMsg()))
+				{
+					node.setStyle(BUTTON_HIT_STYLE);
+				}
+				else if (hitOrMiss.equals(Message.MISS.getMsg()))
+				{
+					node.setStyle(BUTTON_MISS_STYLE);
+				}
+
+				break;
+			}
+		}
+	}
+
+	private void handleSunkShip(String ship)
 	{
 		switch (ship)
 		{
-			case Armada.CARRIER_NAME:
-				hitArmada.addToCarrier(boardPosition);
-				break;
 			case Armada.CRUISER_NAME:
-				hitArmada.addToCruiser(boardPosition);
+				updateSunkShip(playerCruiser, m_armada.isCruiserSunk());
+				break;
+			case Armada.CARRIER_NAME:
+				updateSunkShip(playerCarrier, m_armada.isCarrierSunk());
 				break;
 			case Armada.DESTROYER_NAME:
-				hitArmada.addToDestroyer(boardPosition);
+				updateSunkShip(playerDestroyer, m_armada.isDestroyerSunk());
 				break;
 			case Armada.SUBMARINE_NAME:
-				hitArmada.addToSubmarine(boardPosition);
+				updateSunkShip(playerSubmarine, m_armada.isSubmarineSunk());
 				break;
 			case Armada.BATTLESHIP_NAME:
-				hitArmada.addToBattleship(boardPosition);
+				updateSunkShip(playerBattleship, m_armada.isBattleshipSunk());
 				break;
+			default:
+				m_logger.error("Received unknown ship of type: " + ship + ".");
+		}
+	}
+
+	/**
+	 *
+	 * @param shipText
+	 * @param isShipSunk
+	 * @return boolean
+	 */
+	public void updateSunkShip(Text shipText, boolean isShipSunk)
+	{
+		// If the shipText has not been struck out and the ship has sunk, we have an update
+		if (!shipText.isStrikethrough() && isShipSunk)
+		{
+			setSunkShipText(shipText);
+
+			m_logger.debug(shipText.getText() + " has sunk.");
+
+			// If m_armada has sunk, the game is over
+			if (m_armada.isArmadaSunk())
+			{
+				m_observer.update(Message.OVER.getMsg());
+			}
+			else // notify m_observer to share sunk ship detail to opponent
+			{
+				String positions = "";
+				switch (shipText.getText().toUpperCase())
+				{
+					case Armada.CARRIER_NAME:
+						positions = m_hitArmada.getCarrierPositions();
+						break;
+					case Armada.CRUISER_NAME:
+						positions = m_hitArmada.getCruiserPositions();
+						break;
+					case Armada.DESTROYER_NAME:
+						positions = m_hitArmada.getDestroyerPositions();
+						break;
+					case Armada.SUBMARINE_NAME:
+						positions = m_hitArmada.getSubmarinePositions();
+						break;
+					case Armada.BATTLESHIP_NAME:
+						positions = m_hitArmada.getBattleshipPositions();
+						break;
+					default:
+						m_logger.error("Received unknown ship of type: " + shipText.getText().toUpperCase() + ".");
+				}
+
+				m_observer.update(shipText.getText().toUpperCase() + " " + positions);
+			}
 		}
 	}
 
@@ -606,12 +592,12 @@ public class BoardController implements Initializable, Observer, Observable, Con
 						dropImage(type, (Button) target, style, size);
 						image.setDisable(true);
 
-						if (armada.isCruiserSet() && armada.isCarrierSet() &&
-							armada.isSubmarineSet() && armada.isDestroyerSet() &&
-							armada.isBattleshipSet())
+						if (m_armada.isCruiserSet() && m_armada.isCarrierSet() &&
+							m_armada.isSubmarineSet() && m_armada.isDestroyerSet() &&
+							m_armada.isBattleshipSet())
 						{
-
-							observer.update(Message.SHIPS.getMsg());
+							m_armada.logArmadaPosition();
+							m_observer.update(Message.SHIPS.getMsg());
 						}
 					}
 					
@@ -633,13 +619,13 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	{
 		boolean valid = false;
 		
-		if (orientation.equalsIgnoreCase(HORIZONTAL))
+		if (m_orientation.equalsIgnoreCase(HORIZONTAL))
 		{
-			valid = dragDropController.freeStrideHorizontal(target, size);
+			valid = m_dragDropController.freeStrideHorizontal(target, size);
 		}
-		else if (orientation.equalsIgnoreCase(VERTICAL))
+		else if (m_orientation.equalsIgnoreCase(VERTICAL))
 		{
-			valid = dragDropController.freeStrideVertical(target, size);
+			valid = m_dragDropController.freeStrideVertical(target, size);
 		}
 		
 		return valid;
@@ -654,13 +640,13 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	private void highlightImage(Button target, String dragStyle, int size)
 	{
 
-		if (orientation.equalsIgnoreCase(HORIZONTAL))
+		if (m_orientation.equalsIgnoreCase(HORIZONTAL))
 		{
-			dragDropController.highlightHorizontal(target, dragStyle, size);
+			m_dragDropController.highlightHorizontal(target, dragStyle, size);
 		}
-		else if (orientation.equalsIgnoreCase(VERTICAL))
+		else if (m_orientation.equalsIgnoreCase(VERTICAL))
 		{
-			dragDropController.highlightVertical(target, dragStyle, size);
+			m_dragDropController.highlightVertical(target, dragStyle, size);
 		}
 	}
 	
@@ -670,13 +656,13 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	 */
 	private void unHighlightImage(Button target)
 	{
-		if (orientation.equalsIgnoreCase(HORIZONTAL))
+		if (m_orientation.equalsIgnoreCase(HORIZONTAL))
 		{
-			dragDropController.unhighlightHorizontal(target);
+			m_dragDropController.unhighlightHorizontal(target);
 		}
-		else if (orientation.equalsIgnoreCase(VERTICAL))
+		else if (m_orientation.equalsIgnoreCase(VERTICAL))
 		{
-			dragDropController.unhighlightVertical(target);
+			m_dragDropController.unhighlightVertical(target);
 		}
 	}
 	
@@ -689,13 +675,40 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	 */
 	private void dropImage(ArmadaType type, Button target, String dropStyle, int size)
 	{
-		if (orientation.equalsIgnoreCase(HORIZONTAL))
+		if (m_orientation.equalsIgnoreCase(HORIZONTAL))
 		{
-			dragDropController.dropHorizontal(type, target, dropStyle, size);
+			m_dragDropController.dropHorizontal(type, target, dropStyle, size);
 		}
-		else if (orientation.equalsIgnoreCase(VERTICAL))
+		else if (m_orientation.equalsIgnoreCase(VERTICAL))
 		{
-			dragDropController.dropVertical(type, target, dropStyle, size);
+			m_dragDropController.dropVertical(type, target, dropStyle, size);
+		}
+	}
+
+	/**
+	 *
+	 * @param ship
+	 * @param boardPosition
+	 */
+	private void addHitShipPosition(String ship, String boardPosition)
+	{
+		switch (ship)
+		{
+			case Armada.CARRIER_NAME:
+				m_hitArmada.addToCarrier(boardPosition);
+				break;
+			case Armada.CRUISER_NAME:
+				m_hitArmada.addToCruiser(boardPosition);
+				break;
+			case Armada.DESTROYER_NAME:
+				m_hitArmada.addToDestroyer(boardPosition);
+				break;
+			case Armada.SUBMARINE_NAME:
+				m_hitArmada.addToSubmarine(boardPosition);
+				break;
+			case Armada.BATTLESHIP_NAME:
+				m_hitArmada.addToBattleship(boardPosition);
+				break;
 		}
 	}
 	
@@ -706,16 +719,16 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	{
 		m_logger.info("Controller " + getID() + ": current turn is: " + getCurrentTurn() + ".");
 
-		if (getCurrentTurn() == myTurn && isShipsSet)
+		if (getCurrentTurn() == m_myTurn && m_isShipsSet)
 		{
-			toSend = ((Node) event.getTarget()).getId();
-			toSend = toSend + mySymbol;
+			m_toSend = ((Node) event.getTarget()).getId();
+			m_toSend = m_toSend + m_mySymbol;
 
 			((Button) event.getTarget()).setDisable(true);
 			((Button) event.getTarget()).setMouseTransparent(false);
-			m_logger.info("Controller " + getID() + ": sending " + toSend + " to opponent.");
-			myTurnFlag = true;
-			observer.update(toSend);
+			m_logger.info("Controller " + getID() + ": sending " + m_toSend + " to opponent.");
+			m_myTurnFlag = true;
+			m_observer.update(m_toSend);
 			destroyerImage.setDisable(true);
 			submarineImage.setDisable(true);
 			cruiserImage.setDisable(true);
@@ -785,15 +798,18 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	 */
 	private final EventHandler<MouseEvent> automateArmada = event ->
 	{
+		autoShips.setDisable(true);
 		destroyerImage.setDisable(true);
 		submarineImage.setDisable(true);
 		cruiserImage.setDisable(true);
 		battleshipImage.setDisable(true);
 		carrierImage.setDisable(true);
-		automator.automateArmadaPlacement(buttonList, stylesMap);
-		armada.logArmadaPosition();
-		autoShips.setDisable(true);
-		observer.update(Message.SHIPS.getMsg());
+
+		m_automator.automateArmadaPlacement(m_buttonList, m_stylesMap);
+		m_armada.logArmadaPosition();
+
+		// Signals player instance that the ships have been placed.
+		m_observer.update(Message.SHIPS.getMsg());
 	};
 
 	/**
@@ -801,35 +817,51 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	 */
 	private void populateStyles()
 	{
-		stylesMap = new HashMap<>();
-		stylesMap.put(ArmadaType.DESTROYER, DESTROYER_SET_STYLE);
-		stylesMap.put(ArmadaType.SUBMARINE, SUBMARINE_SET_STYLE);
-		stylesMap.put(ArmadaType.CRUISER, CRUISER_SET_STYLE);
-		stylesMap.put(ArmadaType.BATTLESHIP, BATTLESHIP_SET_STYLE);
-		stylesMap.put(ArmadaType.CARRIER, CARRIER_SET_STYLE);
+		m_stylesMap = new HashMap<>();
+		m_stylesMap.put(ArmadaType.DESTROYER, DESTROYER_SET_STYLE);
+		m_stylesMap.put(ArmadaType.SUBMARINE, SUBMARINE_SET_STYLE);
+		m_stylesMap.put(ArmadaType.CRUISER, CRUISER_SET_STYLE);
+		m_stylesMap.put(ArmadaType.BATTLESHIP, BATTLESHIP_SET_STYLE);
+		m_stylesMap.put(ArmadaType.CARRIER, CARRIER_SET_STYLE);
 	}
 
+	/**
+	 * Sets the current turn.
+	 *
+	 * @param t - The turn for which the internal turn value should be set to.
+	 */
 	@Override
 	public void setCurrentTurn(int t)
 	{
-		synchronized (turnMutex)
+		synchronized (m_turnMutex)
 		{
-			currentTurn = t;
+			m_currentTurn = t;
 		}
 	}
 
+	/**
+	 * Returns an integer representing the current turn.
+	 *
+	 * @return int - The value of the current turn.
+	 */
+	@Override
 	public int getCurrentTurn()
 	{
 		int turn = 0;
 
-		synchronized (turnMutex)
+		synchronized (m_turnMutex)
 		{
-			turn = currentTurn;
+			turn = m_currentTurn;
 		}
 
 		return turn;
 	}
 
+	/**
+	 * Initializes the passed button to add the mouseClickEvent event to its event handler.
+	 *
+	 * @param b - A button object to initialize and add a mouse event to.
+	 */
 	private void initMouseEvent(Button b)
 	{
 		b.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_CLICKED, mouseClickEvent);
@@ -841,25 +873,30 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	public void shutdown()
 	{
 		Platform.exit();
-		observer.update(Message.SHUTDOWN.getMsg());
+		m_observer.update(Message.SHUTDOWN.getMsg());
 	}
 
+	/**
+	 * When a ship has sunk, this method is called in order to set some Text object to the color RED and
+	 * with a strikethrough.
+	 *
+	 * @param ship - The Text object to update.
+	 */
 	private void setSunkShipText(Text ship)
 	{
 		ship.setFill(SUNK_COLOR);
 		ship.setStrikethrough(true);
 	}
 
-	@Override
-	public Armada getArmada()
-	{
-		return armada;
-	}
-
+	/**
+	 * Registers the controllers Observer reference to the passed object.
+	 *
+	 * @param observer An Observer instance that the Observable instance needs to update.
+	 */
 	@Override
 	public void register(Observer observer)
 	{
-		this.observer = observer;
+		m_observer = observer;
 	}
 
 	/**

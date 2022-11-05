@@ -289,7 +289,7 @@ public class Player implements Runnable, Observable, Observer
 
 			m_logger.info("All ships are set!");
 			isSet = true;
-			m_controller.getArmada().logArmadaPosition();
+
 			infoBox("Ships are Set!", PLAYER_HEADER + m_myID);
 		}
 	}

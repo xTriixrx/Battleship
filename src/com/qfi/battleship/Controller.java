@@ -23,13 +23,6 @@ public interface Controller
 	public void shutdown();
 
 	/**
-	 * Returns the controllers' armada object.
-	 *
-	 * @return Armada - An armada object.
-	 */
-	public Armada getArmada();
-
-	/**
 	 * Returns the current turn.
 	 *
 	 * @return int - An integer representing the current turn of either the server or client.
