@@ -63,7 +63,3 @@ cp target/battleship-1.0.0.jar lib
 # If you are starting as the client to play a real opponent on port 5000:
 ./scripts/startClient.sh javafx-XX/lib lib 192.168.1.1 5000 false
 ```
-
-### Windows Instruction's
-
-<p align="center">Windows Instructions will be provided shortly.</p>
