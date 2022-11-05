@@ -96,15 +96,20 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	/**
-	 * 
+	 * The main automated game loop that will continue making guesses until the game is over.
 	 */
 	public void run()
 	{
+		// Wait for "CONNECTED" message from observer
 		waitForConnection();
+
 		logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Submitting SHIPS flag to m_observer to signify automated ship placement has completed.");
 		m_observer.update(Message.SHIPS.getMsg());
+
+		// Wait for opponents "SET" message representing ships have been set.
 		waitForShipSet();
 
+		// While the game is active, continue making guesses and wait until it is the automated controllers' turn.
 		while (!m_shutdown)
 		{
 			if (getCurrentTurn() == m_myTurn && !myTurnStatus())
@@ -118,8 +123,9 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	/**
+	 * Submits a guess to the opponent and adds the guess to internal tracking.
 	 *
-	 * @param guess
+	 * @param guess - A position representing some guess that will be submitted to the opponent.
 	 */
 	private void submitAndAddGuess(String guess)
 	{
@@ -131,7 +137,8 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	/**
-	 *
+	 * This method generates and submits a guess to the opponent based off of the current state being tracked
+	 * by the automated controller.
 	 */
 	public void makeGuess()
 	{
@@ -139,44 +146,38 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 
 		if (isShipInFocus())
 		{
+			String position;
 			m_shipSunk = false;
-
-			String position = "";
-			List<String> availablePositions = null;
 			
 			String lastPosition = m_latestGuess;
 			
-			logger.info("HIT SHIP POSITIONS: " + m_hitShipPositions);
-			
-			if (m_hitShipPositions.contains(lastPosition) && m_hitShipPositions.size() > 1) // hit multiple sections
+			logger.debug("HIT SHIP POSITIONS: " + m_hitShipPositions);
+
+			// If multiple sections have been hit, attempt to go down that direction
+			if (m_hitShipPositions.contains(lastPosition) && m_hitShipPositions.size() > 1)
 			{
-				logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": LAST POSITION HIT & MULTIPLE HITS");
+				logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": LAST POSITION HIT & MULTIPLE HITS");
 				String prevHitPosition = m_hitShipPositions.get(m_hitShipPositions.indexOf(lastPosition) - 1);
 				
 				position = getNextPosition(lastPosition,
 					calculateDirection(lastPosition, prevHitPosition));
 
-				// If next position in direction is already guessed, we've run off the hit ship
+				// If next position in direction is already guessed or empty, we've run off the hit ship
 				if (isGuessedPosition(position) || position.isEmpty())
 				{
-					String firstHitPosition = m_hitShipPositions.get(0);
-					String secondHitPosition = m_hitShipPositions.get(1);
-
-					position = performDirectionPositionProtocol(firstHitPosition, secondHitPosition, firstHitPosition);
+					position = runOffProtocol();
 				}
 			}
+			// If last guess was missed with multiple hits, we have ran off the target
 			else if (!m_hitShipPositions.contains(lastPosition) && m_hitShipPositions.size() > 1) // ran off
 			{
-				logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": LAST POSITION MISSED & MULTIPLE HITS");
-
-				String firstHitPosition = m_hitShipPositions.get(0);
-				String secondHitPosition = m_hitShipPositions.get(1);
-
-				position = performDirectionPositionProtocol(firstHitPosition, firstHitPosition, secondHitPosition);
+				logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": LAST POSITION MISSED & MULTIPLE HITS");
+				position = runOffProtocol();
 			}
 			else
 			{
-				logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": CROSS POSITION");
+				// Only one position has been hit, perform a cross pattern guess
+				logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": CROSS POSITION");
 				position = performCrossPositionProtocol(m_hitShipPositions.get(0));
 			}
 
@@ -186,6 +187,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			return;
 		}
 
+		// Perform a random guess
 		m_latestGuess = getRandomPosition();
 		submitAndAddGuess(m_latestGuess);
 
@@ -247,23 +249,30 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	/**
+	 * After the automated player has submitted its own guess, the player instance managing the automated
+	 * controller will receive an update from the opponent, and if it is the automated controller's turn, then
+	 * it must be either a "HIT" or a "MISS" message based on the automated guess. Based on that information,
+	 * the automated controller will update its internal tracking of hit positions and state tracking to help
+	 * with the next automated guess.
 	 *
-	 * @param opponentMessage
+	 * @param opponentMessage - A string based message "HIT" or "MISS" sent by the opponent.
 	 */
 	private void automatedPlayerProtocol(String opponentMessage)
 	{
 		waitForTurn();
 
+		// Set the ship focus if you just hit a position
 		if (opponentMessage.equalsIgnoreCase(Message.HIT.getMsg()) && !isShipInFocus())
 		{
 			setShipFocus(true);
 		}
-		else if (isShipInFocus() && m_hitShipPositions.isEmpty())
+		else if (isShipInFocus() && m_hitShipPositions.isEmpty()) // turn off ship focus if no more ships are tracked
 		{
 			setShipFocus(false);
 			m_shipSunk = false;
 		}
 
+		// If a ship has been hit and not sunk, add the hit to the hit tracking list
 		if (opponentMessage.equalsIgnoreCase(Message.HIT.getMsg()) && isShipInFocus() && !m_shipSunk)
 		{
 			logger.debug("Adding position " + m_latestGuess + " to hit positions.");
@@ -274,36 +283,45 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	/**
-	 * 
-	 * @param opponentMessage
+	 * This protocol is called only when the current turn is set to being the opponents turn. During this
+	 * scenario, the opponent will send a guess of a position and the controller must determine if it was
+	 * a hit or a miss. Based on that information, the protocol will submit a message to the opponent
+	 * (indirectly through the player) if the game is over with all ships being sunk, or a ship has sunk.
+	 * If the game proceeds, the controller will at least always send a message back to the opponent
+	 * on whether the guessed position was a "HIT" or a "MISS".
+	 *
+	 * @param opponentMessage - A string based message sent by the opponent.
 	 */
 	private void opponentGuessProtocol(String opponentMessage)
 	{
-		String hitOrMissMessage = "";
-		StringBuilder boardPosition = new StringBuilder(opponentMessage);
+		String opponentGuess;
+		String hitOrMissMessage;
+		StringBuilder opponentBoardGuess = new StringBuilder(opponentMessage);
 
 		// Receive a message such as 'OD5X', only need the position between the message.
-		boardPosition.deleteCharAt(0);
-		if (boardPosition.length() == 3)
+		opponentBoardGuess.deleteCharAt(0);
+		if (opponentBoardGuess.length() == 3)
 		{
-			boardPosition.deleteCharAt(2);
+			opponentBoardGuess.deleteCharAt(2);
 		}
-		else if (boardPosition.length() == 4)
+		else if (opponentBoardGuess.length() == 4)
 		{
-			boardPosition.deleteCharAt(3);
+			opponentBoardGuess.deleteCharAt(3);
 		}
 
-		logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": opponent has fired at position: " + boardPosition);
+		opponentGuess = opponentBoardGuess.toString();
+		logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": opponent has fired at position: " + opponentGuess);
 
-		boolean isHit = m_armada.calculateHit(boardPosition.toString());
-		m_armada.updateArmada(boardPosition.toString());
+		// Determine if opponent guess was a hit or miss
+		boolean isHit = m_armada.calculateHit(opponentGuess);
+		m_armada.updateArmada(opponentGuess);
 		m_armada.logArmadaPosition();
 
 		if (isHit)
 		{
 			hitOrMissMessage = Message.HIT.getMsg();
 
-			// Cases: 1) F |= (T & F) ... 2) F |= (T & T) ... 3) T |= (F & T)
+			// Submits a message to the observer/opponent if a ship has sunk
 			m_isCarrierSunk |= checkShipUpdate((!m_isCarrierSunk && m_armada.isCarrierSunk()), Armada.CARRIER_NAME);
 			m_isCruiserSunk |= checkShipUpdate((!m_isCruiserSunk && m_armada.isCruiserSunk()), Armada.CRUISER_NAME);
 			m_isSubmarineSunk |= checkShipUpdate((!m_isSubmarineSunk && m_armada.isSubmarineSunk()), Armada.SUBMARINE_NAME);
@@ -315,7 +333,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			hitOrMissMessage = Message.MISS.getMsg();
 		}
 
-		//
+		// Submit hit or miss to opponent.
 		m_observer.update(hitOrMissMessage);
 		setTurnStatus(false);
 		setCurrentTurn(m_myTurn);
@@ -326,13 +344,28 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		}
 	}
 
+	/**
+	 * This protocol gets the next guess based on the opposite direction when determined to have run off a multiple
+	 * hit scenario.
+	 *
+	 * @return String - Some guess position based on the opposite direction of the initial run.
+	 */
+	private String runOffProtocol()
+	{
+		String firstHitPosition = m_hitShipPositions.get(0);
+		String secondHitPosition = m_hitShipPositions.get(1);
+
+		// Get the position from the opposite direction from the first position context but inverted direction
+		return performDirectionPositionProtocol(firstHitPosition, secondHitPosition, firstHitPosition);
+	}
 
 	/**
+	 * This protocol gets the next guess based on the direction information provided.
 	 *
-	 * @param posContext
-	 * @param startPos
-	 * @param endPos
-	 * @return
+	 * @param posContext - The current context for the position.
+	 * @param startPos - A position representing the start point.
+	 * @param endPos - A position representing the end point.
+	 * @return - Some position to perform the next guess.
 	 */
 	private String performDirectionPositionProtocol(String posContext, String startPos, String endPos)
 	{
@@ -348,9 +381,10 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	/**
+	 * This protocol gets the possible cross position guesses and chooses one of the positions at random.
 	 *
-	 * @param lastPosition
-	 * @return
+	 * @param lastPosition - The last guessed position that was a hit.
+	 * @return String - Some position to perform the next guess.
 	 */
 	private String performCrossPositionProtocol(String lastPosition)
 	{
@@ -368,8 +402,9 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	/**
+	 * This method will generate a random guess for some position that has not already been guessed.
 	 *
-	 * @return String
+	 * @return String - Returns some randomized position within the grid.
 	 */
 	private String getRandomPosition()
 	{
@@ -391,10 +426,11 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	/**
+	 * This method generates a position guess based on the context position provided and the direction.
 	 *
-	 * @param contextPosition
-	 * @param direction
-	 * @return
+	 * @param contextPosition - The position for where the next guess should be based off of.
+	 * @param direction - The direction of where the next guess should be.
+	 * @return String - A position representing the next guess based on the direction and context position.
 	 */
 	private String getNextPosition(String contextPosition, int direction)
 	{
@@ -432,10 +468,11 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	/**
+	 * Calculates the direction (UP, DOWN, LEFT, RIGHT) of a given start to end position.
 	 *
-	 * @param start
-	 * @param end
-	 * @return
+	 * @param start - A position representing the start point.
+	 * @param end - A position representing the end point.
+	 * @return int - An integer representation of the direction.
 	 */
 	private int calculateDirection(String start, String end)
 	{
@@ -471,9 +508,10 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	/**
+	 * This method will return a list of available positions for guess selection based on some focus position.
 	 *
-	 * @param focusPosition
-	 * @return
+	 * @param focusPosition - The position on the board that is in focus.
+	 * @return {@code List<String>} - A list of valid positions that are within the cross pattern.
 	 */
 	private List<String> getCrossPositions(String focusPosition)
 	{
@@ -501,9 +539,11 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	/**
+	 * This method will iterate through each possible position, determine if it is out of bounds, and if so add
+	 * it to a list of out of bound positions. This list of positions will be returned to the caller.
 	 *
-	 * @param possiblePositions
-	 * @return
+	 * @param possiblePositions - A set of possible positions that may be out of bounds.
+	 * @return {@code List<String>} - A list of all the positions that are out of bounds from the set of possible positions.
 	 */
 	private List<String> outBoundsPositions(List<String> possiblePositions)
 	{
@@ -521,9 +561,10 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	/**
+	 * A boolish method to determine if a given position is out of bounds or not.
 	 *
-	 * @param position
-	 * @return
+	 * @param position - A full board position containing some column and row.
+	 * @return boolean - A flag representing whether the provided position is out of bounds.
 	 */
 	private boolean outBoundsPosition(String position)
 	{
@@ -553,10 +594,11 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	/**
+	 * Creates an opponent's position based on some column and row.
 	 *
-	 * @param column
-	 * @param row
-	 * @return
+	 * @param column - A character representing some column.
+	 * @param row - A number representing some row.
+	 * @return String - The positions representing an opponents' position.
 	 */
 	private String makePosition(char column, int row)
 	{
@@ -570,8 +612,11 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	/**
+	 * This method is called during the update method if an opponents' ship has been determined to be sunk.
+	 * This method will use the positions returned by the opponent to update the internal hit ship positions
+	 * list in order to remove sunken positions.
 	 *
-	 * @param positionsContext
+	 * @param positionsContext - Some message containing positions of a sunken ship.
 	 */
 	private void updateHitPositions(String positionsContext)
 	{
@@ -602,10 +647,12 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	}
 
 	/**
+	 * Checks whether a ship has sunk or not and if so, the player instance is updated to send a message to the
+	 * opponent signifying that the ship has sunk.
 	 *
-	 * @param shipSunk
-	 * @param shipName
-	 * @return boolean
+	 * @param shipSunk - A flag representing whether the ship has sunk or not.
+	 * @param shipName - The name of the ship that may have sunk.
+	 * @return boolean - A flag representing whether the ship sunk and a message was sent.
 	 */
 	private boolean checkShipUpdate(boolean shipSunk, String shipName)
 	{
