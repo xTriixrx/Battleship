@@ -33,10 +33,10 @@ selector capability to enable the ability to add that more advanced selection pr
 These instructions will assume you have Apache Maven installed to pull the dependencies needed in order to play the
 game. If you intend to play with someone else, they will also need to perform these steps on their system and network
 access must be configured in order to connect. Also keep in mind you will have to coordinate with the opponent acting
-as the client in order to connect properly (server player must be run first).
+as the client in order to connect properly (server player must be running first).
 </p>
 
-### Linux Based OS's
+### Linux Instruction's
 
 ```Bash
 # Replace XX with the version of javafx that will be used
@@ -54,13 +54,10 @@ mv lib/javafx-* javafx-XX/lib
 # If you are starting as the server to play a real opponent on port 5000:
 ./scripts/startServer.sh javafx-XX/lib lib 5000 false
 
-# If you are starting as the client to play an automated opponent on port 5000:
-./scripts/startClient.sh javafx-XX/lib lib 127.0.0.1 5000 true
-
 # If you are starting as the client to play a real opponent on port 5000:
 ./scripts/startClient.sh javafx-XX/lib lib 192.168.1.1 5000 false
 ```
 
-### Windows Based OS's
+### Windows Instruction's
 
 <p align="center">Windows Instructions will be provided shortly.</p>
