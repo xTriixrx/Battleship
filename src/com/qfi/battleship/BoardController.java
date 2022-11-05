@@ -928,6 +928,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	/**
 	 * Called by stage when one player closes their respective window.
 	 */
+	@Override
 	public void shutdown()
 	{
 		Platform.exit();
