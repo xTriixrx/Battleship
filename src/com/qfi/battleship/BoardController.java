@@ -360,9 +360,9 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		// If a ship has sunk, or the armada is lost, the controller will submit an update message
 		handleSunkShip(ship);
 
-		setCurrentTurn(m_myTurn);
 		m_myTurnFlag = false;
 		m_observer.update(hitOrMissMessage);
+		setCurrentTurn(m_myTurn);
 	}
 
 	/**
