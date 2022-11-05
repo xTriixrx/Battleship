@@ -28,7 +28,11 @@ import javafx.scene.input.ClipboardContent;
 import com.qfi.battleship.Armada.ArmadaType;
 
 /**
- * 
+ * The BoardController object is a JavaFX GUI controller managing the Armada and board positions
+ * of the player instance this controller is instantiated for. The BoardController and Player instances
+ * will communicate throughout the game submitting each other messages about status of the game and relaying
+ * messages to and from the opponent.
+ *
  * @author Vincent.Nigro
  * @version 1.0.0
  */
@@ -158,8 +162,9 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	private static final String BATTLESHIP_SET_STYLE = "-fx-background-color: #ff007f";
 
 	/**
-	 * 
-	 * @param type
+	 * BoardController constructor.
+	 *
+	 * @param type - The type of player this controller is associated with.
 	 */
 	BoardController(int type)
 	{
@@ -184,9 +189,10 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	}
 
 	/**
-	 * 
-	 * @param location
-	 * @param resources
+	 * Initialization of the JavaFX GUI interface called through the JavaFX runtime.
+	 *
+	 * @param location - The URL where the FXML layout is being referenced.
+	 * @param resources - The resources bundle if any were provided.
 	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources)
@@ -206,26 +212,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		}
 
 		// If not connected to opponent, set text to disconnected
-		synchronized (m_connectedMutex)
-		{
-			if (!m_connected)
-			{
-				connectedText.setText(DISCONNECTED);
-				connectedText.setFill(SUNK_COLOR);
-
-				destroyerImage.setDisable(true);
-				submarineImage.setDisable(true);
-				cruiserImage.setDisable(true);
-				battleshipImage.setDisable(true);
-				carrierImage.setDisable(true);
-				autoShips.setDisable(true);
-			}
-			else
-			{
-				connectedText.setText(CONNECTED);
-				connectedText.setFill(CONNECTED_COLOR);
-			}
-		}
+		disconnectedProtocol();
 
 		// Add event hander's for each drag and drop image & auto ships button
 		destroyerImage.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, destroyerClickEvent);
@@ -245,7 +232,8 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	}
 
 	/**
-	 * 
+	 * An interface method for the player to notify the controller about game status & submit opponent responses.
+	 *
 	 * @param observableMessage - A string based message that contains a message from either the player instance or opponent.
 	 */
 	@Override
@@ -255,24 +243,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 
 		if (observableMessage.equals(Message.CONNECTED.getMsg()))
 		{
-			synchronized (m_connectedMutex)
-			{
-				m_connected = true;
-
-				if (destroyerImage != null)
-				{
-					connectedText.setText(CONNECTED);
-					connectedText.setFill(CONNECTED_COLOR);
-
-					destroyerImage.setDisable(false);
-					submarineImage.setDisable(false);
-					cruiserImage.setDisable(false);
-					battleshipImage.setDisable(false);
-					carrierImage.setDisable(false);
-					autoShips.setDisable(false);
-				}
-			}
-
+			connectedProtocol();
 		}
 		else if (observableMessage.equals(Message.SET.getMsg()))
 		{
@@ -285,41 +256,29 @@ public class BoardController implements Initializable, Observer, Observable, Con
 				}
 			}
 		}
-		else if(observableMessage.contains(Message.CARRIER.getMsg()))
+		else if (observableMessage.contains(Message.CARRIER.getMsg()))
 		{
 			setSunkShipText(opponentCarrier);
 		}
-		else if(observableMessage.contains(Message.BATTLESHIP.getMsg()))
+		else if (observableMessage.contains(Message.BATTLESHIP.getMsg()))
 		{
 			setSunkShipText(opponentBattleship);
 		}
-		else if(observableMessage.contains(Message.CRUISER.getMsg()))
+		else if (observableMessage.contains(Message.CRUISER.getMsg()))
 		{
 			setSunkShipText(opponentCruiser);
 		}
-		else if(observableMessage.contains(Message.SUBMARINE.getMsg()))
+		else if (observableMessage.contains(Message.SUBMARINE.getMsg()))
 		{
 			setSunkShipText(opponentSubmarine);
 		}
-		else if(observableMessage.contains(Message.DESTROYER.getMsg()))
+		else if (observableMessage.contains(Message.DESTROYER.getMsg()))
 		{
 			setSunkShipText(opponentDestroyer);
 		}
 		else if (getCurrentTurn() == m_myTurn && m_myTurnFlag)
 		{
-			StringBuilder boardPosition = new StringBuilder(m_toSend);
-
-			if (boardPosition.length() == 4)
-			{
-				boardPosition.deleteCharAt(3);
-			}
-			else if (boardPosition.length() == 5)
-			{
-				boardPosition.deleteCharAt(4);
-			}
-
-			updateOpponentGrid(boardPosition.toString(), observableMessage);
-			setCurrentTurn(m_opponentTurn);
+			playerGuessProtocol(observableMessage);
 		}
 		else if (getCurrentTurn() == m_opponentTurn)
 		{
@@ -328,8 +287,40 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	}
 
 	/**
+	 * When a button is selected on the GUI for a player, the guess is sent to the opponent.
+	 * If player instance receives an update from the opponent, and it is the players' turn,
+	 * then it must be either a "HIT" or "MISS" message based on the players' guess. Based
+	 * on that information, the player will update its opponents board and set the turn
+	 * back to the opponent.
 	 *
-	 * @param opponentMessage
+	 * @param opponentMessage - A string based message "HIT" or "MISS" sent by the opponent.
+	 */
+	private void playerGuessProtocol(String opponentMessage)
+	{
+		StringBuilder boardPosition = new StringBuilder(m_toSend);
+
+		if (boardPosition.length() == 4)
+		{
+			boardPosition.deleteCharAt(3);
+		}
+		else if (boardPosition.length() == 5)
+		{
+			boardPosition.deleteCharAt(4);
+		}
+
+		updateOpponentGrid(boardPosition.toString(), opponentMessage);
+		setCurrentTurn(m_opponentTurn);
+	}
+
+	/**
+	 * This protocol is called only when the current turn is set to being the opponents turn. During this
+	 * scenario, the opponent will send a guess of a position and the controller must determine if it was
+	 * a hit or a miss. Based on that information, the protocol will submit a message to the opponent
+	 * (indirectly through the player) if the game is over with all ships being sunk, or a ship has sunk.
+	 * If the game proceeds, the controller will at least always send a message back to the opponent
+	 * on whether the guessed position was a "HIT" or a "MISS".
+	 *
+	 * @param opponentMessage - A string based message sent by the opponent.
 	 */
 	private void opponentGuessProtocol(String opponentMessage)
 	{
@@ -365,6 +356,8 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		}
 
 		updatePlayerGrid(opponentGuess, hitOrMissMessage);
+
+		// If a ship has sunk, or the armada is lost, the controller will submit an update message
 		handleSunkShip(ship);
 
 		setCurrentTurn(m_myTurn);
@@ -373,9 +366,11 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	}
 
 	/**
+	 * An updater method which will update a button in the player portion of the grid based on if the
+	 * position guessed by the opponent was a hit or a miss.
 	 *
-	 * @param pos
-	 * @param hitOrMiss
+	 * @param pos - Some position on the player grid that has either been hit or missed.
+	 * @param hitOrMiss - The flag representing whether the opponent hit or missed at the given position.
 	 */
 	private void updatePlayerGrid(String pos, String hitOrMiss)
 	{
@@ -402,9 +397,11 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	}
 
 	/**
+	 * An updater method which will update a button in the opponent portion of the grid based on if the
+	 * position guessed was a hit or a miss.
 	 *
-	 * @param pos
-	 * @param hitOrMiss
+	 * @param pos - Some position on the opponent grid that has either been hit or missed.
+	 * @param hitOrMiss - The flag representing whether the player hit or missed at the given position.
 	 */
 	private void updateOpponentGrid(String pos, String hitOrMiss)
 	{
@@ -426,6 +423,12 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		}
 	}
 
+	/**
+	 * If a ship has been determined to be hit, this method will be called in order to test whether the
+	 * ship has sunk or not.
+	 *
+	 * @param ship - The string representing the ship that has been hit by the opponent.
+	 */
 	private void handleSunkShip(String ship)
 	{
 		switch (ship)
@@ -451,10 +454,13 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	}
 
 	/**
+	 * A method for updating the text board of available ships if a ship has sunk. When a ship has sunk, the
+	 * player instance will receive a message regarding which ship sunk and the positions of the sunken ship.
+	 * If the armada has completely sunk, then the player instance will receive a message of "OVER". Both
+	 * messages to the player instance will be relayed back to the opponent.
 	 *
-	 * @param shipText
-	 * @param isShipSunk
-	 * @return boolean
+	 * @param shipText - A text object to check if the ship has sunk.
+	 * @param isShipSunk - A flag representing whether the armada believes the ship has sunk or not.
 	 */
 	public void updateSunkShip(Text shipText, boolean isShipSunk)
 	{
@@ -465,44 +471,45 @@ public class BoardController implements Initializable, Observer, Observable, Con
 
 			m_logger.debug(shipText.getText() + " has sunk.");
 
+			String positions = "";
+			switch (shipText.getText().toUpperCase())
+			{
+				case Armada.CARRIER_NAME:
+					positions = m_hitArmada.getCarrierPositions();
+					break;
+				case Armada.CRUISER_NAME:
+					positions = m_hitArmada.getCruiserPositions();
+					break;
+				case Armada.DESTROYER_NAME:
+					positions = m_hitArmada.getDestroyerPositions();
+					break;
+				case Armada.SUBMARINE_NAME:
+					positions = m_hitArmada.getSubmarinePositions();
+					break;
+				case Armada.BATTLESHIP_NAME:
+					positions = m_hitArmada.getBattleshipPositions();
+					break;
+				default:
+					m_logger.error("Received unknown ship of type: " + shipText.getText().toUpperCase() + ".");
+			}
+
 			// If m_armada has sunk, the game is over
 			if (m_armada.isArmadaSunk())
 			{
 				m_observer.update(Message.OVER.getMsg());
 			}
-			else // notify m_observer to share sunk ship detail to opponent
+			else
 			{
-				String positions = "";
-				switch (shipText.getText().toUpperCase())
-				{
-					case Armada.CARRIER_NAME:
-						positions = m_hitArmada.getCarrierPositions();
-						break;
-					case Armada.CRUISER_NAME:
-						positions = m_hitArmada.getCruiserPositions();
-						break;
-					case Armada.DESTROYER_NAME:
-						positions = m_hitArmada.getDestroyerPositions();
-						break;
-					case Armada.SUBMARINE_NAME:
-						positions = m_hitArmada.getSubmarinePositions();
-						break;
-					case Armada.BATTLESHIP_NAME:
-						positions = m_hitArmada.getBattleshipPositions();
-						break;
-					default:
-						m_logger.error("Received unknown ship of type: " + shipText.getText().toUpperCase() + ".");
-				}
-
 				m_observer.update(shipText.getText().toUpperCase() + " " + positions);
 			}
 		}
 	}
 
 	/**
+	 * Sets the drag highlighting and un-highlighting for buttons.
 	 *
-	 * @param shipSize
-	 * @param dragStyle
+	 * @param shipSize - The size of the ship being dragged.
+	 * @param dragStyle - The style associated with dragged ship.
 	 */
 	private void setDrag(int shipSize, String dragStyle)
 	{
@@ -510,24 +517,19 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		{
 			if (target.getId() != null)
 			{
-				//
+				// Enables target to accept transfer on drop during drag
 				target.setOnDragOver(event ->
 				{
-					/* data is dragged over the target */
-					/*
-					 * accept it only if it is not dragged from the same node and if it has a string
-					 * data
-					 */
+					// accept drag over the target if it is not dragged from the same node and if it has data
 					if (event.getGestureSource() != target && event.getDragboard().hasString())
 					{
-						/* allow for moving */
 						event.acceptTransferModes(TransferMode.ANY);
 					}
 
 					event.consume();
 				});
 				
-				//
+				// When target is entered, highlight the current stride
 				target.setOnDragEntered(event ->
 				{
 					//
@@ -540,7 +542,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 					event.consume();
 				});
 				
-				//
+				// When target is left, unhighlight the current stride
 				target.setOnDragExited(event ->
 				{
 					unHighlightImage((Button) target);
@@ -551,12 +553,15 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	}
 
 	/**
-	 * 
-	 * @param image
+	 * Configures & enables the passed image to be dragged across the GUI board.
+	 *
+	 * @param image - Some ImageView object representing a drag and droppable ship.
 	 */
-	private void configureDragAndDrop(ImageView image) {
+	private void configureDragAndDrop(ImageView image)
+	{
 		image.setOnDragDetected(event ->
 		{
+			// Enables image to be dragged
 			Dragboard db = image.startDragAndDrop(TransferMode.ANY);
 
 			ClipboardContent content = new ClipboardContent();
@@ -565,18 +570,18 @@ public class BoardController implements Initializable, Observer, Observable, Con
 
 			event.consume();
 		});
-		
-		// Start source drag done
+
 		image.setOnDragDone(Event::consume);
-		// End Source Drag Done
 	}
 	
 	/**
-	 * 
-	 * @param image
-	 * @param type
-	 * @param size
-	 * @param style
+	 * Configures drop event where if the stride is valid, the ship is placed. If the entire armada is also
+	 * set, then the controller will update the player instance.
+	 *
+	 * @param image - Some ImageView object representing a drag and droppable ship.
+	 * @param type - The type of ship represented by the image.
+	 * @param size - The size of the ship.
+	 * @param style - The style to be applied to the ship on drop.
 	 */
 	private void configureDroppedImage(ImageView image, ArmadaType type, int size, String style)
 	{
@@ -586,7 +591,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 			{
 				target.setOnDragDropped(event ->
 				{
-					//
+					// If the drop occurs on a valid stride
 					if (isValidStride(target, size))
 					{
 						dropImage(type, (Button) target, style, size);
@@ -596,12 +601,13 @@ public class BoardController implements Initializable, Observer, Observable, Con
 							m_armada.isSubmarineSet() && m_armada.isDestroyerSet() &&
 							m_armada.isBattleshipSet())
 						{
+							autoShips.setDisable(true);
 							m_armada.logArmadaPosition();
 							m_observer.update(Message.SHIPS.getMsg());
 						}
 					}
 					
-					//
+					// Finish the event
 					event.setDropCompleted(true);
 					event.consume();
 				});
@@ -610,10 +616,11 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	}
 	
 	/**
-	 * 
-	 * @param target
-	 * @param size
-	 * @return boolean
+	 * A boolish function returning whether the stride is a valid set of positions in some orientation.
+	 *
+	 * @param target - The button for which the focus (center) is on.
+	 * @param size - The size of the ship.
+	 * @return boolean - A flag representing whether the stride for a ship is valid set position.
 	 */
 	private boolean isValidStride(Node target, int size)
 	{
@@ -632,10 +639,11 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	}
 	
 	/**
+	 * Calls to the drag and drop controller to highlight some ship drag on GUI in some orientation.
 	 *
-	 * @param target
-	 * @param dragStyle
-	 * @param size
+	 * @param target - The button for which the focus (center) is on.
+	 * @param dragStyle - The style to be applied to the set of buttons where this ship is dragged onto.
+	 * @param size - The size of the ship.
 	 */
 	private void highlightImage(Button target, String dragStyle, int size)
 	{
@@ -651,8 +659,9 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	}
 	
 	/**
-	 * 
-	 * @param target
+	 * Calls to the drag and drop controller to unhighlight some ship drag on GUI in some orientation.
+	 *
+	 * @param target - The button for which the focus (center) is on.
 	 */
 	private void unHighlightImage(Button target)
 	{
@@ -667,11 +676,12 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	}
 	
 	/**
-	 * 
-	 * @param type
-	 * @param target
-	 * @param dropStyle
-	 * @param size
+	 * Calls to the drag and drop controller to drop some ship on GUI in some orientation.
+	 *
+	 * @param type The type of ship within the Armada to be dropped.
+	 * @param target - The button for which the focus (center) is on.
+	 * @param dropStyle - The style to be applied to the set of buttons where this ship should be dropped.
+	 * @param size - The size of the ship.
 	 */
 	private void dropImage(ArmadaType type, Button target, String dropStyle, int size)
 	{
@@ -686,9 +696,11 @@ public class BoardController implements Initializable, Observer, Observable, Con
 	}
 
 	/**
+	 * Adds some position that was determined to be hit on the internal armada object to another armada
+	 * object in order to track hit positions for later use for when the ship is sunk.
 	 *
-	 * @param ship
-	 * @param boardPosition
+	 * @param ship - The name of the ship that was hit.
+	 * @param boardPosition - The position on the board where the ship was hit.
 	 */
 	private void addHitShipPosition(String ship, String boardPosition)
 	{
@@ -711,13 +723,67 @@ public class BoardController implements Initializable, Observer, Observable, Con
 				break;
 		}
 	}
+
+	/**
+	 * If the "CONNECTED" message has not been received upon GUI initialization, then perform the
+	 * disconnected protocol setting the GUI to signify the opponent is not online yet.
+	 */
+	private void disconnectedProtocol()
+	{
+		synchronized (m_connectedMutex)
+		{
+			if (!m_connected)
+			{
+				connectedText.setText(DISCONNECTED);
+				connectedText.setFill(SUNK_COLOR);
+
+				destroyerImage.setDisable(true);
+				submarineImage.setDisable(true);
+				cruiserImage.setDisable(true);
+				battleshipImage.setDisable(true);
+				carrierImage.setDisable(true);
+				autoShips.setDisable(true);
+			}
+			else
+			{
+				connectedText.setText(CONNECTED);
+				connectedText.setFill(CONNECTED_COLOR);
+			}
+		}
+	}
+
+	/**
+	 * If the "CONNECTED" message is received, then the connected protocol updating the players'
+	 * board must be performed.
+	 */
+	private void connectedProtocol()
+	{
+		synchronized (m_connectedMutex)
+		{
+			m_connected = true;
+
+			if (destroyerImage != null)
+			{
+				connectedText.setText(CONNECTED);
+				connectedText.setFill(CONNECTED_COLOR);
+
+				destroyerImage.setDisable(false);
+				submarineImage.setDisable(false);
+				cruiserImage.setDisable(false);
+				battleshipImage.setDisable(false);
+				carrierImage.setDisable(false);
+				autoShips.setDisable(false);
+			}
+		}
+	}
 	
 	/**
-	 * 
+	 * EventHandler for whenever a players' guess is selected (button click on grid) the guess will be
+	 * submitted to the player in order for the player to pass the message to the opponent.
 	 */
 	private final EventHandler<MouseEvent> mouseClickEvent = event ->
 	{
-		m_logger.info("Controller " + getID() + ": current turn is: " + getCurrentTurn() + ".");
+		m_logger.debug("Controller " + getID() + ": current turn is: " + getCurrentTurn() + ".");
 
 		if (getCurrentTurn() == m_myTurn && m_isShipsSet)
 		{
@@ -726,75 +792,66 @@ public class BoardController implements Initializable, Observer, Observable, Con
 
 			((Button) event.getTarget()).setDisable(true);
 			((Button) event.getTarget()).setMouseTransparent(false);
-			m_logger.info("Controller " + getID() + ": sending " + m_toSend + " to opponent.");
+
+			m_logger.debug("Controller " + getID() + ": sending " + m_toSend + " to opponent.");
+
 			m_myTurnFlag = true;
 			m_observer.update(m_toSend);
-			destroyerImage.setDisable(true);
-			submarineImage.setDisable(true);
-			cruiserImage.setDisable(true);
-			battleshipImage.setDisable(true);
-			carrierImage.setDisable(true);
-			autoShips.setDisable(true);
 		}
 	};
 
 	/**
-	 *
+	 * EventHandler for when the destroyerImage has been entered to be drag and dropped.
 	 */
 	private final EventHandler<MouseEvent> destroyerClickEvent = event ->
 	{
-		autoShips.setDisable(true);
 		configureDragAndDrop(destroyerImage);
 		setDrag(Armada.DESTROYER_SIZE, DESTROYER_SET_STYLE);
 		configureDroppedImage(destroyerImage, ArmadaType.DESTROYER, Armada.DESTROYER_SIZE, DESTROYER_SET_STYLE);
 	};
 	
 	/**
-	 *
+	 * EventHandler for when the submarineImage has been entered to be drag and dropped.
 	 */
 	private final EventHandler<MouseEvent> submarineClickEvent = event ->
 	{
-		autoShips.setDisable(true);
 		configureDragAndDrop(submarineImage);
 		setDrag(Armada.SUBMARINE_SIZE, SUBMARINE_SET_STYLE);
 		configureDroppedImage(submarineImage, ArmadaType.SUBMARINE, Armada.SUBMARINE_SIZE, SUBMARINE_SET_STYLE);
 	};
 	
 	/**
-	 *
+	 * EventHandler for when the cruiserImage has been entered to be drag and dropped.
 	 */
 	private final EventHandler<MouseEvent> cruiserClickEvent = event ->
 	{
-		autoShips.setDisable(true);
 		configureDragAndDrop(cruiserImage);
 		setDrag(Armada.CRUISER_SIZE, CRUISER_SET_STYLE);
 		configureDroppedImage(cruiserImage, ArmadaType.CRUISER, Armada.CRUISER_SIZE, CRUISER_SET_STYLE);
 	};
 	
 	/**
-	 * 
+	 * EventHandler for when the battleshipImage has been entered to be drag and dropped.
 	 */
 	private final EventHandler<MouseEvent> battleshipClickEvent = event ->
 	{
-		autoShips.setDisable(true);
 		configureDragAndDrop(battleshipImage);
 		setDrag(Armada.BATTLESHIP_SIZE, BATTLESHIP_SET_STYLE);
 		configureDroppedImage(battleshipImage, ArmadaType.BATTLESHIP, Armada.BATTLESHIP_SIZE, BATTLESHIP_SET_STYLE);
 	};
 	
 	/**
-	 * 
+	 * EventHandler for when the carrierImage has been entered to be drag and dropped.
 	 */
 	private final EventHandler<MouseEvent> carrierClickEvent = event ->
 	{
-		autoShips.setDisable(true);
 		configureDragAndDrop(carrierImage);
 		setDrag(Armada.CARRIER_SIZE, CARRIER_SET_STYLE);
 		configureDroppedImage(carrierImage, ArmadaType.CARRIER, Armada.CARRIER_SIZE, CARRIER_SET_STYLE);
 	};
 	
 	/**
-	 * 
+	 * EventHandler for automating the Armada during a mouse click on the associated button.
 	 */
 	private final EventHandler<MouseEvent> automateArmada = event ->
 	{
@@ -805,6 +862,7 @@ public class BoardController implements Initializable, Observer, Observable, Con
 		battleshipImage.setDisable(true);
 		carrierImage.setDisable(true);
 
+		// Automate the placement of the armada & log positions
 		m_automator.automateArmadaPlacement(m_buttonList, m_stylesMap);
 		m_armada.logArmadaPosition();
 

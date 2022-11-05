@@ -89,13 +89,56 @@ public class ArmadaAutomator
 	{
 		List<String> usedButtons = new ArrayList<>();
 		
-		// Place ships onto player's board
-		placeShip(carrierAdd, usedButtons, Armada.CARRIER_SIZE);
-		placeShip(battleshipAdd, usedButtons, Armada.BATTLESHIP_SIZE);
-		placeShip(cruiserAdd, usedButtons, Armada.CRUISER_SIZE);
-		placeShip(submarineAdd, usedButtons, Armada.SUBMARINE_SIZE);
-		placeShip(destroyerAdd, usedButtons, Armada.DESTROYER_SIZE);
-		
+		// If Carrier is not already set place ship, otherwise add positions to used positions map
+		if (!m_armada.isCarrierSet())
+		{
+			placeShip(carrierAdd, usedButtons, Armada.CARRIER_SIZE);
+		}
+		else
+		{
+			usedButtons.addAll(m_armada.getCarrier());
+		}
+
+		// If Cruiser is not already set place ship, otherwise add positions to used positions map
+		if (!m_armada.isCruiserSet())
+		{
+			placeShip(cruiserAdd, usedButtons, Armada.CRUISER_SIZE);
+		}
+		else
+		{
+			usedButtons.addAll(m_armada.getCruiser());
+		}
+
+		// If Battleship is not already set place ship, otherwise add positions to used positions map
+		if (!m_armada.isBattleshipSet())
+		{
+			placeShip(battleshipAdd, usedButtons, Armada.BATTLESHIP_SIZE);
+		}
+		else
+		{
+			usedButtons.addAll(m_armada.getBattleship());
+		}
+
+		// If Destroyer is not already set place ship, otherwise add positions to used positions map
+		if (!m_armada.isDestroyerSet())
+		{
+			placeShip(destroyerAdd, usedButtons, Armada.DESTROYER_SIZE);
+		}
+		else
+		{
+			usedButtons.addAll(m_armada.getDestroyer());
+		}
+
+		// If Submarine is not already set place ship, otherwise add positions to used positions map
+		if (!m_armada.isSubmarineSet())
+		{
+			placeShip(submarineAdd, usedButtons, Armada.SUBMARINE_SIZE);
+		}
+		else
+		{
+			usedButtons.addAll(m_armada.getSubmarine());
+		}
+
 		// Highlight all players ships that were placed by automator
 		highlightPlacement(buttonList, usedButtons, styles);
 	}
