@@ -8,38 +8,41 @@ import java.security.SecureRandom;
 import org.apache.log4j.LogManager;
 
 /**
- * 
+ * The AutomatedController object is an automated opponent which manages its own armada and response back
+ * to an opponent through its own Player object instance. The AutomatedController and Player instances
+ * will communicate through the game submitting each other messages about status of the game and relay
+ * messages to and from the opponent.
+ *
  * @author Vincent.Nigro
  * @version 1.0.0
  */
 public class AutomatedController implements Runnable, Observer, Observable, Controller
 {
-	private int myTurn = 0;
-	private char mySymbol = 'A';
-	private int currentTurn = 0;
-	private int opponentTurn = 0;
-	private Armada armada = null;
-	private boolean shipSunk = false;
-	private String latestGuess = "";
-	private Observer observer = null;
-	private boolean shutdown = false;
-	private boolean shipFocus = false;
-	private boolean connected = false;
-	private boolean isShipsSet = false;
-	private boolean myTurnFlag = false;
-	private SecureRandom random = null;
-	private boolean isCarrierSunk = false;
-	private boolean isCruiserSunk = false;
-	private boolean isSubmarineSunk = false;
-	private boolean isDestroyerSunk = false;
-	private boolean isBattleshipSunk = false;
-	private ArmadaAutomator automator = null;
-	private List<String> hitShipPositions = null;
-	private List<String> guessedPositions = null;
-	private final Object turnMutex = new Object();
-	private final Object turnSignal = new Object();
-	private final Object shipSetSignal = new Object();
-	private final Object connectionSignal = new Object();
+	private int m_myTurn = 0;
+	private final Armada m_armada;
+	private char m_mySymbol = 'A';
+	private int m_currentTurn = 0;
+	private int m_opponentTurn = 0;
+	private String m_latestGuess = "";
+	private boolean m_shipSunk = false;
+	private Observer m_observer = null;
+	private boolean m_shutdown = false;
+	private final SecureRandom m_random;
+	private boolean m_shipFocus = false;
+	private boolean m_connected = false;
+	private boolean m_isShipsSet = false;
+	private boolean m_myTurnFlag = false;
+	private boolean m_isCarrierSunk = false;
+	private boolean m_isCruiserSunk = false;
+	private boolean m_isSubmarineSunk = false;
+	private boolean m_isDestroyerSunk = false;
+	private boolean m_isBattleshipSunk = false;
+	private final List<String> m_hitShipPositions;
+	private final List <String> m_guessedPositions;
+	private final Object m_turnMutex = new Object();
+	private final Object m_turnSignal = new Object();
+	private final Object m_shipSetSignal = new Object();
+	private final Object m_connectionSignal = new Object();
 
 	private static final int MIN_ROW = 1;
 	private static final int MAX_ROW = 10;
@@ -62,32 +65,32 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	 */
 	AutomatedController(int type)
 	{
-		armada = new Armada();
-		guessedPositions = new ArrayList<>();
-		hitShipPositions = new ArrayList<>();
+		m_armada = new Armada();
+		m_guessedPositions = new ArrayList<>();
+		m_hitShipPositions = new ArrayList<>();
+		ArmadaAutomator automator = new ArmadaAutomator(m_armada);
 
-		automator = new ArmadaAutomator(armada);
 		automator.automateArmadaPlacement();
-		armada.logArmadaPosition();
+		m_armada.logArmadaPosition();
 
 		// byte seed for the SecureRandom object
 		byte[] seed = ByteBuffer.allocate(Long.SIZE / Byte.SIZE)
 			.putLong(System.currentTimeMillis()).array();
 		
-		// Instantiate random object
-		random = new SecureRandom(seed);
+		// Instantiate m_random object
+		m_random = new SecureRandom(seed);
 		
 		if (type == 1) // client
 		{
-			myTurn = CLIENT_TURN;
-			mySymbol = CLIENT_SYMBOL;
-			opponentTurn = SERVER_TURN;
+			m_myTurn = CLIENT_TURN;
+			m_mySymbol = CLIENT_SYMBOL;
+			m_opponentTurn = SERVER_TURN;
 		}
 		else if (type == 2) // server
 		{
-			myTurn = SERVER_TURN;
-			mySymbol = SERVER_SYMBOL;
-			opponentTurn = CLIENT_TURN;
+			m_myTurn = SERVER_TURN;
+			m_mySymbol = SERVER_SYMBOL;
+			m_opponentTurn = CLIENT_TURN;
 		}
 	}
 
@@ -97,13 +100,13 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	public void run()
 	{
 		waitForConnection();
-		logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Submitting SHIPS flag to observer to signify automated ship placement has completed.");
-		observer.update(Message.SHIPS.getMsg());
+		logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Submitting SHIPS flag to m_observer to signify automated ship placement has completed.");
+		m_observer.update(Message.SHIPS.getMsg());
 		waitForShipSet();
 
-		while (!shutdown)
+		while (!m_shutdown)
 		{
-			if (getCurrentTurn() == myTurn && !myTurnStatus())
+			if (getCurrentTurn() == m_myTurn && !m_myTurnStatus())
 			{
 				makeGuess();
 				setTurnStatus(true);
@@ -119,19 +122,19 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 
 		if (isShipInFocus())
 		{
-			shipSunk = false;
+			m_shipSunk = false;
 
 			String position = "";
 			List<String> availablePositions = null;
 			
-			String lastPosition = latestGuess;
+			String lastPosition = m_latestGuess;
 			
-			logger.info("HIT SHIP POSITIONS: " + hitShipPositions);
+			logger.info("HIT SHIP POSITIONS: " + m_hitShipPositions);
 			
-			if (hitShipPositions.contains(lastPosition) && hitShipPositions.size() > 1) // hit multiple sections
+			if (m_hitShipPositions.contains(lastPosition) && m_hitShipPositions.size() > 1) // hit multiple sections
 			{
 				logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": LAST POSITION HIT & MULTIPLE HITS");
-				String prevHitPosition = hitShipPositions.get(hitShipPositions.indexOf(lastPosition) - 1);
+				String prevHitPosition = m_hitShipPositions.get(m_hitShipPositions.indexOf(lastPosition) - 1);
 				
 				position = getNextPosition(lastPosition,
 					calculateDirection(lastPosition, prevHitPosition));
@@ -139,39 +142,39 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 				// If next position in direction is already guessed, we've run off the hit ship
 				if (isGuessedPosition(position) || position.isEmpty())
 				{
-					String firstHitPosition = hitShipPositions.get(0);
-					String secondHitPosition = hitShipPositions.get(1);
+					String firstHitPosition = m_hitShipPositions.get(0);
+					String secondHitPosition = m_hitShipPositions.get(1);
 
 					position = performDirectionPositionProtocol(firstHitPosition, secondHitPosition, firstHitPosition);
 				}
 			}
-			else if (!hitShipPositions.contains(lastPosition) && hitShipPositions.size() > 1) // ran off
+			else if (!m_hitShipPositions.contains(lastPosition) && m_hitShipPositions.size() > 1) // ran off
 			{
 				logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": LAST POSITION MISSED & MULTIPLE HITS");
 
-				String firstHitPosition = hitShipPositions.get(0);
-				String secondHitPosition = hitShipPositions.get(1);
+				String firstHitPosition = m_hitShipPositions.get(0);
+				String secondHitPosition = m_hitShipPositions.get(1);
 
 				position = performDirectionPositionProtocol(firstHitPosition, firstHitPosition, secondHitPosition);
 			}
 			else
 			{
 				logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": CROSS POSITION");
-				position = performCrossPositionProtocol(hitShipPositions.get(0));
+				position = performCrossPositionProtocol(m_hitShipPositions.get(0));
 			}
 
-			latestGuess = position;
-			submitAndAddGuess(latestGuess);
+			m_latestGuess = position;
+			submitAndAddGuess(m_latestGuess);
 			
 			return;
 		}
 
-		latestGuess = getRandomPosition();
-		submitAndAddGuess(latestGuess);
+		m_latestGuess = getRandomPosition();
+		submitAndAddGuess(m_latestGuess);
 
-		synchronized (turnSignal)
+		synchronized (m_turnSignal)
 		{
-			turnSignal.notifyAll();
+			m_turnSignal.notifyAll();
 		}
 	}
 
@@ -194,7 +197,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 
 		// Add guess and submit to opponent
 		addGuessedPosition(guess);
-		observer.update(guess);
+		m_observer.update(guess);
 	}
 
 
@@ -203,7 +206,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		String position;
 		List<String> availablePositions = getCrossPositions(lastPosition);
 
-		position = availablePositions.get(random.nextInt(availablePositions.size()));
+		position = availablePositions.get(m_random.nextInt(availablePositions.size()));
 
 		if (position.isEmpty())
 		{
@@ -354,7 +357,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 
 		position += column;
 		position += row;
-		position += mySymbol;
+		position += m_mySymbol;
 
 		return position;
 	}
@@ -372,11 +375,11 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		
 		do
 		{
-			row = random.nextInt(10) + 1;
-			column = random.nextInt(10) + 1;
+			row = m_random.nextInt(10) + 1;
+			column = m_random.nextInt(10) + 1;
 			columnChar = (char) (column + 64);
 			position = makePosition(columnChar, row);
-			logger.trace(AUTOMATED_CONTROLLER_LOG_HEADER + ": Attempting to generate a random position: " + position + ".");
+			logger.trace(AUTOMATED_CONTROLLER_LOG_HEADER + ": Attempting to generate a m_random position: " + position + ".");
 		} while (isGuessedPosition(position));
 		
 		return position;
@@ -405,7 +408,7 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			}
 
 			String pos = makePosition(column, row);
-			hitShipPositions.remove(pos);
+			m_hitShipPositions.remove(pos);
 			logger.trace(AUTOMATED_CONTROLLER_LOG_HEADER + ": Removed: " + pos + " from hit ship positions map.");
 		}
 	}
@@ -419,61 +422,61 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 		{
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Player ships have been set!");
 
-			synchronized (shipSetSignal)
+			synchronized (m_shipSetSignal)
 			{
-				isShipsSet = true;
-				shipSetSignal.notifyAll();
+				m_isShipsSet = true;
+				m_shipSetSignal.notifyAll();
 			}
 		}
 		else if (update.equals(Message.CONNECTED.getMsg()))
 		{
-			synchronized (connectionSignal)
+			synchronized (m_connectionSignal)
 			{
-				connected = true;
-				connectionSignal.notifyAll();
+				m_connected = true;
+				m_connectionSignal.notifyAll();
 			}
 		}
 		else if (update.contains(Message.CARRIER.getMsg()))
 		{
-			shipSunk = true;
+			m_shipSunk = true;
 			logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": Opponent's " + Armada.CARRIER_NAME + " has sunk!");
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": " + Armada.CARRIER_NAME + ": " + update);
 			updateHitPositions(update);
-			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Current hit ships mapping: " + hitShipPositions);
+			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Current hit ships mapping: " + m_hitShipPositions);
 		}
 		else if (update.contains(Message.BATTLESHIP.getMsg()))
 		{
-			shipSunk = true;
+			m_shipSunk = true;
 			logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": Opponent's " + Armada.BATTLESHIP_NAME + " has sunk!");
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": " + Armada.BATTLESHIP_NAME + ": " + update);
 			updateHitPositions(update);
-			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Current hit ships mapping: " + hitShipPositions);
+			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Current hit ships mapping: " + m_hitShipPositions);
 		}
 		else if (update.contains(Message.CRUISER.getMsg()))
 		{
-			shipSunk = true;
+			m_shipSunk = true;
 			logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": Opponent's " + Armada.CRUISER_NAME + " has sunk!");
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": " + Armada.CRUISER_NAME + ": " + update);
 			updateHitPositions(update);
-			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Current hit ships mapping: " + hitShipPositions);
+			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Current hit ships mapping: " + m_hitShipPositions);
 		}
 		else if(update.contains(Message.SUBMARINE.getMsg()))
 		{
-			shipSunk = true;
+			m_shipSunk = true;
 			logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": Opponent's " + Armada.SUBMARINE_NAME + " has sunk!");
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": " + Armada.SUBMARINE_NAME + ": " + update);
 			updateHitPositions(update);
-			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Current hit ships mapping: " + hitShipPositions);
+			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Current hit ships mapping: " + m_hitShipPositions);
 		}
 		else if (update.contains(Message.DESTROYER.getMsg()))
 		{
-			shipSunk = true;
+			m_shipSunk = true;
 			logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": Opponent's " + Armada.DESTROYER_NAME + " has sunk!");
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": " + Armada.DESTROYER_NAME + ": " + update);
 			updateHitPositions(update);
-			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Current hit ships mapping: " + hitShipPositions);
+			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": Current hit ships mapping: " + m_hitShipPositions);
 		}
-		else if (getCurrentTurn() == myTurn && myTurnStatus())
+		else if (getCurrentTurn() == m_myTurn && m_myTurnStatus())
 		{
 			waitForTurn();
 
@@ -481,21 +484,21 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			{
 				setShipFocus(true);
 			}
-			else if (isShipInFocus() && hitShipPositions.isEmpty())
+			else if (isShipInFocus() && m_hitShipPositions.isEmpty())
 			{
 				setShipFocus(false);
-				shipSunk = false;
+				m_shipSunk = false;
 			}
 
-			if (update.equalsIgnoreCase(Message.HIT.getMsg()) && isShipInFocus() && !shipSunk)
+			if (update.equalsIgnoreCase(Message.HIT.getMsg()) && isShipInFocus() && !m_shipSunk)
 			{
-				logger.debug("Adding position " + latestGuess + " to hit positions.");
-				hitShipPositions.add(latestGuess);
+				logger.debug("Adding position " + m_latestGuess + " to hit positions.");
+				m_hitShipPositions.add(m_latestGuess);
 			}
 
-			setCurrentTurn(opponentTurn);
+			setCurrentTurn(m_opponentTurn);
 		}
-		else if (getCurrentTurn() == opponentTurn)
+		else if (getCurrentTurn() == m_opponentTurn)
 		{
 			String hitOrMissMessage = "";
 			StringBuilder boardPosition = new StringBuilder(update);
@@ -513,20 +516,20 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 
 			logger.debug(AUTOMATED_CONTROLLER_LOG_HEADER + ": opponent has fired at position: " + boardPosition);
 
-			boolean isHit = armada.calculateHit(boardPosition.toString());
-			armada.updateArmada(boardPosition.toString());
-			armada.logArmadaPosition();
+			boolean isHit = m_armada.calculateHit(boardPosition.toString());
+			m_armada.updateArmada(boardPosition.toString());
+			m_armada.logArmadaPosition();
 
 			if (isHit)
 			{
 				hitOrMissMessage = Message.HIT.getMsg();
 
 				// Cases: 1) F |= (T & F) ... 2) F |= (T & T) ... 3) T |= (F & T)
-				isCarrierSunk |= checkShipUpdate((!isCarrierSunk && armada.isCarrierSunk()), Armada.CARRIER_NAME);
-				isCruiserSunk |= checkShipUpdate((!isCruiserSunk && armada.isCruiserSunk()), Armada.CRUISER_NAME);
-				isSubmarineSunk |= checkShipUpdate((!isSubmarineSunk && armada.isSubmarineSunk()), Armada.SUBMARINE_NAME);
-				isDestroyerSunk |= checkShipUpdate((!isDestroyerSunk && armada.isDestroyerSunk()), Armada.DESTROYER_NAME);
-				isBattleshipSunk |= checkShipUpdate((!isBattleshipSunk && armada.isBattleshipSunk()), Armada.BATTLESHIP_NAME);
+				m_isCarrierSunk |= checkShipUpdate((!m_isCarrierSunk && m_armada.isCarrierSunk()), Armada.CARRIER_NAME);
+				m_isCruiserSunk |= checkShipUpdate((!m_isCruiserSunk && m_armada.isCruiserSunk()), Armada.CRUISER_NAME);
+				m_isSubmarineSunk |= checkShipUpdate((!m_isSubmarineSunk && m_armada.isSubmarineSunk()), Armada.SUBMARINE_NAME);
+				m_isDestroyerSunk |= checkShipUpdate((!m_isDestroyerSunk && m_armada.isDestroyerSunk()), Armada.DESTROYER_NAME);
+				m_isBattleshipSunk |= checkShipUpdate((!m_isBattleshipSunk && m_armada.isBattleshipSunk()), Armada.BATTLESHIP_NAME);
 			}
 			else
 			{
@@ -534,30 +537,30 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 			}
 
 			//
-			observer.update(hitOrMissMessage);
+			m_observer.update(hitOrMissMessage);
 			setTurnStatus(false);
-			setCurrentTurn(myTurn);
+			setCurrentTurn(m_myTurn);
 
-			synchronized (turnSignal)
+			synchronized (m_turnSignal)
 			{
-				turnSignal.notifyAll();
+				m_turnSignal.notifyAll();
 			}
 		}
 	}
 	
-	private boolean checkShipUpdate(boolean shipSunk, String shipName)
+	private boolean checkShipUpdate(boolean m_shipSunk, String shipName)
 	{
-		if (shipSunk)
+		if (m_shipSunk)
 		{
-			// If armada has sunk, the game is over
-			if (armada.isArmadaSunk())
+			// If m_armada has sunk, the game is over
+			if (m_armada.isArmadaSunk())
 			{
-				observer.update(Message.OVER.getMsg());
+				m_observer.update(Message.OVER.getMsg());
 			}
 			else
 			{
 				logger.info(AUTOMATED_CONTROLLER_LOG_HEADER + ": " + shipName + " has been sunk by the opponent!");
-				observer.update(shipName);
+				m_observer.update(shipName);
 			}
 			
 			return true;
@@ -568,13 +571,13 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 
 	private void waitForShipSet()
 	{
-		synchronized (shipSetSignal)
+		synchronized (m_shipSetSignal)
 		{
 			try
 			{
-				while (!isShipsSet)
+				while (!m_isShipsSet)
 				{
-					shipSetSignal.wait();
+					m_shipSetSignal.wait();
 				}
 			}
 			catch (InterruptedException e)
@@ -587,13 +590,13 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 
 	private void waitForConnection()
 	{
-		synchronized (connectionSignal)
+		synchronized (m_connectionSignal)
 		{
 			try
 			{
-				while (!connected)
+				while (!m_connected)
 				{
-					connectionSignal.wait();
+					m_connectionSignal.wait();
 				}
 			}
 			catch (InterruptedException e)
@@ -606,13 +609,13 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 
 	private void waitForTurn()
 	{
-		synchronized (turnSignal)
+		synchronized (m_turnSignal)
 		{
 			try
 			{
-				while (getCurrentTurn() != myTurn)
+				while (getCurrentTurn() != m_myTurn)
 				{
-					turnSignal.wait();
+					m_turnSignal.wait();
 				}
 			}
 			catch (InterruptedException e)
@@ -625,9 +628,9 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	
 	private void setShipFocus(boolean focus)
 	{
-		synchronized (turnMutex)
+		synchronized (m_turnMutex)
 		{
-			shipFocus = focus;
+			m_shipFocus = focus;
 		}
 	}
 	
@@ -635,9 +638,9 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	{
 		boolean focus = false;
 		
-		synchronized (turnMutex)
+		synchronized (m_turnMutex)
 		{
-			focus = shipFocus;
+			focus = m_shipFocus;
 		}
 		
 		return focus;
@@ -645,9 +648,9 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 
 	private void setTurnStatus(boolean t)
 	{
-		synchronized (turnMutex)
+		synchronized (m_turnMutex)
 		{
-			myTurnFlag = t;
+			m_myTurnFlag = t;
 		}
 	}
 	
@@ -655,9 +658,9 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	{
 		List<String> copy = null;
 		
-		synchronized (turnMutex)
+		synchronized (m_turnMutex)
 		{
-			copy = new ArrayList<>(guessedPositions);
+			copy = new ArrayList<>(m_guessedPositions);
 		}
 		
 		return copy;
@@ -665,9 +668,9 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	
 	private void addGuessedPosition(String pos)
 	{
-		synchronized (turnMutex)
+		synchronized (m_turnMutex)
 		{
-			guessedPositions.add(pos);
+			m_guessedPositions.add(pos);
 		}
 	}
 	
@@ -675,21 +678,21 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	{
 		boolean guessed = false;
 
-		synchronized (turnMutex)
+		synchronized (m_turnMutex)
 		{
-			guessed = guessedPositions.contains(pos);
+			guessed = m_guessedPositions.contains(pos);
 		}
 
 		return guessed;
 	}
 
-	private boolean myTurnStatus()
+	private boolean m_myTurnStatus()
 	{
 		boolean t = false;
 
-		synchronized (turnMutex)
+		synchronized (m_turnMutex)
 		{
-			t = myTurnFlag;
+			t = m_myTurnFlag;
 		}
 
 		return t;
@@ -704,30 +707,30 @@ public class AutomatedController implements Runnable, Observer, Observable, Cont
 	@Override
 	public void shutdown()
 	{
-		shutdown = true;
+		m_shutdown = true;
 	}
 
 	@Override
 	public int getCurrentTurn()
 	{
-		synchronized (turnMutex)
+		synchronized (m_turnMutex)
 		{
-			return currentTurn;
+			return m_currentTurn;
 		}
 	}
 
 	@Override
 	public void setCurrentTurn(int turn)
 	{
-		synchronized (turnMutex)
+		synchronized (m_turnMutex)
 		{
-			currentTurn = turn;
+			m_currentTurn = turn;
 		}
 	}
 
 	@Override
 	public void register(Observer observer)
 	{
-		this.observer = observer;
+		m_observer = observer;
 	}
 }
