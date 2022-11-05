@@ -48,6 +48,12 @@ mvn -DoutputDirectory=lib dependency:copy-dependencies
 # Move all javafx library jars to its own library folder
 mv lib/javafx-* javafx-XX/lib
 
+# Build battleship jar
+mvn clean package
+
+# Move package from target to lib
+cp target/battleship-1.0.0.jar lib
+
 # If you are starting as the server to play an automated opponent on port 5000:
 ./scripts/startServer.sh javafx-XX/lib lib 5000 true
 
